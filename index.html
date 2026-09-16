@@ -5,7 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel de Administración | ELEGIDOS</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 
     <style>
@@ -146,7 +149,8 @@
     </div>
 
 <script>
-    const firebaseConfig = {
+    
+const firebaseConfig = {
         apiKey: "AIzaSyAL_1473Guz-pf8_kcNtHU6iUT4e1DOlrY",
         authDomain: "elegidosvalidador.firebaseapp.com",
         databaseURL: "https://elegidosvalidador-default-rtdb.firebaseio.com",
@@ -157,8 +161,13 @@
     };
 
     firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+    
+    // Iniciar sesión anónima para tener control total de administración
+    firebase.auth().signInAnonymously().catch((error) => {
+        console.error("Error de autenticación anónima:", error);
+    });
 
+    const db = firebase.database();
     function validarAdmin() {
         const pass = document.getElementById("master-pass").value;
         if (pass === "200422") { // CONTRASEÑA CAMBIADA AQUÍ
