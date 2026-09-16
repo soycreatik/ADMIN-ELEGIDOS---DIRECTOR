@@ -50,7 +50,7 @@
             <button class="btn-action" style="background: #059669; width: 100%;" onclick="adminCrearEstudianteAuto()">✨ Generar Código y Registrar Estudiante</button>
         </div>
 
-        <!-- NUEVA SECCIÓN: CAMBIAR NOMBRE DE ESTUDIANTE -->
+       <!-- NUEVA SECCIÓN: CAMBIAR NOMBRE DE ESTUDIANTE -->
         <div class="card" style="border-color: #f59e0b; background: #451a03;">
             <h3 style="color: #fbbf24; border-color: #78350f;">Editar Nombre de Estudiante</h3>
             <p style="font-size: 0.85rem; color: #fef3c7;">Corrige cualquier error ortográfico en el nombre de un alumno específico.</p>
@@ -58,6 +58,16 @@
                 <input type="text" id="edit-nombre-codigo" placeholder="Código (Ej: CLASE-2026-001)">
                 <input type="text" id="edit-nombre-nuevo" placeholder="Nombre Correcto">
                 <button class="btn-action" style="background: #f59e0b; color: #451a03;" onclick="adminCambiarNombre()">✏️ Actualizar Nombre</button>
+            </div>
+        </div>
+
+        <!-- NUEVA SECCIÓN: RESETEAR Y BORRAR PERFIL DE ESTUDIANTE -->
+        <div class="card" style="border-color: #be123c; background: #4c0519;">
+            <h3 style="color: #fda4af; border-color: #881337;">Resetear y Borrar Perfil de Estudiante</h3>
+            <p style="font-size: 0.85rem; color: #ffe4e6;">Borra por completo la información del perfil (edad, comunidad, nivel, descripción) dejándolo en blanco para que el alumno lo llene desde cero.</p>
+            <div class="form-group">
+                <input type="text" id="reset-perfil-codigo" placeholder="Código (Ej: CLASE-2026-001)">
+                <button class="btn-action" style="background: #e11d48; color: white;" onclick="adminBorrarPerfilCompleto()">🧹 Borrar Perfil Completo</button>
             </div>
         </div>
 
@@ -152,13 +162,25 @@
     function validarAdmin() {
         const pass = document.getElementById("master-pass").value;
         if (pass === "200422") { // CONTRASEÑA CAMBIADA AQUÍ
-            document.getElementById("login-admin").style.display = "none";
-            document.getElementById("dashboard-admin").style.display = "block";
-            adminCargarListadoGeneral(); 
+            localStorage.setItem("adminElegidos", "autorizado"); 
+            mostrarDashboard();
         } else {
             alert("Contraseña Maestra Incorrecta.");
         }
     }
+
+    function mostrarDashboard() {
+        document.getElementById("login-admin").style.display = "none";
+        document.getElementById("dashboard-admin").style.display = "block";
+        adminCargarListadoGeneral(); 
+    }
+
+    // Comprueba si el dispositivo ya fue autorizado al cargar la página
+    window.onload = function() {
+        if (localStorage.getItem("adminElegidos") === "autorizado") {
+            mostrarDashboard();
+        }
+    };
 
     // NUEVA FUNCIÓN: Registro automático de código
     function adminCrearEstudianteAuto() {
@@ -221,6 +243,41 @@
                 });
             } else {
                 alert("❌ El código no existe.");
+            }
+        });
+    }
+
+    // NUEVA FUNCIÓN: Borrar Perfil Completo (Con botón nativo de confirmar)
+    function adminBorrarPerfilCompleto() {
+        const codigo = document.getElementById("reset-perfil-codigo").value.trim().toUpperCase();
+        
+        if(!codigo.startsWith("CLASE-2026-")) {
+            return alert("Ingresa un código válido (Ej: CLASE-2026-001).");
+        }
+
+        db.ref(`clase/${codigo}`).once('value').then(snap => {
+            if (snap.exists()) {
+                const data = snap.val();
+                const nombreEstudiante = data.nombre;
+
+                if (!data.perfil) {
+                    return alert(`El alumno ${nombreEstudiante} no ha llenado su perfil todavía (ya está en blanco).`);
+                }
+
+                // Ventana nativa de confirmación (Solo botones Aceptar o Cancelar)
+                const confirmarBorrador = confirm(`ATENCIÓN: Vas a BORRAR POR COMPLETO el perfil de:\n\n👤 ${nombreEstudiante}\n\nTodos sus datos quedarán en blanco. ¿Estás completamente seguro de continuar?`);
+                
+                if (confirmarBorrador) {
+                    // Al usar remove(), borramos todo el nodo, dejándolo en blanco
+                    db.ref(`clase/${codigo}/perfil`).remove().then(() => {
+                        alert(`✅ El perfil de ${nombreEstudiante} ha sido borrado exitosamente.\nEl alumno ya puede ingresar y llenar sus datos desde cero.`);
+                        document.getElementById("reset-perfil-codigo").value = '';
+                    }).catch(e => alert("Error al borrar el perfil: " + e));
+                } else {
+                    alert("❌ Operación cancelada. No se borró nada.");
+                }
+            } else {
+                alert("❌ El código no existe en la base de datos.");
             }
         });
     }
@@ -326,40 +383,61 @@
         }).catch(e => alert("Error: " + e));
     }
 
-    function adminCargarListadoGeneral() {
+function adminCargarListadoGeneral() {
         const contenedor = document.getElementById("tabla-alumnos-container");
-        contenedor.innerHTML = "<p style='color: #94a3b8;'>Cargando listado general...</p>";
         
-        db.ref('clase').once('value').then(snap => {
+        // Evita parpadeos mostrando "Cargando..." solo si el contenedor está vacío
+        if (contenedor.innerHTML.trim() === "") {
+            contenedor.innerHTML = "<p style='color: #94a3b8;'>Cargando listado general...</p>";
+        }
+        
+        db.ref('clase').off('value'); // Apaga escuchadores previos para no duplicar consultas
+        db.ref('clase').on('value', snap => { // .on() mantiene la conexión en tiempo real
+
+
             if(!snap.exists()) {
                 contenedor.innerHTML = "<p style='color: #94a3b8;'>No hay alumnos registrados en la base de datos.</p>";
                 return;
             }
 
-            let html = `<table style="width:100%; border-collapse: collapse; font-size: 0.85rem; text-align: left;">
-                <thead>
-                    <tr style="border-bottom: 2px solid #334155; color: #38bdf8;">
-                        <th style="padding: 10px;">Código</th>
-                        <th style="padding: 10px;">Nombre</th>
-                        <th style="padding: 10px; text-align: center;">Asistencias</th>
-                        <th style="padding: 10px;">Contraseña</th>
-                        <th style="padding: 10px; text-align: center;">Acciones Rápidas</th>
-                    </tr>
-                </thead>
-                <tbody>`;
+            let totalAlumnos = 0;
+            let perfilesCreados = 0;
+            let filasTablaHtml = "";
 
             snap.forEach(child => {
+                totalAlumnos++;
                 const data = child.val();
                 const codigo = child.key;
                 const nombre = data.nombre || "Sin nombre";
                 const pass = data.password || "ELEGIDOS26";
                 const totalAsist = data.asistencias ? Object.keys(data.asistencias).length : 0;
+                
+                let estadoPerfil = "<span style='color: #f87171;'>Pendiente ❌</span>";
+                let datosPerfil = "<span style='color: #64748b;'>Sin datos</span>";
+                
+                if (data.perfil && data.perfil.edad) {
+                    perfilesCreados++;
+                    estadoPerfil = "<span style='color: #4ade80;'>Completado ✅</span>";
+                    
+                    const pEdad = data.perfil.edad || "-";
+                    const pComunidad = data.perfil.comunidad || "-";
+                    const pNivel = data.perfil.nivel || "-";
+                    const pCelular = data.perfil.celular || "No reg."; 
+                    
+                    datosPerfil = `<div style="font-size: 0.75rem; color: #cbd5e1; line-height: 1.4;">
+                        <strong>E:</strong> ${pEdad} | <strong>C:</strong> ${pCelular}<br>
+                        <strong>L:</strong> ${pComunidad}<br>
+                        <strong>N:</strong> ${pNivel}
+                    </div>`;
+                }
 
-                html += `<tr style="border-bottom: 1px solid #334155;">
+                filasTablaHtml += `<tr style="border-bottom: 1px solid #334155;">
                     <td style="padding: 10px; font-family: monospace; color: #fbbf24; font-weight: bold;">${codigo}</td>
                     <td style="padding: 10px; text-transform: capitalize;">${nombre}</td>
                     <td style="padding: 10px; text-align: center; font-weight: bold; color: #4ade80;">${totalAsist}</td>
                     <td style="padding: 10px; font-family: monospace; color: #cbd5e1;">${pass}</td>
+                    <td style="padding: 10px; text-align: center;">${estadoPerfil}</td>
+                    <td style="padding: 10px;">${datosPerfil}</td>
                     <td style="padding: 10px; text-align: center; display: flex; gap: 6px; justify-content: center; flex-wrap: wrap;">
                         <button class="btn-action" style="padding: 5px 10px; font-size: 0.75rem;" onclick="rellenarEditar('${codigo}')">Editar Clave</button>
                         <button class="btn-danger" style="padding: 5px 10px; font-size: 0.75rem;" onclick="adminBorrarEstudiante('${codigo}')">Borrar</button>
@@ -367,7 +445,42 @@
                 </tr>`;
             });
 
-            html += `</tbody></table>`;
+            const perfilesPendientes = totalAlumnos - perfilesCreados;
+            const porcentajeCompletado = totalAlumnos > 0 ? Math.round((perfilesCreados / totalAlumnos) * 100) : 0;
+
+            let html = `
+            <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 150px; background: #0f172a; border: 1px solid #334155; padding: 15px; border-radius: 12px; text-align: center;">
+                    <span style="color: #94a3b8; font-size: 0.75rem; text-transform: uppercase; font-weight: bold;">Total Alumnos</span>
+                    <h2 style="color: #38bdf8; margin: 5px 0 0 0; font-size: 1.8rem;">${totalAlumnos}</h2>
+                </div>
+                <div style="flex: 1; min-width: 150px; background: #0f172a; border: 1px solid #10b981; padding: 15px; border-radius: 12px; text-align: center;">
+                    <span style="color: #34d399; font-size: 0.75rem; text-transform: uppercase; font-weight: bold;">Perfiles Creados</span>
+                    <h2 style="color: #4ade80; margin: 5px 0 0 0; font-size: 1.8rem;">${perfilesCreados} <small style="font-size: 0.9rem; color: #94a3b8;">(${porcentajeCompletado}%)</small></h2>
+                </div>
+                <div style="flex: 1; min-width: 150px; background: #0f172a; border: 1px solid #ef4444; padding: 15px; border-radius: 12px; text-align: center;">
+                    <span style="color: #f87171; font-size: 0.75rem; text-transform: uppercase; font-weight: bold;">Perfiles Pendientes</span>
+                    <h2 style="color: #f87171; margin: 5px 0 0 0; font-size: 1.8rem;">${perfilesPendientes}</h2>
+                </div>
+            </div>
+
+            <table style="width:100%; border-collapse: collapse; font-size: 0.85rem; text-align: left;">
+                <thead>
+                    <tr style="border-bottom: 2px solid #334155; color: #38bdf8;">
+                        <th style="padding: 10px;">Código</th>
+                        <th style="padding: 10px;">Nombre</th>
+                        <th style="padding: 10px; text-align: center;">Asistencias</th>
+                        <th style="padding: 10px;">Contraseña</th>
+                        <th style="padding: 10px; text-align: center;">Estado Perfil</th>
+                        <th style="padding: 10px;">Datos (Edad / Cel / Com / Nivel)</th>
+                        <th style="padding: 10px; text-align: center;">Acciones Rápidas</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${filasTablaHtml}
+                </tbody>
+            </table>`;
+
             contenedor.innerHTML = html;
         });
     }
