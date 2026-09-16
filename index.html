@@ -39,16 +39,26 @@
     <div id="dashboard-admin">
         <h1>⚙️ Consola de Administración ELEGIDOS</h1>
 
-        <!-- NUEVA SECCIÓN: REGISTRAR NUEVO ESTUDIANTE -->
+        <!-- SECCIÓN: REGISTRAR NUEVO ESTUDIANTE (CÓDIGO AUTOMÁTICO) -->
         <div class="card" style="border-color: #10b981; background: #064e3b;">
-            <h3 style="color: #34d399; border-color: #065f46;">Registrar Nuevo Estudiante</h3>
-            <p style="font-size: 0.85rem; color: #d1fae5;">Da de alta a un estudiante nuevo directamente en la base de datos con su código, nombre y contraseña inicial.</p>
+            <h3 style="color: #34d399; border-color: #065f46;">Registrar Nuevo Estudiante (Código Automático)</h3>
+            <p style="font-size: 0.85rem; color: #d1fae5;">El sistema buscará el último código y asignará el siguiente disponible. Tú solo escribe el nombre.</p>
             <div class="form-group">
-                <input type="text" id="nuevo-codigo" placeholder="Código (Ej: CLASE-2026-051)">
                 <input type="text" id="nuevo-nombre" placeholder="Nombre Completo del Alumno">
                 <input type="text" id="nuevo-password" placeholder="Contraseña (opcional, por defecto ELEGIDOS26)">
             </div>
-            <button class="btn-action" style="background: #059669; width: 100%;" onclick="adminCrearEstudiante()">✨ Registrar Estudiante</button>
+            <button class="btn-action" style="background: #059669; width: 100%;" onclick="adminCrearEstudianteAuto()">✨ Generar Código y Registrar Estudiante</button>
+        </div>
+
+        <!-- NUEVA SECCIÓN: CAMBIAR NOMBRE DE ESTUDIANTE -->
+        <div class="card" style="border-color: #f59e0b; background: #451a03;">
+            <h3 style="color: #fbbf24; border-color: #78350f;">Editar Nombre de Estudiante</h3>
+            <p style="font-size: 0.85rem; color: #fef3c7;">Corrige cualquier error ortográfico en el nombre de un alumno específico.</p>
+            <div class="form-group">
+                <input type="text" id="edit-nombre-codigo" placeholder="Código (Ej: CLASE-2026-001)">
+                <input type="text" id="edit-nombre-nuevo" placeholder="Nombre Correcto">
+                <button class="btn-action" style="background: #f59e0b; color: #451a03;" onclick="adminCambiarNombre()">✏️ Actualizar Nombre</button>
+            </div>
         </div>
 
         <!-- SECCIÓN 1: GESTIÓN DE CONTRASEÑAS -->
@@ -75,8 +85,9 @@
                 <button class="btn-action" style="background: #f97316;" onclick="adminModificarAsistencia('permiso')">Asignar Permiso</button>
                 <button class="btn-danger" onclick="adminModificarAsistencia('eliminar')">Borrar Registro</button>
             </div>
+        </div>
 
-        <!-- NUEVA SECCIÓN: PASE DE ASISTENCIA MASIVO POR FECHA -->
+        <!-- SECCIÓN: PASE DE ASISTENCIA MASIVO POR FECHA -->
         <div class="card" style="border-color: #d97706; background: #451a03;">
             <h3 style="color: #fbbf24; border-color: #78350f;">Pase de Lista Masivo por Fecha</h3>
             <p style="font-size: 0.85rem; color: #fef3c7;">Selecciona una fecha y marca o desmarca rápidamente la asistencia de todos los alumnos de un solo vistazo.</p>
@@ -87,7 +98,7 @@
             <div id="masivo-lista-container" style="margin-top: 15px;"></div>
         </div>
 
-        <!-- NUEVA SECCIÓN: LISTADO GENERAL DE ALUMNOS -->
+        <!-- SECCIÓN: LISTADO GENERAL DE ALUMNOS -->
         <div class="card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #334155; padding-bottom: 10px;">
                 <h3 style="margin: 0; border: none; padding: 0;">Listado General de Alumnos</h3>
@@ -99,10 +110,10 @@
             </div>
         </div>
 
-        <!-- NUEVA SECCIÓN: EXPORTAR REPORTES CSV -->
+        <!-- SECCIÓN: EXPORTAR REPORTES CSV -->
         <div class="card" style="border-color: #0284c7; background: #082f49;">
             <h3 style="color: #38bdf8; border-color: #0369a1;">Exportar Reportes de Asistencia</h3>
-            <p style="font-size: 0.85rem; color: #cbd5e1;">Descarga un archivo CSV con el resumen de todos los alumnos, sus códigos y su conteo total de asistencias para controles internos o Excel.</p>
+            <p style="font-size: 0.85rem; color: #cbd5e1;">Descarga un archivo CSV con el resumen de todos los alumnos, sus códigos y su conteo total de asistencias.</p>
             <button class="btn-action" style="background: #0284c7; width: 100%;" onclick="adminExportarCSV()">📥 Descargar Reporte Completo (CSV)</button>
         </div>
 
@@ -140,41 +151,76 @@
 
     function validarAdmin() {
         const pass = document.getElementById("master-pass").value;
-        if (pass === "MAHU2026") {
+        if (pass === "200422") { // CONTRASEÑA CAMBIADA AQUÍ
             document.getElementById("login-admin").style.display = "none";
             document.getElementById("dashboard-admin").style.display = "block";
-            adminCargarListadoGeneral(); // Cargar tabla automáticamente al entrar
+            adminCargarListadoGeneral(); 
         } else {
             alert("Contraseña Maestra Incorrecta.");
         }
     }
 
-    function adminCrearEstudiante() {
-        const codigo = document.getElementById("nuevo-codigo").value.trim().toUpperCase();
+    // NUEVA FUNCIÓN: Registro automático de código
+    function adminCrearEstudianteAuto() {
         const nombre = document.getElementById("nuevo-nombre").value.trim();
         let password = document.getElementById("nuevo-password").value.trim();
 
-        if (!codigo.startsWith("CLASE-2026-") || !nombre) {
-            return alert("Ingresa un código válido (Ej: CLASE-2026-051) y el nombre completo.");
+        if (!nombre) {
+            return alert("Ingresa el nombre completo del alumno.");
         }
 
         if (!password) password = "ELEGIDOS26";
 
+        // Busca el código más alto en la base de datos
+        db.ref('clase').once('value').then(snap => {
+            let maxNum = 0;
+            if (snap.exists()) {
+                snap.forEach(child => {
+                    const key = child.key; 
+                    if (key.startsWith("CLASE-2026-")) {
+                        const numStr = key.split("-")[2];
+                        const num = parseInt(numStr, 10);
+                        if (!isNaN(num) && num > maxNum) {
+                            maxNum = num;
+                        }
+                    }
+                });
+            }
+            
+            // Genera el siguiente número y lo rellena con ceros (ej. 001, 045, 105)
+            const nextNum = maxNum + 1;
+            const nextCode = "CLASE-2026-" + String(nextNum).padStart(3, '0');
+
+            db.ref(`clase/${nextCode}`).set({
+                nombre: nombre,
+                password: password,
+                asistencias: {}
+            }).then(() => {
+                alert(`✅ Estudiante registrado exitosamente.\n\n👤 Alumno: ${nombre}\n🎟️ CÓDIGO ASIGNADO: ${nextCode}\n\n(Copia y envíale este código al alumno)`);
+                document.getElementById("nuevo-nombre").value = '';
+                document.getElementById("nuevo-password").value = '';
+                adminCargarListadoGeneral();
+            });
+        });
+    }
+
+    // NUEVA FUNCIÓN: Cambiar Nombre
+    function adminCambiarNombre() {
+        const codigo = document.getElementById("edit-nombre-codigo").value.trim().toUpperCase();
+        const nuevoNombre = document.getElementById("edit-nombre-nuevo").value.trim();
+        
+        if(!codigo.startsWith("CLASE-2026-") || !nuevoNombre) return alert("Ingresa un código válido y el nuevo nombre.");
+
         db.ref(`clase/${codigo}`).once('value').then(snap => {
             if (snap.exists()) {
-                alert("❌ El código ya existe en la base de datos.");
-            } else {
-                db.ref(`clase/${codigo}`).set({
-                    nombre: nombre,
-                    password: password,
-                    asistencias: {}
-                }).then(() => {
-                    alert(`✅ Estudiante ${nombre} (${codigo}) registrado exitosamente.`);
-                    document.getElementById("nuevo-codigo").value = '';
-                    document.getElementById("nuevo-nombre").value = '';
-                    document.getElementById("nuevo-password").value = '';
+                db.ref(`clase/${codigo}`).update({ nombre: nuevoNombre }).then(() => {
+                    alert(`✅ Nombre de ${codigo} actualizado a: ${nuevoNombre}`);
+                    document.getElementById("edit-nombre-codigo").value = '';
+                    document.getElementById("edit-nombre-nuevo").value = '';
                     adminCargarListadoGeneral();
                 });
+            } else {
+                alert("❌ El código no existe.");
             }
         });
     }
@@ -207,8 +253,7 @@
         if(!codigo.startsWith("CLASE-2026-") || !fecha) return alert("Ingresa el código y selecciona una fecha.");
 
         db.ref(`clase/${codigo}`).once('value').then(snap => {
-            
-if (snap.exists()) {
+            if (snap.exists()) {
                 if (accion === 'agregar') {
                     db.ref(`clase/${codigo}/asistencias/${fecha}`).set("Admin: Asistencia Manual").then(() => {
                         alert(`✅ Asistencia FORZADA agregada para el ${fecha} al alumno ${codigo}.`);
@@ -317,7 +362,6 @@ if (snap.exists()) {
                     <td style="padding: 10px; font-family: monospace; color: #cbd5e1;">${pass}</td>
                     <td style="padding: 10px; text-align: center; display: flex; gap: 6px; justify-content: center; flex-wrap: wrap;">
                         <button class="btn-action" style="padding: 5px 10px; font-size: 0.75rem;" onclick="rellenarEditar('${codigo}')">Editar Clave</button>
-                        <button class="btn-action" style="padding: 5px 10px; font-size: 0.75rem; background: #eab308; color: #422006;" onclick="adminDesbloquearPerfil('${codigo}')">Desbloquear Perfil</button>
                         <button class="btn-danger" style="padding: 5px 10px; font-size: 0.75rem;" onclick="adminBorrarEstudiante('${codigo}')">Borrar</button>
                     </td>
                 </tr>`;
@@ -331,15 +375,6 @@ if (snap.exists()) {
     function rellenarEditar(codigo) {
         document.getElementById("pass-codigo").value = codigo;
         window.scrollTo({top: 400, behavior: 'smooth'});
-    }
-
-    function adminDesbloquearPerfil(codigo) {
-        if(confirm(`🔓 ¿Quieres permitir que el alumno ${codigo} pueda editar su perfil nuevamente sin esperar los 30 días?`)) {
-            // Esto elimina únicamente la fecha de bloqueo en la base de datos, dejando sus respuestas intactas
-            db.ref(`clase/${codigo}/perfil/ultimaActualizacion`).remove().then(() => {
-                alert(`✅ Perfil de ${codigo} desbloqueado. Ahora pueden volver a editar sus datos desde su aplicación.`);
-            }).catch(e => alert("Error al desbloquear: " + e));
-        }
     }
 
     function adminBorrarEstudiante(codigo) {
