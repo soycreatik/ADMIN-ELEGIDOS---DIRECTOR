@@ -74,6 +74,16 @@
             </div>
         </div>
 
+<!-- NUEVA SECCIÓN: DESVINCULAR BOLETOS DE EVENTOS -->
+        <div class="card" style="border-color: #ea580c; background: #431407;">
+            <h3 style="color: #fdba74; border-color: #9a3412;">Desvincular Boletos de Eventos</h3>
+            <p style="font-size: 0.85rem; color: #ffedd5;">Si un alumno vinculó un boleto equivocado, bórralo de su perfil para que el ticket vuelva a quedar "libre" y el estudiante pueda registrar el correcto.</p>
+            <div class="form-group">
+                <input type="text" id="desvincular-codigo" placeholder="Código del Alumno (Ej: CLASE-2026-001)">
+                <button class="btn-action" style="background: #ea580c; color: white;" onclick="adminDesvincularBoletos()">✂️ Desvincular Todos sus Boletos</button>
+            </div>
+        </div>
+
         <!-- SECCIÓN 1: GESTIÓN DE CONTRASEÑAS -->
         <div class="card">
             <h3>Restablecer Contraseña de Estudiante</h3>
@@ -108,11 +118,44 @@
                 <input type="date" id="masivo-fecha" title="Selecciona fecha de la sesión">
                 <button class="btn-action" style="background: #d97706;" onclick="adminCargarPaseMasivo()">📂 Cargar Lista para Pase</button>
             </div>
-            <div id="masivo-lista-container" style="margin-top: 15px;"></div>
+            
+<div id="masivo-lista-container" style="margin-top: 15px;"></div>
+        </div>
+
+        <!-- NUEVA SECCIÓN: CONTROL DE BOLETOS DE EVENTOS -->
+        <div class="card" style="border-color: #6366f1; background: #312e81;">
+            <h3 style="color: #818cf8; border-color: #3730a3;">Control de Escaneo de Eventos</h3>
+            <p style="font-size: 0.85rem; color: #e0e7ff;">Selecciona un evento para ver qué boletos ya fueron escaneados y reiniciarlos individualmente o todos a la vez.</p>
+            <div class="form-group">
+                <select id="select-evento-boletos" class="input-admin" style="max-width: none;">
+                    <option value="" disabled selected>Selecciona un evento...</option>
+                    <option value="elegidos">MAHU FILMS</option>
+                    <option value="masterclass">DREAMEZ</option>
+                    <option value="festival">FESTIVAL CREATIVO</option>
+                </select>
+                <button class="btn-action" style="background: #4f46e5;" onclick="adminCargarBoletosEvento()">👁️ Ver Boletos</button>
+            </div>
+            <div id="boletos-lista-container" style="margin-top: 15px;"></div>
+        </div>
+
+        <!-- NUEVA SECCIÓN: ANUNCIO GLOBAL AL PORTAL -->
+        <div class="card" style="border-color: #14b8a6; background: #042f2e;">
+            <h3 style="color: #2dd4bf; border-color: #134e4a;">📢 Publicar Anuncio Global</h3>
+            <p style="font-size: 0.85rem; color: #ccfbf1;">Envía un recordatorio urgente. Aparecerá en toda la pantalla del Portal de Alumnos hasta que expire.</p>
+            <div class="form-group" style="flex-direction: column;">
+                <textarea id="anuncio-mensaje" rows="3" placeholder="Escribe el anuncio aquí..." style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #0f766e; background: #022c22; color: #fff; resize: vertical; font-family: 'Inter', sans-serif; outline:none;"></textarea>
+                <div style="display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
+                    <span style="color: #2dd4bf; align-self: center; font-size: 0.85rem;">Expira el:</span>
+                    <input type="datetime-local" id="anuncio-expiracion" style="flex: 1; min-width: 200px; background: #022c22; border-color: #0f766e; color: #fff;">
+                    <button class="btn-action" style="background: #0d9488;" onclick="adminPublicarAnuncio()">🚀 Publicar</button>
+                    <button class="btn-danger" onclick="adminBorrarAnuncio()">Desactivar Anuncio</button>
+                </div>
+            </div>
         </div>
 
         <!-- SECCIÓN: LISTADO GENERAL DE ALUMNOS -->
         <div class="card">
+
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #334155; padding-bottom: 10px;">
                 <h3 style="margin: 0; border: none; padding: 0;">Listado General de Alumnos</h3>
                 <button class="btn-action" style="background: #0284c7; padding: 6px 14px; font-size: 0.8rem;" onclick="adminCargarListadoGeneral()">🔄 Actualizar Listado</button>
@@ -130,11 +173,11 @@
             <button class="btn-action" style="background: #0284c7; width: 100%;" onclick="adminExportarCSV()">📥 Descargar Reporte Completo (CSV)</button>
         </div>
 
-        <!-- SECCIÓN 3: REINICIAR TODAS LAS ASISTENCIAS (DEJAR A 0) -->
+        <!-- SECCIÓN 3: REINICIAR TODAS LAS ASISTENCIAS Y EVENTOS -->
         <div class="card" style="border-color: #9333ea; background: #1e1b4b;">
-            <h3 style="color: #c084fc; border-color: #312e81;">Reiniciar Todas las Asistencias a 0</h3>
-            <p style="font-size: 0.85rem; color: #cbd5e1;">Limpia el historial de asistencias de todos los alumnos dejándolas a 0, pero <strong>respeta y conserva</strong> sus contraseñas personalizadas y códigos.</p>
-            <button class="btn-action" style="background: #9333ea; width: 100%;" onclick="adminReiniciarTodasAsistencias()">🔄 Reiniciar Historial de Asistencias (Conservar Claves)</button>
+            <h3 style="color: #c084fc; border-color: #312e81;">Reiniciar Asistencias (Clases y Eventos)</h3>
+            <p style="font-size: 0.85rem; color: #cbd5e1;">Limpia el historial de asistencias de las clases y restablece los tickets de los eventos (MAHU, DREAMEZ, FESTIVAL) como "no usados". <strong>Conserva</strong> los nombres, perfiles, descripciones y contraseñas.</p>
+            <button class="btn-action" style="background: #9333ea; width: 100%;" onclick="adminReiniciarTodasAsistencias()">🔄 Reiniciar Asistencias de Todos los Apartados</button>
         </div>
 
         <!-- SECCIÓN 4: REINICIAR ASISTENCIAS POR FECHA / EVENTO ESPECÍFICO -->
@@ -291,6 +334,58 @@ const firebaseConfig = {
         });
     }
 
+    // NUEVA FUNCIÓN: Desvincular Boletos
+    function adminDesvincularBoletos() {
+        const codigoEstudiante = document.getElementById("desvincular-codigo").value.trim().toUpperCase();
+
+        if (!codigoEstudiante.startsWith("CLASE-2026-")) {
+            return alert("Ingresa un código válido de alumno (Ej: CLASE-2026-001).");
+        }
+
+        db.ref(`clase/${codigoEstudiante}`).once('value').then(snap => {
+            if (!snap.exists()) {
+                return alert("❌ El código de estudiante no existe.");
+            }
+
+            const data = snap.val();
+            const nombreEstudiante = data.nombre;
+
+            if (!data.boletos) {
+                return alert(`El alumno ${nombreEstudiante} no tiene ningún boleto especial vinculado a su cuenta.`);
+            }
+
+            const confirmacion = confirm(`ATENCIÓN: Vas a desvincular los boletos especiales de:\n\n👤 ${nombreEstudiante}\n\nLos tickets volverán a quedar libres. ¿Deseas continuar?`);
+            
+            if (confirmacion) {
+                const updates = {};
+                
+                // Recorrer los boletos que tiene el estudiante
+                Object.keys(data.boletos).forEach(codigoBoleto => {
+                    const eventoId = data.boletos[codigoBoleto]; // 'elegidos', 'masterclass', o 'festival'
+                    
+                    // 1. Quitar la vinculación del ticket original en el evento
+                    updates[`${eventoId}/${codigoBoleto}/vinculado_a`] = null;
+                    updates[`${eventoId}/${codigoBoleto}/codigoEstudiante`] = null;
+                    
+                    // 2. Eliminar el acceso especial del perfil del estudiante
+                    updates[`clase/${codigoEstudiante}/accesos_especiales/${eventoId}`] = null;
+                });
+                
+                // 3. Borrar el historial de boletos del estudiante
+                updates[`clase/${codigoEstudiante}/boletos`] = null;
+
+                // Ejecutar todos los borrados simultáneamente
+                db.ref().update(updates).then(() => {
+                    alert(`✅ Los boletos de ${nombreEstudiante} han sido desvinculados exitosamente. Ahora los tickets están libres.`);
+                    document.getElementById("desvincular-codigo").value = '';
+                    adminCargarListadoGeneral();
+                }).catch(e => alert("Error al desvincular boletos: " + e));
+            } else {
+                alert("Operación cancelada.");
+            }
+        });
+    }
+
     function adminCambiarPassword() {
         const codigo = document.getElementById("pass-codigo").value.trim().toUpperCase();
         let nuevaPass = document.getElementById("pass-nueva").value.trim();
@@ -316,23 +411,30 @@ const firebaseConfig = {
         const codigo = document.getElementById("asist-codigo").value.trim().toUpperCase();
         const fecha = document.getElementById("asist-fecha").value;
 
-        if(!codigo.startsWith("CLASE-2026-") || !fecha) return alert("Ingresa el código y selecciona una fecha.");
+        if(!codigo.startsWith("CLASE-2026-") || !fecha) return alert("Ingresa el código y selecciona una fecha válida.");
 
         db.ref(`clase/${codigo}`).once('value').then(snap => {
             if (snap.exists()) {
+                // Preparamos un objeto de actualización para no sobrescribir toda la base
+                const updates = {};
+                
                 if (accion === 'agregar') {
-                    db.ref(`clase/${codigo}/asistencias/${fecha}`).set("Admin: Asistencia Manual").then(() => {
+                    updates[`clase/${codigo}/asistencias/${fecha}`] = "Admin: Asistencia Manual";
+                    db.ref().update(updates).then(() => {
                         alert(`✅ Asistencia FORZADA agregada para el ${fecha} al alumno ${codigo}.`);
                         adminCargarListadoGeneral();
                     });
                 } else if (accion === 'permiso') {
-                    db.ref(`clase/${codigo}/asistencias/${fecha}`).set("Admin: Permiso Justificado").then(() => {
+                    updates[`clase/${codigo}/asistencias/${fecha}`] = "Admin: Permiso Justificado";
+                    db.ref().update(updates).then(() => {
                         alert(`🟠 Permiso asignado exitosamente para el ${fecha} al alumno ${codigo}.`);
                         adminCargarListadoGeneral();
                     });
                 } else if (accion === 'eliminar') {
-                    db.ref(`clase/${codigo}/asistencias/${fecha}`).remove().then(() => {
-                        alert(`🗑️ Asistencia ELIMINADA para el ${fecha} del alumno ${codigo}.`);
+                    // El secreto para borrar SOLO ese registro es setearlo a null mediante update
+                    updates[`clase/${codigo}/asistencias/${fecha}`] = null;
+                    db.ref().update(updates).then(() => {
+                        alert(`🗑️ Asistencia de la fecha ${fecha} ELIMINADA para el alumno ${codigo}. (Los demás datos siguen intactos)`);
                         adminCargarListadoGeneral();
                     });
                 }
@@ -535,22 +637,43 @@ function adminCargarListadoGeneral() {
     }
 
     function adminReiniciarTodasAsistencias() {
-        const confirmacion = prompt("ATENCIÓN: Esto pondrá a 0 el historial de asistencias de TODOS los alumnos, pero conservará sus contraseñas y datos. Escribe 'REINICIAR ASISTENCIAS' para confirmar.");
+        const confirmacion = prompt("ATENCIÓN: Esto pondrá a 0 el historial de clases y restablecerá los tickets de los eventos (MAHU, DREAMEZ, FESTIVAL). Escribe 'REINICIAR ASISTENCIAS' para confirmar.");
+        
         if (confirmacion === "REINICIAR ASISTENCIAS") {
-            db.ref('clase').once('value').then(snap => {
-                if (snap.exists()) {
-                    const updates = {};
-                    snap.forEach(childSnap => {
-                        updates[`${childSnap.key}/asistencias`] = null;
+            // Leer las 4 ramas principales de la base de datos al mismo tiempo
+            Promise.all([
+                db.ref('clase').once('value'),
+                db.ref('elegidos').once('value'),
+                db.ref('masterclass').once('value'),
+                db.ref('festival').once('value')
+            ]).then((snapshots) => {
+                const updates = {};
+                
+                // 1. Limpiar asistencias de CLASE (sin tocar contraseña, nombre o perfil)
+                if (snapshots[0].exists()) {
+                    snapshots[0].forEach(child => {
+                        updates[`clase/${child.key}/asistencias`] = null;
                     });
-                    db.ref('clase').update(updates).then(() => {
-                        alert("✅ Todas las asistencias han sido reiniciadas a 0. Las contraseñas de los usuarios se han conservado intactas.");
-                        adminCargarListadoGeneral();
-                    }).catch(e => alert("Error: " + e));
-                } else {
-                    alert("No hay registros en la base de datos.");
                 }
-            });
+                
+                // 2. Restablecer tickets de los 3 EVENTOS como no usados (sin borrar descripciones)
+                const eventos = ['elegidos', 'masterclass', 'festival'];
+                for (let i = 0; i < 3; i++) {
+                    if (snapshots[i + 1].exists()) {
+                        snapshots[i + 1].forEach(child => {
+                            updates[`${eventos[i]}/${child.key}/usado`] = false;
+                            updates[`${eventos[i]}/${child.key}/fechaIngreso`] = null;
+                        });
+                    }
+                }
+
+                // 3. Aplicar todos los cambios simultáneamente desde la raíz de la base de datos
+                db.ref().update(updates).then(() => {
+                    alert("✅ Todas las asistencias (Clases y Eventos) han sido reiniciadas. Las contraseñas, nombres, y datos de los tickets se han conservado intactos.");
+                    adminCargarListadoGeneral();
+                }).catch(e => alert("Error al actualizar la base de datos: " + e));
+
+            }).catch(e => alert("Error al leer la base de datos: " + e));
         } else {
             alert("Operación cancelada.");
         }
@@ -581,6 +704,118 @@ function adminCargarListadoGeneral() {
             alert("Operación cancelada.");
         }
     }
+
+    // --- NUEVAS FUNCIONES: CONTROL DE BOLETOS DE EVENTO ---
+    function adminCargarBoletosEvento() {
+        const evento = document.getElementById("select-evento-boletos").value;
+        const contenedor = document.getElementById("boletos-lista-container");
+        if (!evento) return alert("Selecciona un evento de la lista.");
+
+        contenedor.innerHTML = "<p style='color: #a5b4fc;'>Cargando base de datos del evento...</p>";
+        db.ref(evento).once('value').then(snap => {
+            if (!snap.exists()) {
+                contenedor.innerHTML = "<p style='color: #f87171;'>No hay boletos registrados para este evento.</p>";
+                return;
+            }
+            
+            let html = `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:10px;">
+                <strong style="color:#818cf8;">Lista Detallada de Boletos</strong>
+                <button class="btn-danger" style="padding: 6px 12px; font-size: 0.75rem;" onclick="adminReiniciarBoletoMasivo('${evento}')">⚠️ Reiniciar TODOS a 0</button>
+            </div>
+            <div style="max-height: 350px; overflow-y: auto; border: 1px solid #3730a3; padding: 10px; border-radius: 8px; background: #1e1b4b;">
+            <table style="width:100%; border-collapse: collapse; font-size: 0.8rem; text-align: left;">
+                <thead>
+                    <tr style="border-bottom: 1px solid #4f46e5; color: #a5b4fc;">
+                        <th style="padding: 8px; position:sticky; top:0; background:#1e1b4b; z-index:1;">Código</th>
+                        <th style="padding: 8px; position:sticky; top:0; background:#1e1b4b; z-index:1;">Estado</th>
+                        <th style="padding: 8px; position:sticky; top:0; background:#1e1b4b; z-index:1;">Hora Ingreso</th>
+                        <th style="padding: 8px; position:sticky; top:0; background:#1e1b4b; z-index:1;">Acción</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+            
+            let countUsados = 0;
+            let countTotal = 0;
+
+            snap.forEach(child => {
+                countTotal++;
+                const data = child.val();
+                const codigo = child.key;
+                const usado = data.usado;
+                const hora = data.fechaIngreso || "-";
+                
+                if(usado) countUsados++;
+
+                let estadoHtml = usado ? `<span style="color:#f87171; font-weight:bold;">Usado 🔴</span>` : `<span style="color:#4ade80;">Libre 🟢</span>`;
+                
+                html += `<tr style="border-bottom: 1px solid #312e81;">
+                    <td style="padding: 8px; font-family: monospace; color:#e0e7ff;">${codigo}</td>
+                    <td style="padding: 8px;">${estadoHtml}</td>
+                    <td style="padding: 8px; color: #94a3b8;">${hora}</td>
+                    <td style="padding: 8px;">
+                        ${usado ? `<button style="background:#dc2626; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-weight:bold;" onclick="adminReiniciarBoletoIndividual('${evento}', '${codigo}')">Resetear</button>` : `<span style="color:#475569;">-</span>`}
+                    </td>
+                </tr>`;
+            });
+
+            let porcentaje = Math.round((countUsados/countTotal)*100);
+            html += `</tbody></table></div>`;
+            html = `<div style="background:#3730a3; color:white; padding:10px; border-radius:8px; margin-bottom:15px; font-weight:bold;">📊 Progreso: ${countUsados} de ${countTotal} boletos escaneados (${porcentaje}%)</div>` + html;
+            contenedor.innerHTML = html;
+        });
+    }
+
+    function adminReiniciarBoletoIndividual(evento, codigo) {
+        if(confirm(`¿Estás seguro de restablecer el boleto ${codigo} como NO USADO?`)) {
+            db.ref(`${evento}/${codigo}`).update({ usado: false, fechaIngreso: null }).then(() => {
+                adminCargarBoletosEvento(); // Recargar la tabla
+            });
+        }
+    }
+
+    function adminReiniciarBoletoMasivo(evento) {
+        if(confirm(`⚠️ PELIGRO: Vas a reiniciar TODOS los boletos del evento ${evento.toUpperCase()} dejándolos en cero (NO USADOS). ¿Estás totalmente seguro?`)) {
+            db.ref(evento).once('value').then(snap => {
+                const updates = {};
+                snap.forEach(child => {
+                    updates[`${evento}/${child.key}/usado`] = false;
+                    updates[`${evento}/${child.key}/fechaIngreso`] = null;
+                });
+                db.ref().update(updates).then(() => {
+                    alert(`✅ Todos los boletos de ${evento.toUpperCase()} han sido reseteados.`);
+                    adminCargarBoletosEvento();
+                });
+            });
+        }
+    }
+
+    // --- NUEVAS FUNCIONES: ANUNCIO GLOBAL ---
+    function adminPublicarAnuncio() {
+        const mensaje = document.getElementById("anuncio-mensaje").value.trim();
+        const expiracion = document.getElementById("anuncio-expiracion").value;
+        
+        if(!mensaje || !expiracion) return alert("❌ Debes escribir un mensaje y fijar la fecha/hora de expiración.");
+
+        // Guardamos el anuncio en un nodo general llamado 'configuracion'
+        db.ref('configuracion/anuncioGlobal').set({
+            mensaje: mensaje,
+            expiracion: expiracion,
+            activo: true
+        }).then(() => {
+            alert("📢 ¡Anuncio publicado en vivo! Todos los alumnos lo verán al entrar a su portal.");
+        });
+    }
+
+    function adminBorrarAnuncio() {
+        if(confirm("¿Quitar el anuncio actual de las pantallas de los alumnos?")) {
+            db.ref('configuracion/anuncioGlobal/activo').set(false).then(() => {
+                alert("✅ Anuncio desactivado con éxito.");
+                document.getElementById("anuncio-mensaje").value = "";
+                document.getElementById("anuncio-expiracion").value = "";
+            });
+        }
+    }
+
 </script>
 </body>
 </html>
