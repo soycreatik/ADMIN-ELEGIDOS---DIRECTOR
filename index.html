@@ -13,7 +13,7 @@
 
     <style>
         body { background: #0f172a; color: #f8fafc; font-family: 'Inter', sans-serif; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
-        h1 { color: #fbbf24; text-transform: uppercase; font-weight: 800; letter-spacing: 2px; margin-bottom: 30px; text-align: center; }
+        h1 { color: #fbbf24; text-transform: uppercase; font-weight: 800; letter-spacing: 2px; margin-bottom: 20px; text-align: center; font-size: 1.5rem; }
         
         #login-admin { background: #1e293b; padding: 40px; border-radius: 16px; border: 1px solid #334155; text-align: center; }
         .input-admin { width: 100%; max-width: 300px; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: #fff; outline: none; }
@@ -28,6 +28,17 @@
         .btn-action { background: #2563eb; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
         .btn-danger { background: #dc2626; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
         table th, table td { border-bottom: 1px solid #334155; }
+
+        /* Estilos de Pestañas */
+        .admin-nav { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-bottom: 25px; background: #1e293b; padding: 10px; border-radius: 12px; border: 1px solid #334155; }
+        .admin-tab-btn { background: transparent; color: #94a3b8; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 0.85rem; }
+        .admin-tab-btn:hover { background: #334155; color: #fff; }
+        .admin-tab-btn.active { background: #9333ea; color: #fff; }
+        
+        .admin-section { display: none; animation: fadeIn 0.3s ease; }
+        .admin-section.active { display: block; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
@@ -40,29 +51,218 @@
     </div>
 
     <div id="dashboard-admin">
-        <h1>⚙️ Consola de Administración ELEGIDOS</h1>
+        <h1>⚙️ Consola de Administración</h1>
 
-        <!-- SECCIÓN: REGISTRAR NUEVO ESTUDIANTE (CÓDIGO AUTOMÁTICO) -->
-        <div class="card" style="border-color: #10b981; background: #064e3b;">
-            <h3 style="color: #34d399; border-color: #065f46;">Registrar Nuevo Estudiante (Código Automático)</h3>
-            <p style="font-size: 0.85rem; color: #d1fae5;">El sistema buscará el último código y asignará el siguiente disponible. Tú solo escribe el nombre.</p>
-            <div class="form-group">
-                <input type="text" id="nuevo-nombre" placeholder="Nombre Completo del Alumno">
-                <input type="text" id="nuevo-password" placeholder="Contraseña (opcional, por defecto ELEGIDOS26)">
-            </div>
-            <button class="btn-action" style="background: #059669; width: 100%;" onclick="adminCrearEstudianteAuto()">✨ Generar Código y Registrar Estudiante</button>
+        <!-- MENÚ DE NAVEGACIÓN -->
+        <div class="admin-nav">
+            <button class="admin-tab-btn active" onclick="cambiarSeccionAdmin('alumnos', this)">👤 Gestión de Alumnos</button>
+            <button class="admin-tab-btn" onclick="cambiarSeccionAdmin('asistencia', this)">📅 Asistencia y Eventos</button>
+            <button class="admin-tab-btn" onclick="cambiarSeccionAdmin('permisos', this)">📝 Permisos Solicitados</button>
+            <button class="admin-tab-btn" onclick="cambiarSeccionAdmin('sistema', this)">🛠️ Sistema y Avisos</button>
         </div>
 
-       <!-- NUEVA SECCIÓN: CAMBIAR NOMBRE DE ESTUDIANTE -->
-        <div class="card" style="border-color: #f59e0b; background: #451a03;">
-            <h3 style="color: #fbbf24; border-color: #78350f;">Editar Nombre de Estudiante</h3>
-            <p style="font-size: 0.85rem; color: #fef3c7;">Corrige cualquier error ortográfico en el nombre de un alumno específico.</p>
-            <div class="form-group">
-                <input type="text" id="edit-nombre-codigo" placeholder="Código (Ej: CLASE-2026-001)">
-                <input type="text" id="edit-nombre-nuevo" placeholder="Nombre Correcto">
-                <button class="btn-action" style="background: #f59e0b; color: #451a03;" onclick="adminCambiarNombre()">✏️ Actualizar Nombre</button>
+        <!-- SECCIÓN 1: GESTIÓN DE ALUMNOS -->
+        <div id="sec-alumnos" class="admin-section active">
+            <!-- Listado General (Movido arriba para mejor visibilidad) -->
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #334155; padding-bottom: 10px;">
+                    <h3 style="margin: 0; border: none; padding: 0;">Listado General de Alumnos</h3>
+                    <button class="btn-action" style="background: #0284c7; padding: 6px 14px; font-size: 0.8rem;" onclick="adminCargarListadoGeneral()">🔄 Actualizar Listado</button>
+                </div>
+                <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 15px;">Consulta todos los códigos, nombres, contraseñas y total de asistencias acumuladas.</p>
+                <div id="tabla-alumnos-container" style="overflow-x: auto;">
+                    <p style="color: #94a3b8; font-style: italic;">Haz clic en "Actualizar Listado" para cargar los registros.</p>
+                </div>
+            </div>
+
+            <div class="card" style="border-color: #10b981; background: #064e3b;">
+                <h3 style="color: #34d399; border-color: #065f46;">Registrar Nuevo Estudiante (Código Automático)</h3>
+                <div class="form-group">
+                    <input type="text" id="nuevo-nombre" placeholder="Nombre Completo del Alumno">
+                    <input type="text" id="nuevo-password" placeholder="Contraseña (opcional, por defecto ELEGIDOS26)">
+                </div>
+                <button class="btn-action" style="background: #059669; width: 100%;" onclick="adminCrearEstudianteAuto()">✨ Generar Código y Registrar Estudiante</button>
+            </div>
+
+            <div class="card" style="border-color: #f59e0b; background: #451a03;">
+                <h3 style="color: #fbbf24; border-color: #78350f;">Editar Nombre de Estudiante</h3>
+                <div class="form-group">
+                    <input type="text" id="edit-nombre-codigo" placeholder="Código (Ej: CLASE-2026-001)">
+                    <input type="text" id="edit-nombre-nuevo" placeholder="Nombre Correcto">
+                    <button class="btn-action" style="background: #f59e0b; color: #451a03;" onclick="adminCambiarNombre()">✏️ Actualizar</button>
+                </div>
+            </div>
+
+            <div class="card" style="border-color: #ec4899; background: #500724;">
+                <h3 style="color: #f472b6; border-color: #831843;">🔍 Inspector y Reseteo de Perfil</h3>
+                <div class="form-group">
+                    <input type="text" id="inspector-codigo" placeholder="Código (Ej: CLASE-2026-001)">
+                    <button class="btn-action" style="background: #db2777; color: white;" onclick="adminInspeccionarPerfil()">👁️ Extraer Perfil</button>
+                </div>
+                <div id="inspector-resultado" style="margin-top: 15px; display: none; background: #831843; padding: 15px; border-radius: 12px; text-align: center;">
+                    <div id="inspector-foto-box" style="width: 100px; height: 100px; border-radius: 50%; border: 3px solid #fbcfe8; margin: 0 auto 15px auto; overflow: hidden; background: #000; display: flex; align-items: center; justify-content: center;">
+                        <img id="inspector-foto" src="" style="width: 100%; height: 100%; object-fit: cover; display: none;">
+                        <span id="inspector-nofoto" style="color: #f472b6; font-size: 0.75rem;">Sin foto</span>
+                    </div>
+                    <div style="color: #fbcfe8; font-size: 0.85rem; text-align: left; background: #4c0519; padding: 12px; border-radius: 8px; margin-bottom: 15px;">
+                        <strong>Nombre:</strong> <span id="inspector-nombre"></span><br>
+                        <hr style="border: 0; border-top: 1px solid #831843; margin: 8px 0;">
+                        <strong>Edad:</strong> <span id="inspector-edad"></span><br>
+                        <strong>Comunidad:</strong> <span id="inspector-comunidad"></span><br>
+                        <strong>Nivel:</strong> <span id="inspector-nivel"></span><br>
+                        <strong>Descripción:</strong> <span id="inspector-desc"></span>
+                    </div>
+                    <button class="btn-danger" style="background: #be123c; width: 100%;" onclick="adminBorrarPerfilInspector()">🗑️ Resetear (Borrar todo el perfil)</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Restablecer Contraseña de Estudiante</h3>
+                <div class="form-group">
+                    <input type="text" id="pass-codigo" placeholder="Código (Ej: CLASE-2026-001)">
+                    <input type="text" id="pass-nueva" placeholder="Nueva Contraseña (o dejar en blanco para ELEGIDOS26)">
+                    <button class="btn-action" onclick="adminCambiarPassword()">Guardar Clave</button>
+                </div>
             </div>
         </div>
+
+        <!-- SECCIÓN 2: ASISTENCIA Y EVENTOS -->
+        <div id="sec-asistencia" class="admin-section">
+            <div class="card" style="border-color: #d97706; background: #451a03;">
+                <h3 style="color: #fbbf24; border-color: #78350f;">Pase de Lista Masivo por Fecha</h3>
+                <div class="form-group">
+                    <input type="date" id="masivo-fecha" title="Selecciona fecha de la sesión">
+                    <button class="btn-action" style="background: #d97706;" onclick="adminCargarPaseMasivo()">📂 Cargar Lista para Pase</button>
+                </div>
+                <div id="masivo-lista-container" style="margin-top: 15px;"></div>
+            </div>
+
+            <div class="card">
+                <h3>Inyectar / Eliminar Asistencias (Historial Individual)</h3>
+                <div class="form-group">
+                    <input type="text" id="asist-codigo" placeholder="Código (Ej: CLASE-2026-050)">
+                    <input type="date" id="asist-fecha" title="Fecha exacta de la clase">
+                </div>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn-action" style="background: #16a34a;" onclick="adminModificarAsistencia('agregar')">Añadir Forzada</button>
+                    <button class="btn-action" style="background: #f97316;" onclick="adminModificarAsistencia('permiso')">Asignar Permiso</button>
+                    <button class="btn-danger" onclick="adminModificarAsistencia('eliminar')">Borrar Registro</button>
+                </div>
+            </div>
+
+            <div class="card" style="border-color: #6366f1; background: #312e81;">
+                <h3 style="color: #818cf8; border-color: #3730a3;">Control de Escaneo de Eventos (Boletos)</h3>
+                <div class="form-group">
+                    <select id="select-evento-boletos" class="input-admin" style="max-width: none;">
+                        <option value="" disabled selected>Selecciona un evento...</option>
+                        <option value="elegidos">MAHU FILMS</option>
+                        <option value="masterclass">DREAMEZ</option>
+                        <option value="festival">FESTIVAL CREATIVO</option>
+                    </select>
+                    <button class="btn-action" style="background: #4f46e5;" onclick="adminCargarBoletosEvento()">👁️ Ver Boletos</button>
+                </div>
+                <div id="boletos-lista-container" style="margin-top: 15px;"></div>
+            </div>
+
+            <div class="card" style="border-color: #ea580c; background: #431407;">
+                <h3 style="color: #fdba74; border-color: #9a3412;">Desvincular Boletos de Eventos</h3>
+                <div class="form-group">
+                    <input type="text" id="desvincular-codigo" placeholder="Código del Alumno">
+                    <button class="btn-action" style="background: #ea580c; color: white;" onclick="adminDesvincularBoletos()">✂️ Desvincular Todos</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- NUEVA SECCIÓN: BANDEJA DE PERMISOS DIGITALES -->
+        <div id="sec-permisos" class="admin-section">
+            <div class="card" style="border-color: #ea580c; background: #431407;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #78350f; padding-bottom: 10px;">
+                    <h3 style="color: #fdba74; margin: 0; border: none; padding: 0;">📥 Bandeja de Permisos y Justificantes</h3>
+                    <button class="btn-action" style="background: #ea580c; padding: 6px 14px; font-size: 0.8rem;" onclick="adminCargarPermisos()">🔄 Actualizar Bandeja</button>
+                </div>
+                <p style="font-size: 0.85rem; color: #ffedd5;">Aquí aparecen las solicitudes enviadas por los alumnos desde su portal. Puedes leer el motivo, ver la imagen adjunta (si enviaron) y borrar la solicitud para limpiar la bandeja una vez revisada.</p>
+                <div id="bandeja-permisos-container" style="margin-top: 15px;">
+                    <p style="color: #fdba74; font-style: italic;">Haz clic en "Actualizar Bandeja" para ver las solicitudes entrantes.</p>
+                </div>
+            </div>
+            
+            <!-- Modal invisible para ver la foto del permiso en grande -->
+            <div id="modal-foto-permiso" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.9); z-index: 9999; justify-content: center; align-items: center; flex-direction: column;">
+                <img id="img-modal-permiso" src="" style="max-width: 90%; max-height: 80%; border-radius: 12px; border: 2px solid #ea580c; box-shadow: 0 0 30px rgba(234, 88, 12, 0.5);">
+                <button class="btn-main" style="margin-top: 20px; background: #ea580c; max-width: 200px;" onclick="document.getElementById('modal-foto-permiso').style.display='none'">Cerrar Imagen</button>
+            </div>
+        </div>
+
+        <!-- SECCIÓN 3: SISTEMA Y AVISOS -->
+        <div id="sec-sistema" class="admin-section">
+            <div class="card" style="border-color: #14b8a6; background: #042f2e;">
+                <h3 style="color: #2dd4bf; border-color: #134e4a;">📢 Publicar Anuncio Global</h3>
+                <div class="form-group" style="flex-direction: column;">
+                    <textarea id="anuncio-mensaje" rows="3" placeholder="Escribe el anuncio aquí..." style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #0f766e; background: #022c22; color: #fff; resize: vertical; font-family: 'Inter', sans-serif; outline:none;"></textarea>
+                    <div style="display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
+                        <span style="color: #2dd4bf; align-self: center; font-size: 0.85rem;">Expira el:</span>
+                        <input type="datetime-local" id="anuncio-expiracion" style="flex: 1; min-width: 200px; background: #022c22; border-color: #0f766e; color: #fff;">
+                        <button class="btn-action" style="background: #0d9488;" onclick="adminPublicarAnuncio()">🚀 Publicar</button>
+                        <button class="btn-danger" onclick="adminBorrarAnuncio()">Desactivar Anuncio</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- NUEVA SECCIÓN: ASIGNAR TEMAS A LAS CLASES -->
+            <div class="card" style="border-color: #8b5cf6; background: #2e1065;">
+                <h3 style="color: #a78bfa; border-color: #4c1d95;">📚 Asignar Temas y Ponentes</h3>
+                <p style="font-size: 0.85rem; color: #ede9fe;">Escribe el tema que se impartirá y quién lo dará. Aparecerá automáticamente en el historial de los alumnos.</p>
+                <div class="form-group">
+                    <select id="select-clase-tema" class="input-admin" style="max-width: none;">
+                        <option value="" disabled selected>Selecciona la Clase...</option>
+                        <option value="27_1300">Inauguración Curso (27 Sept)</option>
+                        <option value="30_1500">Clase 5 (30 Sept)</option>
+                        <option value="04_1500">Masterclass I (4 Oct)</option>
+                        <option value="07_1500">Clase 7 (7 Oct)</option>
+                        <option value="11_1500">Clase 8 (11 Oct)</option>
+                        <option value="14_1500">Clase 9 (14 Oct)</option>
+                        <option value="18_1500">Clase 10 (18 Oct)</option>
+                        <option value="21_1500">Clase 11 (21 Oct)</option>
+                        <option value="25_1500">Masterclass II (25 Oct)</option>
+                        <option value="28_1500">Clase 13 (28 Oct)</option>
+                        <option value="01_1500">Clase 14 (1 Nov)</option>
+                        <option value="04_1500_2">Clase 15 (4 Nov)</option>
+                        <option value="08_1300">Festival Creativo (8 Nov)</option>
+                        <option value="11_1500_2">Clase 17 (11 Nov)</option>
+                        <option value="15_1500">Clase 18 (15 Nov)</option>
+                        <option value="18_1500_2">Clase 19 (18 Nov)</option>
+                        <option value="22_1500">Clase 20 (22 Nov)</option>
+                        <option value="25_1500_2">Clase 21 (25 Nov)</option>
+                        <option value="29_1500">Entrega de Proyectos (29 Nov)</option>
+                        <option value="02_1500">Clase 23 (2 Dic)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <input type="text" id="input-tema-texto" placeholder="Escribe el tema (Ej: Triángulo de Exposición)">
+                    <input type="text" id="input-ponente-texto" placeholder="Nombre del Ponente (Ej: Mahu Films)">
+                    <button class="btn-action" style="background: #7c3aed;" onclick="adminGuardarTema()">💾 Guardar Datos</button>
+                </div>
+            </div>
+
+            <div class="card" style="border-color: #0284c7; background: #082f49;">
+                <h3 style="color: #38bdf8; border-color: #0369a1;">Exportar Reportes de Asistencia</h3>
+                <button class="btn-action" style="background: #0284c7; width: 100%;" onclick="adminExportarCSV()">📥 Descargar Reporte Completo (CSV)</button>
+            </div>
+
+            <div class="card" style="border-color: #0284c7; background: #082f49;">
+                <h3 style="color: #38bdf8; border-color: #0369a1;">Reiniciar Asistencias para un Evento Específico</h3>
+                <div class="form-group">
+                    <input type="date" id="reset-fecha-evento" title="Fecha del evento a reiniciar">
+                    <button class="btn-action" style="background: #0284c7;" onclick="adminReiniciarAsistenciaPorFecha()">🗑️ Borrar Asistencia de esta Fecha</button>
+                </div>
+            </div>
+
+            <div class="card" style="border-color: #9333ea; background: #1e1b4b;">
+                <h3 style="color: #c084fc; border-color: #312e81;">Peligro: Reiniciar Todas las Asistencias</h3>
+                <button class="btn-danger" style="background: #9333ea; width: 100%;" onclick="adminReiniciarTodasAsistencias()">🔄 Reiniciar Asistencias de Todos los Apartados</button>
+            </div>
+        </div>
+    </div>
 
        <!-- SECCIÓN MAESTRA: INSPECTOR DE PERFILES -->
         <div class="card" style="border-color: #ec4899; background: #500724;">
@@ -535,17 +735,17 @@ const firebaseConfig = {
         }).catch(e => alert("Error: " + e));
     }
 
-function adminCargarListadoGeneral() {
+    function adminCargarListadoGeneral() {
         const contenedor = document.getElementById("tabla-alumnos-container");
         
         // Evita parpadeos mostrando "Cargando..." solo si el contenedor está vacío
-        if (contenedor.innerHTML.trim() === "") {
+        if (contenedor && contenedor.innerHTML.trim() === "") {
             contenedor.innerHTML = "<p style='color: #94a3b8;'>Cargando listado general...</p>";
         }
         
         db.ref('clase').off('value'); // Apaga escuchadores previos para no duplicar consultas
         db.ref('clase').on('value', snap => { // .on() mantiene la conexión en tiempo real
-
+            if(!contenedor) return;
 
             if(!snap.exists()) {
                 contenedor.innerHTML = "<p style='color: #94a3b8;'>No hay alumnos registrados en la base de datos.</p>";
@@ -806,7 +1006,7 @@ function adminCargarListadoGeneral() {
         });
     }
 
-   function adminReiniciarBoletoIndividual(evento, codigo) {
+    function adminReiniciarBoletoIndividual(evento, codigo) {
         if(confirm(`¿Estás seguro de restablecer el boleto ${codigo} como NO USADO?`)) {
             db.ref(`${evento}/${codigo}`).once('value').then(snap => {
                 if (snap.exists()) {
@@ -853,51 +1053,6 @@ function adminCargarListadoGeneral() {
         }
     }
 
-    function adminReiniciarBoletoMasivo(evento) {
-        if(confirm(`⚠️ PELIGRO: Vas a reiniciar TODOS los boletos del evento ${evento.toUpperCase()} dejándolos en cero (NO USADOS). ¿Estás totalmente seguro?`)) {
-            db.ref(evento).once('value').then(snap => {
-                const updates = {};
-                snap.forEach(child => {
-                    const dataBoleto = child.val();
-                    updates[`${evento}/${child.key}/usado`] = false;
-                    updates[`${evento}/${child.key}/fechaIngreso`] = null;
-                    
-                    if (dataBoleto.vinculado_a) {
-                        updates[`clase/${dataBoleto.vinculado_a}/asistencias/evento_${evento}`] = null;
-                        updates[`clase/${dataBoleto.vinculado_a}/boletos/${child.key}`] = null;
-                        updates[`clase/${dataBoleto.vinculado_a}/accesos_especiales/${evento}`] = null;
-                    }
-                });
-                db.ref().update(updates).then(() => {
-                    alert(`✅ Todos los boletos de ${evento.toUpperCase()} han sido reseteados y sus asistencias cruzadas eliminadas.`);
-                    adminCargarBoletosEvento();
-                });
-            });
-        }
-    }
-
-    function adminReiniciarBoletoMasivo(evento) {
-        if(confirm(`⚠️ PELIGRO: Vas a reiniciar TODOS los boletos del evento ${evento.toUpperCase()} dejándolos en cero (NO USADOS). ¿Estás totalmente seguro?`)) {
-            db.ref(evento).once('value').then(snap => {
-                const updates = {};
-                snap.forEach(child => {
-                    const dataBoleto = child.val();
-                    updates[`${evento}/${child.key}/usado`] = false;
-                    updates[`${evento}/${child.key}/fechaIngreso`] = null;
-                    
-                    // Si estaban vinculados a estudiantes, borrar las asistencias fantasmas
-                    if (dataBoleto.vinculado_a) {
-                        updates[`clase/${dataBoleto.vinculado_a}/asistencias/evento_${evento}`] = null;
-                    }
-                });
-                db.ref().update(updates).then(() => {
-                    alert(`✅ Todos los boletos de ${evento.toUpperCase()} han sido reseteados y sus asistencias cruzadas eliminadas.`);
-                    adminCargarBoletosEvento();
-                });
-            });
-        }
-    }
-
     // --- NUEVAS FUNCIONES: ANUNCIO GLOBAL ---
     function adminPublicarAnuncio() {
         const mensaje = document.getElementById("anuncio-mensaje").value.trim();
@@ -925,6 +1080,242 @@ function adminCargarListadoGeneral() {
             });
         }
     }
-</script>
-</body>
+
+    // Función para navegar entre las pestañas del Admin
+    function cambiarSeccionAdmin(idSeccion, boton) {
+        document.querySelectorAll('.admin-section').forEach(sec => sec.classList.remove('active'));
+        document.querySelectorAll('.admin-tab-btn').forEach(btn => btn.classList.remove('active'));
+        
+        document.getElementById('sec-' + idSeccion).classList.add('active');
+        boton.classList.add('active');
+    }
+
+    function adminGuardarTema() {
+        const claseId = document.getElementById("select-clase-tema").value;
+        const temaTexto = document.getElementById("input-tema-texto").value.trim();
+        const ponenteTexto = document.getElementById("input-ponente-texto").value.trim();
+
+        if (!claseId) return alert("Selecciona una clase primero.");
+
+        const updates = {};
+        updates[`configuracion/temasClases/${claseId}`] = temaTexto;
+        // Solo guardamos el ponente si se ingresó algo, de lo contrario dejamos que use el predeterminado
+        if(ponenteTexto) {
+            updates[`configuracion/ponentesClases/${claseId}`] = ponenteTexto;
+        } else {
+            // Si lo dejó en blanco, borramos cualquier ponente forzado para que vuelva al original
+            updates[`configuracion/ponentesClases/${claseId}`] = null;
+        }
+
+        db.ref().update(updates).then(() => {
+            alert(`✅ Datos de la clase guardados exitosamente.`);
+            document.getElementById("input-tema-texto").value = "";
+            document.getElementById("input-ponente-texto").value = "";
+        }).catch(e => alert("Error al guardar: " + e));
+    }
+
+    // --- RESTAURACIÓN DE LA FUNCIÓN DE LISTADO GENERAL ---
+    function adminCargarListadoGeneral() {
+        const contenedor = document.getElementById("tabla-alumnos-container");
+        
+        if (contenedor && contenedor.innerHTML.trim() === "") {
+            contenedor.innerHTML = "<p style='color: #94a3b8;'>Cargando listado general...</p>";
+        }
+        
+        db.ref('clase').off('value'); 
+        db.ref('clase').on('value', snap => { 
+            if(!contenedor) return;
+
+            if(!snap.exists()) {
+                contenedor.innerHTML = "<p style='color: #94a3b8;'>No hay alumnos registrados en la base de datos.</p>";
+                return;
+            }
+
+            let totalAlumnos = 0;
+            let perfilesCreados = 0;
+            let filasTablaHtml = "";
+
+            snap.forEach(child => {
+                totalAlumnos++;
+                const data = child.val();
+                const codigo = child.key;
+                const nombre = data.nombre || "Sin nombre";
+                const pass = data.password || "ELEGIDOS26";
+                const totalAsist = data.asistencias ? Object.keys(data.asistencias).length : 0;
+                
+                let estadoPerfil = "<span style='color: #f87171;'>Pendiente ❌</span>";
+                let datosPerfilHtml = "<span style='color: #64748b;'>Sin datos</span>";
+                let fotoHtml = `<div style="width: 40px; height: 40px; border-radius: 8px; background: #334155; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; color: #94a3b8;">N/A</div>`;
+                
+                if (data.perfil && data.perfil.edad) {
+                    perfilesCreados++;
+                    estadoPerfil = "<span style='color: #4ade80;'>Completado ✅</span>";
+                    
+                    const pEdad = data.perfil.edad || "-";
+                    const pComunidad = data.perfil.comunidad || "-";
+                    const pNivel = data.perfil.nivel || "-";
+                    
+                    datosPerfilHtml = `
+                        <div style="font-size: 0.75rem; color: #cbd5e1; line-height: 1.4;">
+                            <strong>Edad:</strong> ${pEdad} <br>
+                            <strong>Zona:</strong> ${pComunidad}<br>
+                            <strong>Nivel:</strong> ${pNivel}
+                        </div>
+                    `;
+
+                    if (data.perfil.foto) {
+                        fotoHtml = `<img src="${data.perfil.foto}" style="width: 40px; height: 40px; border-radius: 8px; object-fit: cover; border: 1px solid #4ade80;">`;
+                    }
+                }
+
+                filasTablaHtml += `<tr style="border-bottom: 1px solid #334155;">
+                    <td style="padding: 10px; font-family: monospace; color: #fbbf24; font-weight: bold;">${codigo}</td>
+                    <td style="padding: 10px; text-align: center;">${fotoHtml}</td>
+                    <td style="padding: 10px; text-transform: capitalize;">${nombre}</td>
+                    <td style="padding: 10px; text-align: center; font-weight: bold; color: #4ade80;">${totalAsist}</td>
+                    <td style="padding: 10px; font-family: monospace; color: #cbd5e1;">${pass}</td>
+                    <td style="padding: 10px; text-align: center;">${estadoPerfil}</td>
+                    <td style="padding: 10px;">${datosPerfilHtml}</td>
+                    <td style="padding: 10px; text-align: center; display: flex; gap: 6px; justify-content: center; flex-wrap: wrap;">
+                        <button class="btn-action" style="padding: 5px 10px; font-size: 0.75rem;" onclick="rellenarEditar('${codigo}')">Editar Clave</button>
+                        <button class="btn-danger" style="padding: 5px 10px; font-size: 0.75rem;" onclick="adminBorrarEstudiante('${codigo}')">Borrar</button>
+                    </td>
+                </tr>`;
+            });
+
+            const perfilesPendientes = totalAlumnos - perfilesCreados;
+            const porcentajeCompletado = totalAlumnos > 0 ? Math.round((perfilesCreados / totalAlumnos) * 100) : 0;
+
+            let html = `
+            <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 150px; background: #0f172a; border: 1px solid #334155; padding: 15px; border-radius: 12px; text-align: center;">
+                    <span style="color: #94a3b8; font-size: 0.75rem; text-transform: uppercase; font-weight: bold;">Total Alumnos</span>
+                    <h2 style="color: #38bdf8; margin: 5px 0 0 0; font-size: 1.8rem;">${totalAlumnos}</h2>
+                </div>
+                <div style="flex: 1; min-width: 150px; background: #0f172a; border: 1px solid #10b981; padding: 15px; border-radius: 12px; text-align: center;">
+                    <span style="color: #34d399; font-size: 0.75rem; text-transform: uppercase; font-weight: bold;">Perfiles Creados</span>
+                    <h2 style="color: #4ade80; margin: 5px 0 0 0; font-size: 1.8rem;">${perfilesCreados} <small style="font-size: 0.9rem; color: #94a3b8;">(${porcentajeCompletado}%)</small></h2>
+                </div>
+                <div style="flex: 1; min-width: 150px; background: #0f172a; border: 1px solid #ef4444; padding: 15px; border-radius: 12px; text-align: center;">
+                    <span style="color: #f87171; font-size: 0.75rem; text-transform: uppercase; font-weight: bold;">Perfiles Pendientes</span>
+                    <h2 style="color: #f87171; margin: 5px 0 0 0; font-size: 1.8rem;">${perfilesPendientes}</h2>
+                </div>
+            </div>
+
+            <table style="width:100%; border-collapse: collapse; font-size: 0.85rem; text-align: left;">
+                <thead>
+                    <tr style="border-bottom: 2px solid #334155; color: #38bdf8;">
+                        <th style="padding: 10px;">Código</th>
+                        <th style="padding: 10px; text-align: center;">Foto</th>
+                        <th style="padding: 10px;">Nombre</th>
+                        <th style="padding: 10px; text-align: center;">Asistencias</th>
+                        <th style="padding: 10px;">Contraseña</th>
+                        <th style="padding: 10px; text-align: center;">Estado Perfil</th>
+                        <th style="padding: 10px;">Datos Guardados</th>
+                        <th style="padding: 10px; text-align: center;">Acciones Rápidas</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${filasTablaHtml}
+                </tbody>
+            </table>`;
+
+            contenedor.innerHTML = html;
+        });
+    }
+
+// --- LÓGICA DE LA BANDEJA DE PERMISOS ---
+    function adminCargarPermisos() {
+        const contenedor = document.getElementById("bandeja-permisos-container");
+        contenedor.innerHTML = "<p style='color: #fdba74;'>Buscando permisos recientes...</p>";
+        
+        db.ref('clase').once('value').then(snap => {
+            if(!snap.exists()) {
+                contenedor.innerHTML = "<p style='color: #fdba74;'>No hay alumnos registrados.</p>";
+                return;
+            }
+
+            let html = "";
+            let contadorPermisos = 0;
+
+            snap.forEach(child => {
+                const data = child.val();
+                const codigo = child.key;
+                const nombre = data.nombre || "Sin nombre";
+                
+                // Si el alumno tiene la carpeta de 'permisos_solicitados'
+                if (data.permisos_solicitados) {
+                    Object.keys(data.permisos_solicitados).forEach(fecha => {
+                        contadorPermisos++;
+                        const permiso = data.permisos_solicitados[fecha];
+                        
+                        // Formatear la fecha de envío (timestamp)
+                        let fechaEnvio = "Desconocida";
+                        if(permiso.timestamp) {
+                            const d = new Date(permiso.timestamp);
+                            fechaEnvio = d.toLocaleDateString() + " " + d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                        }
+
+                        // Botón para ver foto si existe
+                        let btnFoto = `<span style="color: #94a3b8; font-size: 0.75rem;">Sin imagen adjunta</span>`;
+                        if (permiso.foto && permiso.foto !== "") {
+                            btnFoto = `<button class="btn-action" style="background: #10b981; padding: 4px 8px; font-size: 0.75rem;" onclick="adminVerFotoPermiso('${permiso.foto}')">📸 Ver Justificante</button>`;
+                        }
+
+                        html += `
+                        <div style="background: #291504; border: 1px solid #78350f; border-radius: 12px; padding: 15px; margin-bottom: 15px;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid #451a03; padding-bottom: 10px; margin-bottom: 10px;">
+                                <div>
+                                    <strong style="color: #fdba74; font-size: 1.1rem; text-transform: capitalize;">${nombre}</strong>
+                                    <span style="font-family: monospace; color: #94a3b8; font-size: 0.8rem; margin-left: 10px;">(${codigo})</span>
+                                    <br>
+                                    <span style="color: #fef3c7; font-size: 0.85rem; background: #ea580c; padding: 2px 8px; border-radius: 4px; margin-top: 5px; display: inline-block;">Falta programada para: ${fecha}</span>
+                                </div>
+                                <div style="text-align: right;">
+                                    <span style="display: block; font-size: 0.7rem; color: #94a3b8; margin-bottom: 8px;">Enviado: ${fechaEnvio}</span>
+                                    <button class="btn-danger" style="padding: 6px 12px; font-size: 0.75rem;" onclick="adminBorrarPermisoBandeja('${codigo}', '${fecha}')">🗑️ Borrar Solicitud</button>
+                                </div>
+                            </div>
+                            <div style="font-size: 0.9rem; color: #ffedd5; line-height: 1.5; margin-bottom: 10px;">
+                                <strong>Motivo:</strong> ${permiso.razon}
+                            </div>
+                            <div>
+                                ${btnFoto}
+                            </div>
+                        </div>`;
+                    });
+                }
+            });
+
+            if (contadorPermisos === 0) {
+                contenedor.innerHTML = "<p style='color: #4ade80; font-weight: bold; text-align: center; padding: 20px; background: #064e3b; border-radius: 12px;'>🎉 ¡Bandeja limpia! No hay permisos pendientes de revisión.</p>";
+            } else {
+                contenedor.innerHTML = `<p style="color: #fdba74; margin-bottom: 15px; font-weight: bold;">Se encontraron ${contadorPermisos} solicitudes:</p>` + html;
+            }
+        });
+    }
+
+    function adminVerFotoPermiso(base64Image) {
+        document.getElementById("img-modal-permiso").src = base64Image;
+        document.getElementById("modal-foto-permiso").style.display = "flex";
+    }
+
+    function adminBorrarPermisoBandeja(codigo, fecha) {
+        if(confirm(`⚠️ ATENCIÓN: Vas a rechazar/eliminar el permiso del alumno ${codigo} para la fecha ${fecha}.\n\nEsto borrará la solicitud de tu bandeja Y TAMBIÉN quitará el justificante de su historial de clases, volviendo a marcarlo como "Ausente" o "Próximamente". ¿Estás seguro?`)) {
+            
+            const updates = {};
+            // 1. Borramos la solicitud de la bandeja del Admin
+            updates[`clase/${codigo}/permisos_solicitados/${fecha}`] = null;
+            // 2. Borramos la "Asistencia de Permiso" del historial del estudiante
+            updates[`clase/${codigo}/asistencias/${fecha}`] = null;
+
+            db.ref().update(updates).then(() => {
+                alert("✅ Solicitud rechazada y permiso eliminado del historial del alumno.");
+                adminCargarPermisos(); // Recargar la bandeja
+                adminCargarListadoGeneral(); // Actualizar el listado por si acaso
+            }).catch(e => alert("Error al borrar: " + e));
+        }
+    }
+
+</script></body>
 </html>
