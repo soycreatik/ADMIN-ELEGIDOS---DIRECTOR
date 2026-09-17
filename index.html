@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel de Administración | ELEGIDOS</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <title>ELEGIDOS - Validador Universal en Tiempo Real</title>
+    
+    <link rel="icon" type="image/png" href="LOGOS/ELEGIDOS VER.2.png">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cinzel:wght@700;900&family=Inter:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
@@ -12,188 +14,224 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 
     <style>
-        body { background: #0f172a; color: #f8fafc; font-family: 'Inter', sans-serif; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
-        h1 { color: #fbbf24; text-transform: uppercase; font-weight: 800; letter-spacing: 2px; margin-bottom: 30px; text-align: center; }
-        
-        #login-admin { background: #1e293b; padding: 40px; border-radius: 16px; border: 1px solid #334155; text-align: center; }
-        .input-admin { width: 100%; max-width: 300px; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: #fff; outline: none; }
-        .btn-admin { background: #9333ea; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; width: 100%; max-width: 300px; }
-        .btn-admin:hover { background: #7e22ce; }
+        :root {
+            --bg-color: #0f0f13;
+            --card-bg: rgba(20, 20, 25, 0.95); 
+            --card-border: rgba(227, 218, 201, 0.15); 
+            --text-main: #E3DAC9; 
+            --text-muted: #9c978e;
+            --accent-color: #D5C7A3; 
+            --status-valid: rgba(35, 134, 54, 0.95);
+            --status-used: rgba(217, 119, 6, 0.95);
+            --status-invalid: rgba(218, 54, 51, 0.95);
+        }
 
-        #dashboard-admin { display: none; width: 100%; max-width: 900px; }
-        .card { background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 25px; margin-bottom: 20px; }
-        .card h3 { margin-top: 0; color: #38bdf8; font-size: 1.2rem; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 20px; }
-        .form-group { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
-        .form-group input { flex: 1; min-width: 200px; padding: 10px; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: #fff; }
-        .btn-action { background: #2563eb; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .btn-danger { background: #dc2626; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        table th, table td { border-bottom: 1px solid #334155; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+        }
+
+        .connection-indicator {
+            position: fixed; top: 15px; right: 15px;
+            background: #1a1a24;
+            border: 1px solid rgba(227, 218, 201, 0.2); border-radius: 50px;
+            padding: 6px 12px; font-size: 0.8rem; font-weight: bold; z-index: 9999;
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        .stats-panel {
+            position: fixed; top: 60px; right: 15px;
+            background: #1a1a24;
+            border: 1px solid rgba(227, 218, 201, 0.2); border-radius: 12px;
+            padding: 15px; font-size: 0.75rem; z-index: 9999;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5); pointer-events: none;
+            min-width: 160px;
+        }
+
+        .stats-panel h4 { color: var(--accent-color); margin-bottom: 8px; font-size: 0.85rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 4px; letter-spacing: 1px; text-transform: uppercase; }
+        .stats-panel .stat-row { display: flex; justify-content: space-between; margin-bottom: 6px; gap: 15px; color: var(--text-main); }
+        .stats-panel .stat-label { color: var(--text-muted); }
+        
+        .test-mode-toggle {
+            position: fixed; bottom: 15px; left: 15px;
+            background: #1a1a24;
+            border: 1px solid rgba(227, 218, 201, 0.2); border-radius: 8px;
+            padding: 6px 10px; font-size: 0.75rem; z-index: 9999;
+            display: flex; flex-direction: column; align-items: flex-start; gap: 6px; color: var(--text-muted); pointer-events: auto;
+        }
+        .test-mode-controls { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+        #test-date-input { background: #000; color: var(--text-main); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; padding: 4px; display: none; }
+
+        .live-feed {
+            position: fixed; bottom: 60px; left: 15px;
+            display: flex; flex-direction: column-reverse; gap: 6px;
+            z-index: 9999; pointer-events: none;
+            max-height: 200px; overflow: hidden;
+        }
+
+        .feed-item {
+            background: #1a1a24; border: 1px solid rgba(227, 218, 201, 0.3);
+            border-left: 4px solid var(--accent-color); border-radius: 6px;
+            padding: 8px 12px; font-size: 0.75rem;
+            animation: slideIn 0.2s ease-out forwards, fadeOut 0.3s ease-in 1.5s forwards;
+            color: #fff;
+        }
+        .feed-item strong { display: block; font-size: 0.85rem; color: var(--accent-color); margin-bottom: 2px; }
+
+        @keyframes slideIn { from { transform: translateX(-100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; transform: translateY(-10px); } }
+
+        .glass-card {
+            width: 100%; max-width: 440px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px; padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            text-align: center; z-index: 2; margin-top: 10px;
+        }
+
+        .badge {
+            background: rgba(227, 218, 201, 0.1); color: var(--accent-color);
+            padding: 4px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: 700;
+            display: inline-block; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;
+            border: 1px solid rgba(227, 218, 201, 0.2);
+        }
+
+        h2 { font-size: 1.6rem; font-weight: 900; letter-spacing: 1px; color: var(--text-main); text-transform: uppercase; }
+        .subtitle { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px; }
+
+        #reader { width: 100%; border-radius: 12px; overflow: hidden; border: 1px solid var(--card-border); background: #000; }
+
+        .result-box {
+            margin-top: 15px; padding: 15px; border-radius: 10px; font-size: 1rem; font-weight: 700;
+            display: none; border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .valid { background-color: var(--status-valid); color: #fff; }
+        .invalid { background-color: var(--status-invalid); color: #fff; }
+        .used { background-color: var(--status-used); color: #fff; }
+
+        .btn-group { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
+        .pill-btn {
+            background: var(--accent-color); color: #000; padding: 10px 20px; border-radius: 50px;
+            font-weight: 700; border: none; cursor: pointer; font-size: 0.85rem; text-align: center;
+        }
+        .pill-btn:active { background: #E3DAC9; transform: translateY(1px); }
+
+        .select-btn {
+            background: transparent; border: 1px solid rgba(227, 218, 201, 0.3); color: var(--text-main);
+            padding: 10px 20px; border-radius: 50px; font-weight: 700; cursor: pointer;
+            font-size: 0.85rem; text-align: center; appearance: none;
+            outline: none; font-family: 'Inter', sans-serif;
+        }
+        .select-btn option { background: #000; color: #fff; }
+
+        .btn-reset { background: transparent; color: var(--text-muted); border: none; font-size: 0.75rem; margin-top: 10px; cursor: pointer; }
+        .btn-reset:active { color: var(--text-main); }
     </style>
+    <script src="https://unpkg.com/html5-qrcode"></script>
 </head>
 <body>
 
-    <div id="login-admin">
-        <h2 style="color: #fff; margin-bottom: 5px;">Acceso Restringido</h2>
-        <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 20px;">Solo para administración general</p>
-        <input type="password" id="master-pass" class="input-admin" placeholder="Contraseña Maestra">
-        <button class="btn-admin" onclick="validarAdmin()">Ingresar al Panel</button>
+    <div class="connection-indicator" id="connection-indicator">🟠 CONECTANDO...</div>
+
+    <div class="stats-panel" id="stats-panel-container">
+        <h4>ASISTENCIA HOY</h4>
+        <div class="stat-row" id="row-clase"><span class="stat-label">Clase:</span> <strong id="stat-clase">0/0 (0%)</strong></div>
+        <div class="stat-row" id="row-elegidos" style="display: none;"><span class="stat-label">MAHU FILMS:</span> <strong id="stat-elegidos">0/0 (0%)</strong></div>
+        <div class="stat-row" id="row-master" style="display: none;"><span class="stat-label">DREAMEZ:</span> <strong id="stat-master">0/0 (0%)</strong></div>
+        <div class="stat-row" id="row-festival" style="display: none;"><span class="stat-label">FESTIVAL:</span> <strong id="stat-festival">0/0 (0%)</strong></div>
     </div>
 
-    <div id="dashboard-admin">
-        <h1>⚙️ Consola de Administración ELEGIDOS</h1>
+    <div class="live-feed" id="live-feed"></div>
 
-        <!-- SECCIÓN: REGISTRAR NUEVO ESTUDIANTE (CÓDIGO AUTOMÁTICO) -->
-        <div class="card" style="border-color: #10b981; background: #064e3b;">
-            <h3 style="color: #34d399; border-color: #065f46;">Registrar Nuevo Estudiante (Código Automático)</h3>
-            <p style="font-size: 0.85rem; color: #d1fae5;">El sistema buscará el último código y asignará el siguiente disponible. Tú solo escribe el nombre.</p>
-            <div class="form-group">
-                <input type="text" id="nuevo-nombre" placeholder="Nombre Completo del Alumno">
-                <input type="text" id="nuevo-password" placeholder="Contraseña (opcional, por defecto ELEGIDOS26)">
-            </div>
-            <button class="btn-action" style="background: #059669; width: 100%;" onclick="adminCrearEstudianteAuto()">✨ Generar Código y Registrar Estudiante</button>
+    <div class="test-mode-toggle">
+        <div class="test-mode-controls">
+            <input type="checkbox" id="test-mode-checkbox" onchange="toggleDateInput()">
+            <label for="test-mode-checkbox" style="cursor: pointer;">Modo Prueba</label>
         </div>
-
-       <!-- NUEVA SECCIÓN: CAMBIAR NOMBRE DE ESTUDIANTE -->
-        <div class="card" style="border-color: #f59e0b; background: #451a03;">
-            <h3 style="color: #fbbf24; border-color: #78350f;">Editar Nombre de Estudiante</h3>
-            <p style="font-size: 0.85rem; color: #fef3c7;">Corrige cualquier error ortográfico en el nombre de un alumno específico.</p>
-            <div class="form-group">
-                <input type="text" id="edit-nombre-codigo" placeholder="Código (Ej: CLASE-2026-001)">
-                <input type="text" id="edit-nombre-nuevo" placeholder="Nombre Correcto">
-                <button class="btn-action" style="background: #f59e0b; color: #451a03;" onclick="adminCambiarNombre()">✏️ Actualizar Nombre</button>
-            </div>
-        </div>
-
-        <!-- NUEVA SECCIÓN: RESETEAR Y BORRAR PERFIL DE ESTUDIANTE -->
-        <div class="card" style="border-color: #be123c; background: #4c0519;">
-            <h3 style="color: #fda4af; border-color: #881337;">Resetear y Borrar Perfil de Estudiante</h3>
-            <p style="font-size: 0.85rem; color: #ffe4e6;">Borra por completo la información del perfil (edad, comunidad, nivel, descripción) dejándolo en blanco para que el alumno lo llene desde cero.</p>
-            <div class="form-group">
-                <input type="text" id="reset-perfil-codigo" placeholder="Código (Ej: CLASE-2026-001)">
-                <button class="btn-action" style="background: #e11d48; color: white;" onclick="adminBorrarPerfilCompleto()">🧹 Borrar Perfil Completo</button>
-            </div>
-        </div>
-
-<!-- NUEVA SECCIÓN: DESVINCULAR BOLETOS DE EVENTOS -->
-        <div class="card" style="border-color: #ea580c; background: #431407;">
-            <h3 style="color: #fdba74; border-color: #9a3412;">Desvincular Boletos de Eventos</h3>
-            <p style="font-size: 0.85rem; color: #ffedd5;">Si un alumno vinculó un boleto equivocado, bórralo de su perfil para que el ticket vuelva a quedar "libre" y el estudiante pueda registrar el correcto.</p>
-            <div class="form-group">
-                <input type="text" id="desvincular-codigo" placeholder="Código del Alumno (Ej: CLASE-2026-001)">
-                <button class="btn-action" style="background: #ea580c; color: white;" onclick="adminDesvincularBoletos()">✂️ Desvincular Todos sus Boletos</button>
-            </div>
-        </div>
-
-        <!-- SECCIÓN 1: GESTIÓN DE CONTRASEÑAS -->
-        <div class="card">
-            <h3>Restablecer Contraseña de Estudiante</h3>
-            <p style="font-size: 0.85rem; color: #94a3b8;">Si un alumno no puede entrar, cámbiale la clave manualmente aquí.</p>
-            <div class="form-group">
-                <input type="text" id="pass-codigo" placeholder="Código (Ej: CLASE-2026-001)">
-                <input type="text" id="pass-nueva" placeholder="Nueva Contraseña (o dejar en blanco para ELEGIDOS26)">
-                <button class="btn-action" onclick="adminCambiarPassword()">Guardar Clave</button>
-            </div>
-        </div>
-
-        <!-- SECCIÓN 2: ASISTENCIA MANUAL Y CORRECCIONES -->
-        <div class="card">
-            <h3>Inyectar / Eliminar Asistencias (Historial Individual)</h3>
-            <p style="font-size: 0.85rem; color: #94a3b8;">Permite forzar asistencias olvidadas o borrar registros erróneos pasados. Saltando todas las reglas de horario.</p>
-            <div class="form-group">
-                <input type="text" id="asist-codigo" placeholder="Código (Ej: CLASE-2026-050)">
-                <input type="date" id="asist-fecha" title="Fecha exacta de la clase">
-            </div>
-            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                <button class="btn-action" style="background: #16a34a;" onclick="adminModificarAsistencia('agregar')">Añadir Asistencia Forzada</button>
-                <button class="btn-action" style="background: #f97316;" onclick="adminModificarAsistencia('permiso')">Asignar Permiso</button>
-                <button class="btn-danger" onclick="adminModificarAsistencia('eliminar')">Borrar Registro</button>
-            </div>
-        </div>
-
-        <!-- SECCIÓN: PASE DE ASISTENCIA MASIVO POR FECHA -->
-        <div class="card" style="border-color: #d97706; background: #451a03;">
-            <h3 style="color: #fbbf24; border-color: #78350f;">Pase de Lista Masivo por Fecha</h3>
-            <p style="font-size: 0.85rem; color: #fef3c7;">Selecciona una fecha y marca o desmarca rápidamente la asistencia de todos los alumnos de un solo vistazo.</p>
-            <div class="form-group">
-                <input type="date" id="masivo-fecha" title="Selecciona fecha de la sesión">
-                <button class="btn-action" style="background: #d97706;" onclick="adminCargarPaseMasivo()">📂 Cargar Lista para Pase</button>
-            </div>
+        <input type="date" id="test-date-input" title="Selecciona la fecha a simular">
+    </div>
+    <script>
+        function toggleDateInput() {
+            const cb = document.getElementById("test-mode-checkbox");
+            const dateInput = document.getElementById("test-date-input");
+            dateInput.style.display = cb.checked ? "block" : "none";
             
-<div id="masivo-lista-container" style="margin-top: 15px;"></div>
+            // Si lo activan y no hay fecha, poner la de hoy por defecto
+            if (cb.checked && !dateInput.value) {
+                const tzOffset = (new Date()).getTimezoneOffset() * 60000;
+                const localISOTime = (new Date(Date.now() - tzOffset)).toISOString().split('T')[0];
+                dateInput.value = localISOTime;
+            }
+        }
+    </script>
+
+    <div class="glass-card">
+            
+<div class="badge" id="badge-mode">Escáner Universal</div>
+            <h2 style="font-size: 2.5rem; margin: 10px 0;">ELEGIDOS</h2>
+            <div class="subtitle" id="subtitle-mode" style="margin-bottom: 20px;">Clases & Eventos Oficiales</div>
+
+        
+        <div id="reader"></div>
+        <div id="result" class="result-box"></div>
+
+        <div class="btn-group">
+            <button class="pill-btn" onclick="reiniciarEscaner()">Escanear Siguiente Ticket</button>
+            <select class="select-btn" id="export-filter" onchange="exportarReporte()">
+                <option value="" disabled selected>⬇️ Descargar Reporte CSV...</option>
+                <option value="todos">Reporte General (Todos)</option>
+                <option value="clase">Solo CLASE</option>
+                <option value="elegidos">Solo MAHU FILMS</option>
+                <option value="masterclass">Solo DREAMEZ</option>
+                <option value="festival">Solo FESTIVAL</option>
+            </select>
         </div>
 
-        <!-- NUEVA SECCIÓN: CONTROL DE BOLETOS DE EVENTOS -->
-        <div class="card" style="border-color: #6366f1; background: #312e81;">
-            <h3 style="color: #818cf8; border-color: #3730a3;">Control de Escaneo de Eventos</h3>
-            <p style="font-size: 0.85rem; color: #e0e7ff;">Selecciona un evento para ver qué boletos ya fueron escaneados y reiniciarlos individualmente o todos a la vez.</p>
-            <div class="form-group">
-                <select id="select-evento-boletos" class="input-admin" style="max-width: none;">
-                    <option value="" disabled selected>Selecciona un evento...</option>
-                    <option value="elegidos">MAHU FILMS</option>
-                    <option value="masterclass">DREAMEZ</option>
-                    <option value="festival">FESTIVAL CREATIVO</option>
-                </select>
-                <button class="btn-action" style="background: #4f46e5;" onclick="adminCargarBoletosEvento()">👁️ Ver Boletos</button>
+        <div style="margin-top: 25px; padding-top: 15px; border-top: 1px solid var(--card-border);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">Opciones de Escáner:</p>
+                <button id="btn-linterna" onclick="toggleLinterna()" style="background: transparent; border: 1px solid var(--accent-color); color: var(--accent-color); padding: 4px 10px; border-radius: 5px; font-size: 0.75rem; cursor: pointer; display: none;">🔦 Encender Linterna</button>
             </div>
-            <div id="boletos-lista-container" style="margin-top: 15px;"></div>
-        </div>
 
-        <!-- NUEVA SECCIÓN: ANUNCIO GLOBAL AL PORTAL -->
-        <div class="card" style="border-color: #14b8a6; background: #042f2e;">
-            <h3 style="color: #2dd4bf; border-color: #134e4a;">📢 Publicar Anuncio Global</h3>
-            <p style="font-size: 0.85rem; color: #ccfbf1;">Envía un recordatorio urgente. Aparecerá en toda la pantalla del Portal de Alumnos hasta que expire.</p>
-            <div class="form-group" style="flex-direction: column;">
-                <textarea id="anuncio-mensaje" rows="3" placeholder="Escribe el anuncio aquí..." style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #0f766e; background: #022c22; color: #fff; resize: vertical; font-family: 'Inter', sans-serif; outline:none;"></textarea>
-                <div style="display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
-                    <span style="color: #2dd4bf; align-self: center; font-size: 0.85rem;">Expira el:</span>
-                    <input type="datetime-local" id="anuncio-expiracion" style="flex: 1; min-width: 200px; background: #022c22; border-color: #0f766e; color: #fff;">
-                    <button class="btn-action" style="background: #0d9488;" onclick="adminPublicarAnuncio()">🚀 Publicar</button>
-                    <button class="btn-danger" onclick="adminBorrarAnuncio()">Desactivar Anuncio</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- SECCIÓN: LISTADO GENERAL DE ALUMNOS -->
-        <div class="card">
-
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #334155; padding-bottom: 10px;">
-                <h3 style="margin: 0; border: none; padding: 0;">Listado General de Alumnos</h3>
-                <button class="btn-action" style="background: #0284c7; padding: 6px 14px; font-size: 0.8rem;" onclick="adminCargarListadoGeneral()">🔄 Actualizar Listado</button>
-            </div>
-            <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 15px;">Consulta todos los códigos, nombres, contraseñas y total de asistencias acumuladas.</p>
-            <div id="tabla-alumnos-container" style="overflow-x: auto;">
-                <p style="color: #94a3b8; font-style: italic;">Haz clic en "Actualizar Listado" para cargar los registros.</p>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px; text-align: left;">¿Error al escanear? Anular ingreso manual:</p>
+            <div style="display: flex; gap: 8px;">
+                <input type="text" id="input-reset-codigo" placeholder="Ej: CLASE-2026-081" style="flex: 1; padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.5); color: var(--text-main); font-family: 'Inter', sans-serif; font-size: 0.9rem;">
+                <button onclick="resetearCodigoManual()" style="background: var(--status-invalid); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s;">Anular Ingreso</button>
             </div>
         </div>
-
-        <!-- SECCIÓN: EXPORTAR REPORTES CSV -->
-        <div class="card" style="border-color: #0284c7; background: #082f49;">
-            <h3 style="color: #38bdf8; border-color: #0369a1;">Exportar Reportes de Asistencia</h3>
-            <p style="font-size: 0.85rem; color: #cbd5e1;">Descarga un archivo CSV con el resumen de todos los alumnos, sus códigos y su conteo total de asistencias.</p>
-            <button class="btn-action" style="background: #0284c7; width: 100%;" onclick="adminExportarCSV()">📥 Descargar Reporte Completo (CSV)</button>
+        
+        <div style="text-align: center; margin-top: 20px; display: flex; flex-direction: column; gap: 10px;">
+            <button class="pill-btn" id="btn-toggle-asistencia" onclick="toggleAsistencia()" style="background: var(--accent-blue); color: #fff; z-index: 2;">📋 Abrir Control de Asistencia</button>
         </div>
+    </div>
 
-        <!-- SECCIÓN 3: REINICIAR TODAS LAS ASISTENCIAS Y EVENTOS -->
-        <div class="card" style="border-color: #9333ea; background: #1e1b4b;">
-            <h3 style="color: #c084fc; border-color: #312e81;">Reiniciar Asistencias (Clases y Eventos)</h3>
-            <p style="font-size: 0.85rem; color: #cbd5e1;">Limpia el historial de asistencias de las clases y restablece los tickets de los eventos (MAHU, DREAMEZ, FESTIVAL) como "no usados". <strong>Conserva</strong> los nombres, perfiles, descripciones y contraseñas.</p>
-            <button class="btn-action" style="background: #9333ea; width: 100%;" onclick="adminReiniciarTodasAsistencias()">🔄 Reiniciar Asistencias de Todos los Apartados</button>
-        </div>
+    <!-- PANEL DE ASISTENCIA OCULTO -->
+    <div class="glass-card" id="panel-asistencia" style="display: none; margin-top: 20px; max-width: 600px; width: 100%;">
+        <h3 style="color: var(--accent-color); margin-bottom: 10px; font-size: 1.1rem; text-transform: uppercase;">Horarios y Fechas de Clases</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px; text-align: center;">
+            🕒 <strong>Domingos:</strong> 12:00 PM - 4:59 PM<br>
+            🕒 <strong>Miércoles:</strong> 7:45 PM - 8:59 PM<br>
+            <em>* El escáner solo aceptará ingresos en estos bloques horarios.</em>
+        </p>
 
-        <!-- SECCIÓN 4: REINICIAR ASISTENCIAS POR FECHA / EVENTO ESPECÍFICO -->
-        <div class="card" style="border-color: #0284c7; background: #082f49;">
-            <h3 style="color: #38bdf8; border-color: #0369a1;">Reiniciar Asistencias para un Evento Específico</h3>
-            <p style="font-size: 0.85rem; color: #cbd5e1;">Borra únicamente los registros de asistencia de una fecha o clase específica para todos los estudiantes, sin tocar contraseñas ni el resto de fechas.</p>
-            <div class="form-group">
-                <input type="date" id="reset-fecha-evento" title="Fecha del evento a reiniciar">
-                <button class="btn-action" style="background: #0284c7;" onclick="adminReiniciarAsistenciaPorFecha()">🗑️ Borrar Asistencia de esta Fecha</button>
-            </div>
+        <h3 style="color: var(--accent-color); margin-bottom: 10px; border-top: 1px solid var(--card-border); padding-top: 15px; font-size: 1.1rem; text-transform: uppercase;">Control de Asistencia General</h3>
+        <div id="tabla-asistencia-alumnos" style="max-height: 300px; overflow-y: auto; text-align: left; font-size: 0.8rem; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+            Cargando listado de alumnos...
         </div>
     </div>
 
 <script>
-    
-const firebaseConfig = {
+    const firebaseConfig = {
         apiKey: "AIzaSyAL_1473Guz-pf8_kcNtHU6iUT4e1DOlrY",
         authDomain: "elegidosvalidador.firebaseapp.com",
         databaseURL: "https://elegidosvalidador-default-rtdb.firebaseio.com",
@@ -205,617 +243,706 @@ const firebaseConfig = {
 
     firebase.initializeApp(firebaseConfig);
     
-    // Iniciar sesión anónima para tener control total de administración
     firebase.auth().signInAnonymously().catch((error) => {
         console.error("Error de autenticación anónima:", error);
     });
 
     const db = firebase.database();
-    function validarAdmin() {
-        const pass = document.getElementById("master-pass").value;
-        if (pass === "200422") { // CONTRASEÑA CAMBIADA AQUÍ
-            localStorage.setItem("adminElegidos", "autorizado"); 
-            mostrarDashboard();
+
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    document.body.addEventListener('click', () => { if(audioCtx.state === 'suspended') audioCtx.resume(); }, {once:true});
+    document.body.addEventListener('touchstart', () => { if(audioCtx.state === 'suspended') audioCtx.resume(); }, {once:true});
+
+    function playFeedback(type) {
+        if(audioCtx.state === 'suspended') audioCtx.resume();
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        
+        if (type === 'success') {
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(800, audioCtx.currentTime); 
+            gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+            oscillator.start();
+            gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.2);
+            oscillator.stop(audioCtx.currentTime + 0.2);
+            if (navigator.vibrate) navigator.vibrate([100, 50, 100]); 
         } else {
-            alert("Contraseña Maestra Incorrecta.");
+            oscillator.type = 'sawtooth';
+            oscillator.frequency.setValueAtTime(250, audioCtx.currentTime); 
+            gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+            oscillator.start();
+            gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.5);
+            oscillator.stop(audioCtx.currentTime + 0.5);
+            if (navigator.vibrate) navigator.vibrate([300, 100, 300]); 
         }
     }
 
-    function mostrarDashboard() {
-        document.getElementById("login-admin").style.display = "none";
-        document.getElementById("dashboard-admin").style.display = "block";
-        adminCargarListadoGeneral(); 
-    }
-
-    // Comprueba si el dispositivo ya fue autorizado al cargar la página
-    window.onload = function() {
-        if (localStorage.getItem("adminElegidos") === "autorizado") {
-            mostrarDashboard();
+    const connectedRef = db.ref(".info/connected");
+    connectedRef.on("value", (snap) => {
+        const indicator = document.getElementById("connection-indicator");
+        if (snap.val() === true) {
+            indicator.innerHTML = "🟢 ONLINE";
+            indicator.style.color = "#4ade80";
+            indicator.style.borderColor = "rgba(74, 222, 128, 0.4)";
+        } else {
+            indicator.innerHTML = "🔴 OFFLINE";
+            indicator.style.color = "#f87171";
+            indicator.style.borderColor = "rgba(248, 113, 113, 0.4)";
         }
+    });
+
+    const alumnosInscritos = [
+        "Adriana Isabela Orellana Salinas", "Alessandro Enmanuel Silvas Torres", "Alexis Antonio Garcia cruz",
+        "Alicia Sugey Martínez Lara", "Alison Estefany Zepeda Hernández", "Allison Melissa Batres Coreas",
+        "Anderson Alexis Garcia Alfaro", "Andrés Ezequiel Mejía Morán", "Arnold Antonio Parada Lara",
+        "Beily Michelle", "Blanca de la Cruz Funes", "Blanca Isabel López Alvarenga",
+        "Brandon Zair Amaya González", "Brenda Nataly Vasquez Campos", "Brenda Yohana Ramos Velasquez",
+        "Briseida Sarai Escobar Orellana", "Britanny Nicole Ramos", "Carlos Enrique Montes Rivera",
+        "Daniel Emanuel Bernal Torres", "Daniela Angeline Canjura Hernández", "Daniela Fernanda Pérez Ramírez",
+        "Dennys Anthony Flores Lazo", "Didier Ernesto Rivera Hernández", "Eduardo Wilfredo Vásquez Guevara",
+        "Edwin Antonio Mancia Alvarado", "Elida Esperanza Galdámez", "Emely Alessandra Pérez Alvarado",
+        "Erick Edenilson Alfaro Rodríguez", "Evelyn Magdalena Hernàndez Hernàndez", "Fernando Enrique Alfaro Vasquez",
+        "Fátima Andrea Lemus Vásquez", "Genesis Sarai Pineda Ortiz", "Gerson Danilo Alvarado Gómez",
+        "Gloria Haydee Martinez", "Harvin Alexander Arriola Arevalo", "Hazel Griselda Villalobos López",
+        "Helen eunice bonilla escobar", "Hugo Armando García Alfaro", "Héctor Manrique López vela",
+        "Ingrid Jazmín Zelaya Pérez", "Jeferson David García Meléndez", "Jefferson Aldair Cardoza Arriaga",
+        "Jefferson Alexander García Deras", "Jefferson steve amaya López", "Jefferson Leandro Menjivar Gomez",
+        "Jeremy Alexander Garcia Hernandez", "Jeremy Giovanni Ramirez Ramos", "Johana Carolina Aguilar Solorzano",
+        "Jose emmanuel cordero pineda", "Josué Ezequiel Guzmán Vasquez", "José Alberto Rodríguez Romero",
+        "José Daniel Pascasio Calderón", "José Enrique Martínez Sánchez", "José Francisco Leiva Palaciod",
+        "José Ismael Gómez Diaz", "José Mauricio Espinoza Benítez", "Juan José Dueñas Aviles",
+        "Justin Armando Bautista Hernandez", "Karla Marielos Rojas Fichaud", "Keiry Yamileth Martinez Rivera",
+        "Kevin Alejandro Abarca García", "Kevin Enrique Rodriguez Morales", "Lilian Andrea Córdova Merino",
+        "Luis Angel Trejos Urbina", "Luz elena abarca flores", "Maite Jamileth Zelaya Rodríguez",
+        "Marcos Isaías Estrada López", "Maria Santos Lazo", "Maritza Areli Sibrian HenriqueZ",
+        "Maritza Guadalupe Zaldivar Cerón", "Marjorie Priscila Zepeda Beltrán", "María Elena Saravia de Rivera",
+        "María Fernanda Molina Gallegos", "Matthew Adonay Ramos Reyes", "Maybelline Arely Rodas Vázquez",
+        "Maybelline Delgado Maldonado", "Megan Alejandra Rosales Rodríguez", "Miguel Alberto Siguachi",
+        "Moris Giovanni Reyes Flores", "Nathalie Rosemary Medrano Ramírez", "Noé Adolfo Umaña Pérez",
+        "Priscila Elizabeth Guevara García", "Priscila Stephenie Duran Mariona", "Raquel Saraí Meléndez Murillo",
+        "Ricardo Antonio Peña Guevara", "Roberto Ismael Coto Amaya", "Rodrigo Emmanuel Rivera Hernández",
+        "Stephanie Paola Alfaro Loza", "Steven Adonay Javier Bolaños", "Steven Antonio Serrano Cabrera",
+        "Susana Elizabeth Hernández Rivas", "Tatiana Elizabeth Gómez Calles", "Tatiana Yaneth Osorto Guevara",
+        "Walter Alexander Hernández Sánchez", "Walter Giovanni Escalante Fuentes", "Wendy Nayely Marroquín Lovo",
+        "Wendy Patricia Ramírez Velásquez", "Wilber Isaac Guzmán Salazar"
+    ];
+
+    let dbCache = { clase: {}, elegidos: {}, masterclass: {}, festival: {} }; 
+    let isScanning = false; 
+    let html5QrcodeScanner;
+    let scanModeTorchOn = false;
+    const scannerId = "scanner_" + Math.floor(Math.random() * 100000); 
+
+    const FECHAS_PERMITIDAS = {
+        elegidos: "2026-10-04",
+        masterclass: "2026-10-27",
+        festival: "2026-11-08"
     };
 
-    // NUEVA FUNCIÓN: Registro automático de código
-    function adminCrearEstudianteAuto() {
-        const nombre = document.getElementById("nuevo-nombre").value.trim();
-        let password = document.getElementById("nuevo-password").value.trim();
+    const TICKET_IMAGES = {
+        elegidos: "ticket MAHU.jpg",
+        masterclass: "ticket DREAMEZ.jpg", 
+        festival: "ticket FESTIVAL.jpg",
+        clase: "LOGO CURSO FOTOGRAFIA DIGITAL.png"
+    };
 
-        if (!nombre) {
-            return alert("Ingresa el nombre completo del alumno.");
-        }
+    function inicializarNubeSiEsNecesario() {
+        db.ref('clase').once('value', (snapshot) => {
+            if (!snapshot.exists()) {
+                let base = {};
+                for (let i = 1; i <= 200; i++) {
+                    let num = String(i).padStart(3, '0');
+                    let codigo = `CLASE-2026-${num}`;
+                    let nombreAsignado = (i - 1 < alumnosInscritos.length) ? alumnosInscritos[i - 1] : `Entrada General Clase #${i}`;
+                    base[codigo] = { tipo: 'ASISTENCIA CLASE', nombre: nombreAsignado }; 
+                }
+                db.ref('clase').set(base);
+            }
+        });
 
-        if (!password) password = "ELEGIDOS26";
+        const eventosUnicoUso = [
+            { id: 'elegidos', prefijo: 'ELEGIDOS-2026-', tipo: 'MASTERCLASS: MAHU FILMS', desc: 'Entrada Mahu Films' },
+            { id: 'masterclass', prefijo: 'DREAMEZ-2026-', tipo: 'MASTERCLASS: DREAMEZ', desc: 'Entrada Dreamez' },
+            { id: 'festival', prefijo: 'FESTIVAL-2026-', tipo: 'FESTIVAL CREATIVO ELEGIDOS', desc: 'Entrada Festival' }
+        ];
 
-        // Busca el código más alto en la base de datos
-        db.ref('clase').once('value').then(snap => {
-            let maxNum = 0;
-            if (snap.exists()) {
-                snap.forEach(child => {
-                    const key = child.key; 
-                    if (key.startsWith("CLASE-2026-")) {
-                        const numStr = key.split("-")[2];
-                        const num = parseInt(numStr, 10);
-                        if (!isNaN(num) && num > maxNum) {
-                            maxNum = num;
-                        }
+        eventosUnicoUso.forEach(evento => {
+            db.ref(evento.id).once('value', (snapshot) => {
+                if (!snapshot.exists()) {
+                    let base = {};
+                    for (let i = 1; i <= 200; i++) {
+                        let num = String(i).padStart(3, '0');
+                        let codigo = `${evento.prefijo}${num}`;
+                        base[codigo] = { tipo: evento.tipo, nombre: `${evento.desc} #${i}`, usado: false, fechaIngreso: null };
                     }
-                });
-            }
-            
-            // Genera el siguiente número y lo rellena con ceros (ej. 001, 045, 105)
-            const nextNum = maxNum + 1;
-            const nextCode = "CLASE-2026-" + String(nextNum).padStart(3, '0');
-
-            db.ref(`clase/${nextCode}`).set({
-                nombre: nombre,
-                password: password,
-                asistencias: {}
-            }).then(() => {
-                alert(`✅ Estudiante registrado exitosamente.\n\n👤 Alumno: ${nombre}\n🎟️ CÓDIGO ASIGNADO: ${nextCode}\n\n(Copia y envíale este código al alumno)`);
-                document.getElementById("nuevo-nombre").value = '';
-                document.getElementById("nuevo-password").value = '';
-                adminCargarListadoGeneral();
+                    db.ref(evento.id).set(base);
+                }
             });
         });
     }
 
-    // NUEVA FUNCIÓN: Cambiar Nombre
-    function adminCambiarNombre() {
-        const codigo = document.getElementById("edit-nombre-codigo").value.trim().toUpperCase();
-        const nuevoNombre = document.getElementById("edit-nombre-nuevo").value.trim();
-        
-        if(!codigo.startsWith("CLASE-2026-") || !nuevoNombre) return alert("Ingresa un código válido y el nuevo nombre.");
-
-        db.ref(`clase/${codigo}`).once('value').then(snap => {
-            if (snap.exists()) {
-                db.ref(`clase/${codigo}`).update({ nombre: nuevoNombre }).then(() => {
-                    alert(`✅ Nombre de ${codigo} actualizado a: ${nuevoNombre}`);
-                    document.getElementById("edit-nombre-codigo").value = '';
-                    document.getElementById("edit-nombre-nuevo").value = '';
-                    adminCargarListadoGeneral();
-                });
-            } else {
-                alert("❌ El código no existe.");
-            }
-        });
-    }
-
-    // NUEVA FUNCIÓN: Borrar Perfil Completo (Con botón nativo de confirmar)
-    function adminBorrarPerfilCompleto() {
-        const codigo = document.getElementById("reset-perfil-codigo").value.trim().toUpperCase();
-        
-        if(!codigo.startsWith("CLASE-2026-")) {
-            return alert("Ingresa un código válido (Ej: CLASE-2026-001).");
-        }
-
-        db.ref(`clase/${codigo}`).once('value').then(snap => {
-            if (snap.exists()) {
-                const data = snap.val();
-                const nombreEstudiante = data.nombre;
-
-                if (!data.perfil) {
-                    return alert(`El alumno ${nombreEstudiante} no ha llenado su perfil todavía (ya está en blanco).`);
+    function escucharCambiosEnTiempoReal() {
+        ['clase', 'elegidos', 'masterclass', 'festival'].forEach(seccion => {
+            db.ref(seccion).on('value', (snapshot) => {
+                if (snapshot.exists()) {
+                    dbCache[seccion] = snapshot.val();
+                    actualizarEstadisticas();
                 }
-
-                // Ventana nativa de confirmación (Solo botones Aceptar o Cancelar)
-                const confirmarBorrador = confirm(`ATENCIÓN: Vas a BORRAR POR COMPLETO el perfil de:\n\n👤 ${nombreEstudiante}\n\nTodos sus datos quedarán en blanco. ¿Estás completamente seguro de continuar?`);
-                
-                if (confirmarBorrador) {
-                    // Al usar remove(), borramos todo el nodo, dejándolo en blanco
-                    db.ref(`clase/${codigo}/perfil`).remove().then(() => {
-                        alert(`✅ El perfil de ${nombreEstudiante} ha sido borrado exitosamente.\nEl alumno ya puede ingresar y llenar sus datos desde cero.`);
-                        document.getElementById("reset-perfil-codigo").value = '';
-                    }).catch(e => alert("Error al borrar el perfil: " + e));
-                } else {
-                    alert("❌ Operación cancelada. No se borró nada.");
-                }
-            } else {
-                alert("❌ El código no existe en la base de datos.");
-            }
-        });
-    }
-
-    // NUEVA FUNCIÓN: Desvincular Boletos
-    function adminDesvincularBoletos() {
-        const codigoEstudiante = document.getElementById("desvincular-codigo").value.trim().toUpperCase();
-
-        if (!codigoEstudiante.startsWith("CLASE-2026-")) {
-            return alert("Ingresa un código válido de alumno (Ej: CLASE-2026-001).");
-        }
-
-        db.ref(`clase/${codigoEstudiante}`).once('value').then(snap => {
-            if (!snap.exists()) {
-                return alert("❌ El código de estudiante no existe.");
-            }
-
-            const data = snap.val();
-            const nombreEstudiante = data.nombre;
-
-            if (!data.boletos) {
-                return alert(`El alumno ${nombreEstudiante} no tiene ningún boleto especial vinculado a su cuenta.`);
-            }
-
-            const confirmacion = confirm(`ATENCIÓN: Vas a desvincular los boletos especiales de:\n\n👤 ${nombreEstudiante}\n\nLos tickets volverán a quedar libres. ¿Deseas continuar?`);
-            
-            if (confirmacion) {
-                const updates = {};
-                
-                // Recorrer los boletos que tiene el estudiante
-                Object.keys(data.boletos).forEach(codigoBoleto => {
-                    const eventoId = data.boletos[codigoBoleto]; // 'elegidos', 'masterclass', o 'festival'
-                    
-                    // 1. Quitar la vinculación del ticket original en el evento
-                    updates[`${eventoId}/${codigoBoleto}/vinculado_a`] = null;
-                    updates[`${eventoId}/${codigoBoleto}/codigoEstudiante`] = null;
-                    
-                    // 2. Eliminar el acceso especial del perfil del estudiante
-                    updates[`clase/${codigoEstudiante}/accesos_especiales/${eventoId}`] = null;
-                });
-                
-                // 3. Borrar el historial de boletos del estudiante
-                updates[`clase/${codigoEstudiante}/boletos`] = null;
-
-                // Ejecutar todos los borrados simultáneamente
-                db.ref().update(updates).then(() => {
-                    alert(`✅ Los boletos de ${nombreEstudiante} han sido desvinculados exitosamente. Ahora los tickets están libres.`);
-                    document.getElementById("desvincular-codigo").value = '';
-                    adminCargarListadoGeneral();
-                }).catch(e => alert("Error al desvincular boletos: " + e));
-            } else {
-                alert("Operación cancelada.");
-            }
-        });
-    }
-
-    function adminCambiarPassword() {
-        const codigo = document.getElementById("pass-codigo").value.trim().toUpperCase();
-        let nuevaPass = document.getElementById("pass-nueva").value.trim();
-        if(!codigo.startsWith("CLASE-2026-")) return alert("Código inválido.");
-
-        if (!nuevaPass) nuevaPass = "ELEGIDOS26";
-
-        db.ref(`clase/${codigo}`).once('value').then(snap => {
-            if (snap.exists()) {
-                db.ref(`clase/${codigo}`).update({ password: nuevaPass }).then(() => {
-                    alert(`✅ Contraseña de ${codigo} actualizada a: ${nuevaPass}`);
-                    document.getElementById("pass-codigo").value = '';
-                    document.getElementById("pass-nueva").value = '';
-                    adminCargarListadoGeneral();
-                });
-            } else {
-                alert("❌ El código no existe.");
-            }
-        });
-    }
-
-    function adminModificarAsistencia(accion) {
-        const codigo = document.getElementById("asist-codigo").value.trim().toUpperCase();
-        const fecha = document.getElementById("asist-fecha").value;
-
-        if(!codigo.startsWith("CLASE-2026-") || !fecha) return alert("Ingresa el código y selecciona una fecha válida.");
-
-        db.ref(`clase/${codigo}`).once('value').then(snap => {
-            if (snap.exists()) {
-                // Preparamos un objeto de actualización para no sobrescribir toda la base
-                const updates = {};
-                
-                if (accion === 'agregar') {
-                    updates[`clase/${codigo}/asistencias/${fecha}`] = "Admin: Asistencia Manual";
-                    db.ref().update(updates).then(() => {
-                        alert(`✅ Asistencia FORZADA agregada para el ${fecha} al alumno ${codigo}.`);
-                        adminCargarListadoGeneral();
-                    });
-                } else if (accion === 'permiso') {
-                    updates[`clase/${codigo}/asistencias/${fecha}`] = "Admin: Permiso Justificado";
-                    db.ref().update(updates).then(() => {
-                        alert(`🟠 Permiso asignado exitosamente para el ${fecha} al alumno ${codigo}.`);
-                        adminCargarListadoGeneral();
-                    });
-                } else if (accion === 'eliminar') {
-                    // El secreto para borrar SOLO ese registro es setearlo a null mediante update
-                    updates[`clase/${codigo}/asistencias/${fecha}`] = null;
-                    db.ref().update(updates).then(() => {
-                        alert(`🗑️ Asistencia de la fecha ${fecha} ELIMINADA para el alumno ${codigo}. (Los demás datos siguen intactos)`);
-                        adminCargarListadoGeneral();
-                    });
-                }
-            } else {
-                alert("❌ El código no existe.");
-            }
-        });
-    }
-
-    function adminCargarPaseMasivo() {
-        const fecha = document.getElementById("masivo-fecha").value;
-        const contenedor = document.getElementById("masivo-lista-container");
-        if(!fecha) return alert("Por favor selecciona una fecha en el calendario.");
-
-        contenedor.innerHTML = "<p style='color: #94a3b8;'>Cargando estudiantes...</p>";
-        db.ref('clase').once('value').then(snap => {
-            if(!snap.exists()) {
-                contenedor.innerHTML = "<p style='color: #94a3b8;'>No hay alumnos registrados.</p>";
-                return;
-            }
-            let html = `<p style="margin-bottom: 10px; color: #fbbf24; font-weight: bold;">Marcando asistencia para la fecha: ${fecha}</p>
-            <div style="max-height: 250px; overflow-y: auto; border: 1px solid #78350f; padding: 10px; border-radius: 8px; margin-bottom: 15px; background: #291504;">`;
-            
-            snap.forEach(child => {
-                const data = child.val();
-                const codigo = child.key;
-                const nombre = data.nombre || "Sin nombre";
-                const asistencias = data.asistencias || {};
-                const checked = asistencias[fecha] ? "checked" : "";
-                
-                html += `<div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #451a03;">
-                    <span style="font-size: 0.85rem; text-transform: capitalize;">${nombre} <span style="font-family:monospace; color:#cbd5e1; font-size:0.75rem;">(${codigo})</span></span>
-                    <input type="checkbox" class="check-asistencia-masiva" data-codigo="${codigo}" ${checked} style="width: 18px; height: 18px; cursor: pointer;">
-                </div>`;
             });
-            html += `</div>
-            <button class="btn-action" style="background: #16a34a; width: 100%;" onclick="adminGuardarPaseMasivo('${fecha}')">💾 Guardar Cambios de Asistencia Masiva</button>`;
-            contenedor.innerHTML = html;
         });
-    }
 
-    function adminGuardarPaseMasivo(fecha) {
-        const checkboxes = document.querySelectorAll(".check-asistencia-masiva");
-        const updates = {};
-        checkboxes.forEach(chk => {
-            const codigo = chk.getAttribute("data-codigo");
-            if(chk.checked) {
-                updates[`${codigo}/asistencias/${fecha}`] = "Admin: Pase Masivo";
-            } else {
-                updates[`${codigo}/asistencias/${fecha}`] = null;
+        db.ref('live_feed').on('child_added', (snapshot) => {
+            const data = snapshot.val();
+            if (data.scannerId !== scannerId) {
+                mostrarFeedNotificacion(data.nombre, data.codigo, data.tipoEvento);
             }
+            if (Date.now() - data.timestamp > 300000) snapshot.ref.remove(); 
         });
-
-        db.ref('clase').update(updates).then(() => {
-            alert(`✅ Pase masivo guardado correctamente para la fecha ${fecha}.`);
-            adminCargarListadoGeneral();
-        }).catch(e => alert("Error: " + e));
     }
 
-function adminCargarListadoGeneral() {
-        const contenedor = document.getElementById("tabla-alumnos-container");
+    function mostrarFeedNotificacion(nombre, codigo, tipo) {
+        const feedContainer = document.getElementById("live-feed");
+        const item = document.createElement("div");
+        item.className = "feed-item";
+        item.innerHTML = `<strong>${nombre}</strong> <span style="color:#aaa;">${codigo}</span>`;
+        feedContainer.prepend(item);
         
-        // Evita parpadeos mostrando "Cargando..." solo si el contenedor está vacío
-        if (contenedor.innerHTML.trim() === "") {
-            contenedor.innerHTML = "<p style='color: #94a3b8;'>Cargando listado general...</p>";
+        while (feedContainer.childNodes.length > 3) {
+            feedContainer.removeChild(feedContainer.lastChild);
         }
         
-        db.ref('clase').off('value'); // Apaga escuchadores previos para no duplicar consultas
-        db.ref('clase').on('value', snap => { // .on() mantiene la conexión en tiempo real
+        setTimeout(() => {
+            if (item.parentNode) item.parentNode.removeChild(item);
+        }, 1800);
+    }
 
-
-            if(!snap.exists()) {
-                contenedor.innerHTML = "<p style='color: #94a3b8;'>No hay alumnos registrados en la base de datos.</p>";
-                return;
-            }
-
-            let totalAlumnos = 0;
-            let perfilesCreados = 0;
-            let filasTablaHtml = "";
-
-            snap.forEach(child => {
-                totalAlumnos++;
-                const data = child.val();
-                const codigo = child.key;
-                const nombre = data.nombre || "Sin nombre";
-                const pass = data.password || "ELEGIDOS26";
-                const totalAsist = data.asistencias ? Object.keys(data.asistencias).length : 0;
-                
-                let estadoPerfil = "<span style='color: #f87171;'>Pendiente ❌</span>";
-                let datosPerfil = "<span style='color: #64748b;'>Sin datos</span>";
-                
-                if (data.perfil && data.perfil.edad) {
-                    perfilesCreados++;
-                    estadoPerfil = "<span style='color: #4ade80;'>Completado ✅</span>";
-                    
-                    const pEdad = data.perfil.edad || "-";
-                    const pComunidad = data.perfil.comunidad || "-";
-                    const pNivel = data.perfil.nivel || "-";
-                    const pCelular = data.perfil.celular || "No reg."; 
-                    
-                    datosPerfil = `<div style="font-size: 0.75rem; color: #cbd5e1; line-height: 1.4;">
-                        <strong>E:</strong> ${pEdad} | <strong>C:</strong> ${pCelular}<br>
-                        <strong>L:</strong> ${pComunidad}<br>
-                        <strong>N:</strong> ${pNivel}
-                    </div>`;
-                }
-
-                filasTablaHtml += `<tr style="border-bottom: 1px solid #334155;">
-                    <td style="padding: 10px; font-family: monospace; color: #fbbf24; font-weight: bold;">${codigo}</td>
-                    <td style="padding: 10px; text-transform: capitalize;">${nombre}</td>
-                    <td style="padding: 10px; text-align: center; font-weight: bold; color: #4ade80;">${totalAsist}</td>
-                    <td style="padding: 10px; font-family: monospace; color: #cbd5e1;">${pass}</td>
-                    <td style="padding: 10px; text-align: center;">${estadoPerfil}</td>
-                    <td style="padding: 10px;">${datosPerfil}</td>
-                    <td style="padding: 10px; text-align: center; display: flex; gap: 6px; justify-content: center; flex-wrap: wrap;">
-                        <button class="btn-action" style="padding: 5px 10px; font-size: 0.75rem;" onclick="rellenarEditar('${codigo}')">Editar Clave</button>
-                        <button class="btn-danger" style="padding: 5px 10px; font-size: 0.75rem;" onclick="adminBorrarEstudiante('${codigo}')">Borrar</button>
-                    </td>
-                </tr>`;
-            });
-
-            const perfilesPendientes = totalAlumnos - perfilesCreados;
-            const porcentajeCompletado = totalAlumnos > 0 ? Math.round((perfilesCreados / totalAlumnos) * 100) : 0;
-
-            let html = `
-            <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
-                <div style="flex: 1; min-width: 150px; background: #0f172a; border: 1px solid #334155; padding: 15px; border-radius: 12px; text-align: center;">
-                    <span style="color: #94a3b8; font-size: 0.75rem; text-transform: uppercase; font-weight: bold;">Total Alumnos</span>
-                    <h2 style="color: #38bdf8; margin: 5px 0 0 0; font-size: 1.8rem;">${totalAlumnos}</h2>
-                </div>
-                <div style="flex: 1; min-width: 150px; background: #0f172a; border: 1px solid #10b981; padding: 15px; border-radius: 12px; text-align: center;">
-                    <span style="color: #34d399; font-size: 0.75rem; text-transform: uppercase; font-weight: bold;">Perfiles Creados</span>
-                    <h2 style="color: #4ade80; margin: 5px 0 0 0; font-size: 1.8rem;">${perfilesCreados} <small style="font-size: 0.9rem; color: #94a3b8;">(${porcentajeCompletado}%)</small></h2>
-                </div>
-                <div style="flex: 1; min-width: 150px; background: #0f172a; border: 1px solid #ef4444; padding: 15px; border-radius: 12px; text-align: center;">
-                    <span style="color: #f87171; font-size: 0.75rem; text-transform: uppercase; font-weight: bold;">Perfiles Pendientes</span>
-                    <h2 style="color: #f87171; margin: 5px 0 0 0; font-size: 1.8rem;">${perfilesPendientes}</h2>
-                </div>
-            </div>
-
-            <table style="width:100%; border-collapse: collapse; font-size: 0.85rem; text-align: left;">
-                <thead>
-                    <tr style="border-bottom: 2px solid #334155; color: #38bdf8;">
-                        <th style="padding: 10px;">Código</th>
-                        <th style="padding: 10px;">Nombre</th>
-                        <th style="padding: 10px; text-align: center;">Asistencias</th>
-                        <th style="padding: 10px;">Contraseña</th>
-                        <th style="padding: 10px; text-align: center;">Estado Perfil</th>
-                        <th style="padding: 10px;">Datos (Edad / Cel / Com / Nivel)</th>
-                        <th style="padding: 10px; text-align: center;">Acciones Rápidas</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${filasTablaHtml}
-                </tbody>
-            </table>`;
-
-            contenedor.innerHTML = html;
+    function enviarPingFeed(nombre, codigo, tipo) {
+        db.ref('live_feed').push({
+            nombre: nombre,
+            codigo: codigo,
+            tipoEvento: tipo,
+            scannerId: scannerId,
+            timestamp: Date.now()
         });
+        mostrarFeedNotificacion(nombre, codigo, tipo);
     }
 
-    function rellenarEditar(codigo) {
-        document.getElementById("pass-codigo").value = codigo;
-        window.scrollTo({top: 400, behavior: 'smooth'});
+    function actualizarEstadisticas() {
+        const fechaHoy = new Date().toISOString().split('T')[0];
+        const isTestMode = document.getElementById("test-mode-checkbox").checked;
+        let counts = { clase: 0, elegidos: 0, masterclass: 0, festival: 0 };
+        let totals = { clase: 200, elegidos: 200, masterclass: 200, festival: 200 }; 
+
+        if (dbCache.clase) {
+            Object.values(dbCache.clase).forEach(t => { if (t.asistencias && t.asistencias[fechaHoy]) counts.clase++; });
+        }
+        ['elegidos', 'masterclass', 'festival'].forEach(sec => {
+            if (dbCache[sec]) {
+                Object.values(dbCache[sec]).forEach(t => { if (t.usado) counts[sec]++; });
+            }
+        });
+
+        document.getElementById("row-elegidos").style.display = (fechaHoy === FECHAS_PERMITIDAS.elegidos || isTestMode) ? "flex" : "none";
+        document.getElementById("row-master").style.display = (fechaHoy === FECHAS_PERMITIDAS.masterclass || isTestMode) ? "flex" : "none";
+        document.getElementById("row-festival").style.display = (fechaHoy === FECHAS_PERMITIDAS.festival || isTestMode) ? "flex" : "none";
+
+        document.getElementById("stat-clase").innerText = `${counts.clase}/${totals.clase} (${Math.round(counts.clase/totals.clase*100)}%)`;
+        document.getElementById("stat-elegidos").innerText = `${counts.elegidos}/${totals.elegidos} (${Math.round(counts.elegidos/totals.elegidos*100)}%)`;
+        document.getElementById("stat-master").innerText = `${counts.masterclass}/${totals.masterclass} (${Math.round(counts.masterclass/totals.masterclass*100)}%)`;
+        document.getElementById("stat-festival").innerText = `${counts.festival}/${totals.festival} (${Math.round(counts.festival/totals.festival*100)}%)`;
+        
+        actualizarTablaAsistencia();
     }
 
-    function adminBorrarEstudiante(codigo) {
-        if(confirm(`⚠️ ¿Estás completamente seguro de eliminar al alumno con código ${codigo}?`)) {
-            db.ref(`clase/${codigo}`).remove().then(() => {
-                alert(`🗑️ Alumno ${codigo} eliminado correctamente.`);
-                adminCargarListadoGeneral();
-            });
+    function actualizarTablaAsistencia() {
+        const contenedor = document.getElementById("tabla-asistencia-alumnos");
+        if (!contenedor) return;
+        
+        const fechasOficiales = [
+            "2026-09-27", "2026-09-30", "2026-10-04", "2026-10-07",
+            "2026-10-11", "2026-10-14", "2026-10-18", "2026-10-21",
+            "2026-10-25", "2026-10-28", "2026-11-01", "2026-11-04",
+            "2026-11-08", "2026-11-11", "2026-11-15", "2026-11-18",
+            "2026-11-22", "2026-11-25", "2026-11-29", "2026-12-02",
+            "2026-12-06"
+        ];
+
+        let html = '<div style="overflow-x: auto; max-width: 100%; border-radius: 8px; border: 1px solid rgba(255,255,255,0.3);">';
+        html += '<table style="width: max-content; border-collapse: collapse; background-color: #0a0a0a; color: #ffffff; font-size: 0.85rem; text-align: center;">';
+        
+        html += '<tr style="background-color: #1a1a1a;">';
+        html += '<th style="padding: 8px; position: sticky; left: 0; background: #1a1a1a; z-index: 2; border: 1px solid rgba(255,255,255,0.2); color: var(--accent-gold); text-align: left; text-transform: uppercase; min-width: 120px; max-width: 150px;">Alumno</th>';
+        html += '<th style="padding: 8px; border: 1px solid rgba(255,255,255,0.2); color: var(--accent-gold);">Tot.</th>';
+        
+        fechasOficiales.forEach(fecha => {        
+            let partes = fecha.split("-");
+            let fechaCorta = `${partes[2]}/${partes[1]}`;
+            html += `<th style="padding: 10px; border: 1px solid rgba(255,255,255,0.2); color: #ccc; font-weight: normal;">${fechaCorta}</th>`;
+        });
+        html += '</tr>';
+        
+        if (dbCache.clase) {
+            for (let i = 1; i <= 98; i++) {
+                let num = String(i).padStart(3, '0');
+                let codigo = `CLASE-2026-${num}`;
+                let alumno = dbCache.clase[codigo];
+                
+                if (alumno) {
+                    let totalAsistencias = 0;
+                    let celdasFechas = '';
+                    
+                    fechasOficiales.forEach(fecha => {
+                        if (alumno.asistencias && alumno.asistencias[fecha]) {
+                            totalAsistencias++;
+                            celdasFechas += `<td style="padding: 8px; border: 1px solid rgba(255,255,255,0.1); background-color: rgba(35, 134, 54, 0.2); color: #4ade80; font-size: 1rem;">✅</td>`;
+                        } else {
+                            celdasFechas += `<td style="padding: 8px; border: 1px solid rgba(255,255,255,0.1); color: #666; font-size: 0.8rem;">-</td>`;
+                        }
+                    });
+
+                    html += `<tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <td style="padding: 8px; position: sticky; left: 0; background: #111; border: 1px solid rgba(255,255,255,0.1); text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: bold; text-transform: capitalize; max-width: 150px;" title="${alumno.nombre}">${alumno.nombre.toLowerCase()}</td>
+                                <td style="padding: 8px; border: 1px solid rgba(255,255,255,0.1); font-weight: bold; color: var(--accent-color);">${totalAsistencias}</td>
+                                ${celdasFechas}
+                             </tr>`;                    
+                }
+            }
+        } else {
+            html += '<tr><td colspan="23" style="padding: 20px; color: var(--accent-gold);">Cargando los datos de la base...</td></tr>';
+        }
+        
+        html += '</table></div>';
+        contenedor.innerHTML = html;
+    }
+
+    document.getElementById("test-mode-checkbox").addEventListener("change", actualizarEstadisticas);
+
+    function toggleAsistencia() {
+        const panel = document.getElementById('panel-asistencia');
+        const btn = document.getElementById('btn-toggle-asistencia');
+        
+        if (panel.style.display === 'none') {
+            panel.style.display = 'block';
+            btn.innerHTML = '❌ Cerrar Control de Asistencia';
+            btn.style.background = 'var(--status-invalid)'; 
+            setTimeout(() => {
+                panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+        } else {
+            panel.style.display = 'none';
+            btn.innerHTML = '📋 Abrir Control de Asistencia';
+            btn.style.background = 'var(--accent-blue)'; 
         }
     }
 
-    function adminExportarCSV() {
-        db.ref('clase').once('value').then(snap => {
-            if(!snap.exists()) return alert("No hay datos para exportar.");
-            
-            let csvContent = "data:text/csv;charset=utf-8,Codigo,Nombre,Password,TotalAsistencias\n";
-            
-            snap.forEach(child => {
-                const data = child.val();
-                const codigo = child.key;
-                const nombre = (data.nombre || "").replace(/,/g, "");
-                const pass = data.password || "ELEGIDOS26";
-                const totalAsist = data.asistencias ? Object.keys(data.asistencias).length : 0;
-                
-                csvContent += `${codigo},"${nombre}",${pass},${totalAsist}\n`;
-            });
+    function resetearCodigoManual() {
+        const inputField = document.getElementById('input-reset-codigo');
+        let token = inputField.value.trim().toUpperCase();
+        if(!token) return;
 
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", `ELEGIDOS_Reporte_Alumnos_${new Date().toISOString().slice(0,10)}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        });
-    }
-
-    function adminReiniciarTodasAsistencias() {
-        const confirmacion = prompt("ATENCIÓN: Esto pondrá a 0 el historial de clases y restablecerá los tickets de los eventos (MAHU, DREAMEZ, FESTIVAL). Escribe 'REINICIAR ASISTENCIAS' para confirmar.");
+        const isTestMode = document.getElementById("test-mode-checkbox").checked;
+        const testDateInput = document.getElementById("test-date-input").value;
+        const opcionesFecha = { timeZone: 'America/El_Salvador', year: 'numeric', month: '2-digit', day: '2-digit' };
+        const fechaHoy = (isTestMode && testDateInput) ? testDateInput : new Intl.DateTimeFormat('en-CA', opcionesFecha).format(new Date());
         
-        if (confirmacion === "REINICIAR ASISTENCIAS") {
-            // Leer las 4 ramas principales de la base de datos al mismo tiempo
-            Promise.all([
-                db.ref('clase').once('value'),
-                db.ref('elegidos').once('value'),
-                db.ref('masterclass').once('value'),
-                db.ref('festival').once('value')
-            ]).then((snapshots) => {
-                const updates = {};
+        let modoDetectado = null;
+        if (token.startsWith("CLASE-2026-")) modoDetectado = 'clase';
+        else if (token.startsWith("ELEGIDOS-2026-")) modoDetectado = 'elegidos';
+        else if (token.startsWith("DREAMEZ-2026-")) modoDetectado = 'masterclass';
+        else if (token.startsWith("FESTIVAL-2026-")) modoDetectado = 'festival';
+
+        if (modoDetectado && dbCache[modoDetectado] && dbCache[modoDetectado][token]) {
+            if (modoDetectado === 'clase') {
+                const fechaSV = new Date(new Date().toLocaleString("en-US", {timeZone: "America/El_Salvador"}));
+                const diaSemana = fechaSV.getDay(); 
+                const horaActual = fechaSV.getHours(); 
+                const minutosActuales = fechaSV.getMinutes();
                 
-                // 1. Limpiar asistencias de CLASE (sin tocar contraseña, nombre o perfil)
-                if (snapshots[0].exists()) {
-                    snapshots[0].forEach(child => {
-                        updates[`clase/${child.key}/asistencias`] = null;
-                    });
+                if (!isTestMode) {
+                    const esDomingoValido = (diaSemana === 0 && horaActual >= 12 && horaActual < 17);
+                    const esMiercolesValido = (diaSemana === 3 && ((horaActual === 19 && minutosActuales >= 45) || horaActual === 20));
+                    
+                    if (!esDomingoValido && !esMiercolesValido) {
+                        alert("❌ Bloqueado: No puedes anular registros fuera de los horarios de clase.");
+                        return;
+                    }
                 }
-                
-                // 2. Restablecer tickets de los 3 EVENTOS como no usados (sin borrar descripciones)
-                const eventos = ['elegidos', 'masterclass', 'festival'];
-                for (let i = 0; i < 3; i++) {
-                    if (snapshots[i + 1].exists()) {
-                        snapshots[i + 1].forEach(child => {
-                            updates[`${eventos[i]}/${child.key}/usado`] = false;
-                            updates[`${eventos[i]}/${child.key}/fechaIngreso`] = null;
+
+                db.ref(`clase/${token}/asistencias/${fechaHoy}`).remove().then(() => {
+                    alert(`✅ Se anuló la asistencia de la fecha ${fechaHoy} para el código: ${token}`);
+                    inputField.value = '';
+                });
+            } else {
+                db.ref(`${modoDetectado}/${token}`).once('value').then(snap => {
+                    if (snap.exists()) {
+                        const dataBoleto = snap.val();
+                        const updates = {};
+                        updates[`${modoDetectado}/${token}/usado`] = false;
+                        updates[`${modoDetectado}/${token}/fechaIngreso`] = null;
+                        
+                        if (dataBoleto.vinculado_a) {
+                            updates[`clase/${dataBoleto.vinculado_a}/asistencias/evento_${modoDetectado}`] = null;
+                        }
+
+                        db.ref().update(updates).then(() => {
+                            alert(`✅ Boleto restablecido (No Usado). Se eliminó la asistencia cruzada del alumno vinculado.`);
+                            inputField.value = '';
                         });
                     }
-                }
-
-                // 3. Aplicar todos los cambios simultáneamente desde la raíz de la base de datos
-                db.ref().update(updates).then(() => {
-                    alert("✅ Todas las asistencias (Clases y Eventos) han sido reiniciadas. Las contraseñas, nombres, y datos de los tickets se han conservado intactos.");
-                    adminCargarListadoGeneral();
-                }).catch(e => alert("Error al actualizar la base de datos: " + e));
-
-            }).catch(e => alert("Error al leer la base de datos: " + e));
+                });
+            }
         } else {
-            alert("Operación cancelada.");
+            alert("❌ Código no válido o no encontrado en la base de datos.");
         }
     }
 
-    function adminReiniciarAsistenciaPorFecha() {
-        const fecha = document.getElementById("reset-fecha-evento").value;
-        if (!fecha) return alert("Por favor selecciona una fecha o evento para reiniciar.");
+    let autoResetTimer = null; 
 
-        const confirmacion = prompt(`ATENCIÓN: Esto eliminará la asistencia de la fecha ${fecha} para TODOS los alumnos, sin tocar sus contraseñas. Escribe 'BORRAR FECHA' para confirmar.`);
-        if (confirmacion === "BORRAR FECHA") {
-            db.ref('clase').once('value').then(snap => {
-                if (snap.exists()) {
+    function onScanSuccess(decodedText) {
+        if (isScanning) return; 
+        isScanning = true;
+
+        if (autoResetTimer) { clearTimeout(autoResetTimer); autoResetTimer = null; }
+
+        document.getElementById('btn-linterna').style.display = 'none';
+
+        const resultDiv = document.getElementById('result');
+        resultDiv.style.display = 'block';
+        document.getElementById('reader').style.display = 'none'; 
+
+        const token = decodedText.trim();
+        let modoDetectado = null;
+        let colorFondo = "";
+
+        if (token.startsWith("CLASE-2026-")) { modoDetectado = 'clase'; colorFondo = "var(--accent-purple)"; }
+        else if (token.startsWith("ELEGIDOS-2026-")) { modoDetectado = 'elegidos'; colorFondo = "var(--accent-gold)"; }
+        else if (token.startsWith("DREAMEZ-2026-")) { modoDetectado = 'masterclass'; colorFondo = "var(--accent-purple)"; }
+        else if (token.startsWith("FESTIVAL-2026-")) { modoDetectado = 'festival'; colorFondo = "var(--status-valid)"; }
+
+        const isTestMode = document.getElementById("test-mode-checkbox").checked;
+        const testDateInput = document.getElementById("test-date-input").value;
+        const opcionesFecha = { timeZone: 'America/El_Salvador', year: 'numeric', month: '2-digit', day: '2-digit' };
+        const fechaHoy = (isTestMode && testDateInput) ? testDateInput : new Intl.DateTimeFormat('en-CA', opcionesFecha).format(new Date()); 
+        
+        const fechaSV = new Date(new Date().toLocaleString("en-US", {timeZone: "America/El_Salvador"}));
+        let diaSemana;
+        if (isTestMode && testDateInput) {
+            const d = new Date(testDateInput + 'T12:00:00Z');
+            diaSemana = d.getUTCDay();
+        } else {
+            diaSemana = fechaSV.getDay(); 
+        }
+
+        const horaActualNum = fechaSV.getHours(); 
+        const minutosActuales = fechaSV.getMinutes();
+        const horaActualString = new Date().toLocaleTimeString();
+
+        let eventoEspecialDelDia = null;
+        Object.entries(FECHAS_PERMITIDAS).forEach(([eventoId, fecha]) => {
+            if (fecha === fechaHoy) eventoEspecialDelDia = eventoId;
+        });
+
+        const fechasOficialesClase = [
+            "2026-09-27", "2026-09-30", "2026-10-04", "2026-10-07",
+            "2026-10-11", "2026-10-14", "2026-10-18", "2026-10-21",
+            "2026-10-25", "2026-10-28", "2026-11-01", "2026-11-04",
+            "2026-11-08", "2026-11-11", "2026-11-15", "2026-11-18",
+            "2026-11-22", "2026-11-25", "2026-11-29", "2026-12-02",
+            "2026-12-06"
+        ];
+
+        if (modoDetectado === 'clase') {
+            db.ref(`clase/${token}`).once('value').then(snap => {
+                if (!snap.exists()) { mostrarError("Código de estudiante no existe.", token, resultDiv); return; }
+                const registro = snap.val();
+
+                // Validación Unificada: ¿Es día de Evento Especial o de Clase?
+                if (eventoEspecialDelDia) {
+                    if (registro.asistencias && registro.asistencias[`evento_${eventoEspecialDelDia}`]) {
+                        mostrarPantalla(resultDiv, false, registro.nombre, token, `Ingreso: ${registro.asistencias[`evento_${eventoEspecialDelDia}`]}`, eventoEspecialDelDia, "var(--status-used)", "YA INGRESÓ AL EVENTO");
+                        return;
+                    } 
+                    
+                    let ticketVinculado = null;
+                    if (registro.boletos) {
+                        for (let [codigoBoleto, evt] of Object.entries(registro.boletos)) {
+                            if (evt === eventoEspecialDelDia) ticketVinculado = codigoBoleto;
+                        }
+                    }
+                    
                     const updates = {};
-                    snap.forEach(childSnap => {
-                        updates[`${childSnap.key}/asistencias/${fecha}`] = null;
+                    updates[`clase/${token}/asistencias/evento_${eventoEspecialDelDia}`] = horaActualString;
+                    if (ticketVinculado) {
+                        updates[`${eventoEspecialDelDia}/${ticketVinculado}/usado`] = true;
+                        updates[`${eventoEspecialDelDia}/${ticketVinculado}/fechaIngreso`] = horaActualString;
+                    }
+
+                    db.ref().update(updates).then(() => {
+                        let etiquetaAcceso = ticketVinculado ? `VIP VINCULADO - ${eventoEspecialDelDia.toUpperCase()}` : `ACCESO - ${eventoEspecialDelDia.toUpperCase()}`;
+                        mostrarPantalla(resultDiv, true, registro.nombre, token, "", eventoEspecialDelDia, "var(--accent-gold)", etiquetaAcceso);
+                        enviarPingFeed(registro.nombre, token, `Ingreso Evento`);
                     });
-                    db.ref('clase').update(updates).then(() => {
-                        alert(`✅ Asistencias para la fecha ${fecha} eliminadas en todos los perfiles correctamente.`);
-                        document.getElementById("reset-fecha-evento").value = '';
-                        adminCargarListadoGeneral();
-                    }).catch(e => alert("Error: " + e));
                 } else {
-                    alert("No hay registros en la base de datos.");
+                    // Si NO es día de evento especial, procesar como clase normal
+                    procesarAsistenciaClase(token, registro, fechaHoy, isTestMode, diaSemana, horaActualNum, minutosActuales, horaActualString, fechasOficialesClase, colorFondo, resultDiv);
                 }
             });
+        } 
+        else if (modoDetectado) {
+            db.ref(`${modoDetectado}/${token}`).once('value').then(snap => {
+                if (!snap.exists()) { mostrarError("BOLETO NO EXISTE", token, resultDiv); return; }
+                const registroBoleto = snap.val();
+
+                if (registroBoleto.usado) {
+                    let nombreMostrar = registroBoleto.vinculado_a ? "Ticket Vinculado Usado" : registroBoleto.nombre;
+                    mostrarPantalla(resultDiv, false, nombreMostrar, token, `Ingreso: ${registroBoleto.fechaIngreso}`, modoDetectado, "var(--status-used)", "YA SE ESCANEÓ ESTE BOLETO");
+                    return;
+                }
+                
+                if (FECHAS_PERMITIDAS[modoDetectado] !== fechaHoy) {
+                    const isPast = fechaHoy > FECHAS_PERMITIDAS[modoDetectado];
+                    const mensajeTiempo = isPast ? "El evento ya fue, este boleto está caducado." : "Aún no es la fecha de este evento.";
+                    mostrarError(`${mensajeTiempo}<br><span style="font-size:0.85rem; font-weight:normal;">Día oficial: ${FECHAS_PERMITIDAS[modoDetectado]}</span>`, token, resultDiv); 
+                    return;
+                }
+
+                const updates = {};
+                updates[`${modoDetectado}/${token}/usado`] = true;
+                updates[`${modoDetectado}/${token}/fechaIngreso`] = horaActualString;
+                
+                if (registroBoleto.vinculado_a) {
+                    updates[`clase/${registroBoleto.vinculado_a}/asistencias/evento_${modoDetectado}`] = horaActualString;
+                }
+
+                db.ref().update(updates).then(() => {
+                    if (registroBoleto.vinculado_a) {
+                        db.ref(`clase/${registroBoleto.vinculado_a}/nombre`).once('value').then(snapNombre => {
+                            const nombreEst = snapNombre.val() || "Estudiante";
+                            mostrarPantalla(resultDiv, true, nombreEst, token, "", modoDetectado, colorFondo, `TICKET VINCULADO - ${modoDetectado.toUpperCase()}`);
+                            enviarPingFeed(nombreEst, token, `Ingreso Vinculado`);
+                        });
+                    } else {
+                        mostrarPantalla(resultDiv, true, registroBoleto.nombre, token, "", modoDetectado, colorFondo, registroBoleto.tipo);
+                        enviarPingFeed(registroBoleto.nombre, token, registroBoleto.tipo);
+                    }
+                });
+            });
         } else {
-            alert("Operación cancelada.");
+            mostrarError("CÓDIGO INVÁLIDO O NO RECONOCIDO", token, resultDiv);
         }
     }
 
-    // --- NUEVAS FUNCIONES: CONTROL DE BOLETOS DE EVENTO ---
-    function adminCargarBoletosEvento() {
-        const evento = document.getElementById("select-evento-boletos").value;
-        const contenedor = document.getElementById("boletos-lista-container");
-        if (!evento) return alert("Selecciona un evento de la lista.");
+    function procesarAsistenciaClase(token, registro, fechaHoy, isTestMode, diaSemana, horaActualNum, minutosActuales, horaActualString, fechasOficialesClase, colorFondo, resultDiv) {
+        if (registro.asistencias && registro.asistencias[fechaHoy]) {
+            mostrarPantalla(resultDiv, false, registro.nombre, token, `Llegada: ${registro.asistencias[fechaHoy]}`, 'clase', "var(--status-used)", "YA INGRESÓ A CLASE HOY");
+            return;
+        }
+        
+        if (!fechasOficialesClase.includes(fechaHoy)) {
+            const primeraClase = fechasOficialesClase[0];
+            const ultimaClase = fechasOficialesClase[fechasOficialesClase.length - 1];
+            let msj = "No hay clase oficial programada para esta fecha.";
+            if (fechaHoy < primeraClase) msj = "El curso aún no ha iniciado.";
+            if (fechaHoy > ultimaClase) msj = "El curso ya ha finalizado.";
+            mostrarError(`NO HAY CLASES ESTA FECHA<br><span style="font-size:0.85rem; font-weight:normal;">${msj}</span>`, token, resultDiv);
+            return;
+        }
 
-        contenedor.innerHTML = "<p style='color: #a5b4fc;'>Cargando base de datos del evento...</p>";
-        db.ref(evento).once('value').then(snap => {
-            if (!snap.exists()) {
-                contenedor.innerHTML = "<p style='color: #f87171;'>No hay boletos registrados para este evento.</p>";
+        let faltasAcumuladas = 0;
+        fechasOficialesClase.forEach(fechaClase => {
+            if (fechaClase < fechaHoy && (!registro.asistencias || !registro.asistencias[fechaClase])) {
+                faltasAcumuladas++;
+            }
+        });
+
+        let alertaAusenciasHTML = registro.tipo;
+        if (faltasAcumuladas >= 2) {
+            alertaAusenciasHTML = `${registro.tipo} <br><div style="background: rgba(218, 54, 51, 0.2); border: 1px solid rgba(218, 54, 51, 0.5); padding: 6px; border-radius: 6px; margin-top: 8px;">⚠️ Aviso: Este alumno lleva <strong>${faltasAcumuladas} faltas</strong> previas.</div>`;
+        }
+
+        if (!isTestMode) {
+            const esDomingoValido = (diaSemana === 0 && horaActualNum >= 12 && horaActualNum < 17);
+            const esMiercolesValido = (diaSemana === 3 && ((horaActualNum === 19 && minutosActuales >= 45) || horaActualNum === 20));
+            
+            if (!(esDomingoValido || esMiercolesValido)) {
+                mostrarError(`CLASE CERRADA (FUERA DE HORARIO)<br><span style="font-size:0.85rem; font-weight:normal;">Clases: Domingos 12PM-4:59PM / Miércoles 7:45PM-8:59PM.</span>`, token, resultDiv);
                 return;
             }
-            
-            let html = `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:10px;">
-                <strong style="color:#818cf8;">Lista Detallada de Boletos</strong>
-                <button class="btn-danger" style="padding: 6px 12px; font-size: 0.75rem;" onclick="adminReiniciarBoletoMasivo('${evento}')">⚠️ Reiniciar TODOS a 0</button>
-            </div>
-            <div style="max-height: 350px; overflow-y: auto; border: 1px solid #3730a3; padding: 10px; border-radius: 8px; background: #1e1b4b;">
-            <table style="width:100%; border-collapse: collapse; font-size: 0.8rem; text-align: left;">
-                <thead>
-                    <tr style="border-bottom: 1px solid #4f46e5; color: #a5b4fc;">
-                        <th style="padding: 8px; position:sticky; top:0; background:#1e1b4b; z-index:1;">Código</th>
-                        <th style="padding: 8px; position:sticky; top:0; background:#1e1b4b; z-index:1;">Estado</th>
-                        <th style="padding: 8px; position:sticky; top:0; background:#1e1b4b; z-index:1;">Hora Ingreso</th>
-                        <th style="padding: 8px; position:sticky; top:0; background:#1e1b4b; z-index:1;">Acción</th>
-                    </tr>
-                </thead>
-                <tbody>`;
-            
-            let countUsados = 0;
-            let countTotal = 0;
+        }
 
-            snap.forEach(child => {
-                countTotal++;
-                const data = child.val();
-                const codigo = child.key;
-                const usado = data.usado;
-                const hora = data.fechaIngreso || "-";
-                
-                if(usado) countUsados++;
-
-                let estadoHtml = usado ? `<span style="color:#f87171; font-weight:bold;">Usado 🔴</span>` : `<span style="color:#4ade80;">Libre 🟢</span>`;
-                
-                html += `<tr style="border-bottom: 1px solid #312e81;">
-                    <td style="padding: 8px; font-family: monospace; color:#e0e7ff;">${codigo}</td>
-                    <td style="padding: 8px;">${estadoHtml}</td>
-                    <td style="padding: 8px; color: #94a3b8;">${hora}</td>
-                    <td style="padding: 8px;">
-                        ${usado ? `<button style="background:#dc2626; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-weight:bold;" onclick="adminReiniciarBoletoIndividual('${evento}', '${codigo}')">Resetear</button>` : `<span style="color:#475569;">-</span>`}
-                    </td>
-                </tr>`;
-            });
-
-            let porcentaje = Math.round((countUsados/countTotal)*100);
-            html += `</tbody></table></div>`;
-            html = `<div style="background:#3730a3; color:white; padding:10px; border-radius:8px; margin-bottom:15px; font-weight:bold;">📊 Progreso: ${countUsados} de ${countTotal} boletos escaneados (${porcentaje}%)</div>` + html;
-            contenedor.innerHTML = html;
+        db.ref(`clase/${token}/asistencias/${fechaHoy}`).set(horaActualString).then(() => {
+            mostrarPantalla(resultDiv, true, registro.nombre, token, "", 'clase', colorFondo, alertaAusenciasHTML);
+            enviarPingFeed(registro.nombre, token, registro.tipo);
         });
     }
 
-    function adminReiniciarBoletoIndividual(evento, codigo) {
-        if(confirm(`¿Estás seguro de restablecer el boleto ${codigo} como NO USADO?`)) {
-            db.ref(`${evento}/${codigo}`).update({ usado: false, fechaIngreso: null }).then(() => {
-                adminCargarBoletosEvento(); // Recargar la tabla
-            });
-        }
-    }
-
-    function adminReiniciarBoletoMasivo(evento) {
-        if(confirm(`⚠️ PELIGRO: Vas a reiniciar TODOS los boletos del evento ${evento.toUpperCase()} dejándolos en cero (NO USADOS). ¿Estás totalmente seguro?`)) {
-            db.ref(evento).once('value').then(snap => {
-                const updates = {};
-                snap.forEach(child => {
-                    updates[`${evento}/${child.key}/usado`] = false;
-                    updates[`${evento}/${child.key}/fechaIngreso`] = null;
-                });
-                db.ref().update(updates).then(() => {
-                    alert(`✅ Todos los boletos de ${evento.toUpperCase()} han sido reseteados.`);
-                    adminCargarBoletosEvento();
-                });
-            });
-        }
-    }
-
-    // --- NUEVAS FUNCIONES: ANUNCIO GLOBAL ---
-    function adminPublicarAnuncio() {
-        const mensaje = document.getElementById("anuncio-mensaje").value.trim();
-        const expiracion = document.getElementById("anuncio-expiracion").value;
+    function mostrarError(mensaje, token, div) {
+        playFeedback('error');
+        div.className = "result-box invalid";
+        div.style.backgroundColor = "var(--status-invalid)";
+        div.innerHTML = `❌ ${mensaje}<br><small style="font-size:0.75rem; color:rgba(255,255,255,0.7);">${token}</small>`;
         
-        if(!mensaje || !expiracion) return alert("❌ Debes escribir un mensaje y fijar la fecha/hora de expiración.");
-
-        // Guardamos el anuncio en un nodo general llamado 'configuracion'
-        db.ref('configuracion/anuncioGlobal').set({
-            mensaje: mensaje,
-            expiracion: expiracion,
-            activo: true
-        }).then(() => {
-            alert("📢 ¡Anuncio publicado en vivo! Todos los alumnos lo verán al entrar a su portal.");
-        });
+        autoResetTimer = setTimeout(() => {
+            reiniciarEscaner();
+        }, 2500);
     }
 
-    function adminBorrarAnuncio() {
-        if(confirm("¿Quitar el anuncio actual de las pantallas de los alumnos?")) {
-            db.ref('configuracion/anuncioGlobal/activo').set(false).then(() => {
-                alert("✅ Anuncio desactivado con éxito.");
-                document.getElementById("anuncio-mensaje").value = "";
-                document.getElementById("anuncio-expiracion").value = "";
-            });
+    function mostrarPantalla(div, exito, nombre, token, infoExtra, modo, colorFondo, tipoEvento) {
+        div.style.backgroundColor = colorFondo;
+        
+        let imagenTicketHtml = "";
+        if (TICKET_IMAGES[modo]) {
+            imagenTicketHtml = `
+            <div style="margin-top: 15px; text-align: center; animation: fadeIn 0.5s ease-in-out;">
+                <img src="${TICKET_IMAGES[modo]}" alt="Ticket ${tipoEvento}" 
+                     style="max-width: 100%; height: auto; max-height: 220px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); object-fit: contain; border: 1px solid rgba(255,255,255,0.2);"
+                     onerror="this.style.display='none'">
+            </div>`;
+        }
+        
+        if (exito) {
+            playFeedback('success');
+            div.className = "result-box valid";
+            
+            let tituloAcceso = (modo === 'clase') ? "✅ ACCESO A CLASE CONCEDIDO" : `🌟 ¡BIENVENIDO A ${tipoEvento}!`;
+            
+            div.innerHTML = `<strong>${tituloAcceso}</strong><br>
+            <h3 style="margin: 8px 0; color: #fff; font-size:1.4rem; text-transform: uppercase;">${nombre}</h3>
+            <small style="color:rgba(255,255,255,0.9); font-size:0.9rem;">Cód: ${token}</small><br>
+            <small style="color:rgba(255,255,255,0.9); font-size:0.8rem; font-weight:normal;">Sección: ${tipoEvento}</small>
+            ${imagenTicketHtml}`;
+            
+            autoResetTimer = setTimeout(() => {
+                reiniciarEscaner();
+            }, 2500);
+
+        } else {
+            playFeedback('error');
+            div.className = "result-box used";
+            div.innerHTML = `⚠️ ATENCIÓN<br>
+            <h3 style="margin: 8px 0; color: #fff; font-size:1.2rem;">${nombre}</h3>
+            <small style="color:rgba(255,255,255,0.7); font-size:0.8rem;">(${token})</small><br>
+            <small style="font-size:0.75rem; font-weight:normal;">${infoExtra} | ${tipoEvento}</small>`;
+            
+            autoResetTimer = setTimeout(() => {
+                reiniciarEscaner();
+            }, 2500);
         }
     }
 
+    function toggleLinterna() {
+        if (!html5QrcodeScanner) return;
+        scanModeTorchOn = !scanModeTorchOn;
+        const btn = document.getElementById('btn-linterna');
+        
+        html5QrcodeScanner.applyVideoConstraints({
+            advanced: [{ torch: scanModeTorchOn }]
+        }).then(() => {
+            btn.style.background = scanModeTorchOn ? "var(--accent-color)" : "transparent";
+            btn.style.color = scanModeTorchOn ? "#000" : "var(--accent-color)";
+        }).catch(err => {
+            alert("Tu dispositivo o navegador no soporta la función de linterna.");
+            scanModeTorchOn = false;
+        });
+    }
+
+   function inicializarEscaner() {
+        const config = { 
+            fps: 15, 
+            qrbox: function(viewfinderWidth, viewfinderHeight) {
+                let minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+                let size = Math.floor(minEdge * 0.75);
+                return { width: size, height: size };
+            }
+        };
+
+        if(!html5QrcodeScanner) {
+            html5QrcodeScanner = new Html5Qrcode("reader");
+        }
+
+        arrancarCamaraInteligente({ facingMode: "environment" }, config);
+    }
+
+    function arrancarCamaraInteligente(cameraParams, config) {
+        html5QrcodeScanner.start(cameraParams, config, onScanSuccess, (errorMessage) => { 
+        })
+        .then(() => {
+            document.getElementById('btn-linterna').style.display = 'block';
+            document.getElementById('btn-linterna').style.background = 'transparent';
+            document.getElementById('btn-linterna').style.color = 'var(--accent-color)';
+            scanModeTorchOn = false;
+        }).catch(err => {
+            console.warn("No se pudo iniciar con cámara trasera, buscando alternativa para PC...", err);
+            Html5Qrcode.getCameras().then(devices => {
+                if (devices && devices.length > 0) {
+                    html5QrcodeScanner.start(devices[0].id, config, onScanSuccess, () => {}).catch(e => console.error("Error en cámara secundaria:", e));
+                }
+            });
+        });
+    }
+
+    function reiniciarEscaner() {
+        if (autoResetTimer) { 
+            clearTimeout(autoResetTimer); 
+            autoResetTimer = null; 
+        }
+        
+        document.getElementById('result').style.display = 'none';
+        document.getElementById('reader').style.display = 'block';
+        
+        setTimeout(() => { isScanning = false; }, 100);
+        
+        if (html5QrcodeScanner) {
+            document.getElementById('btn-linterna').style.display = 'block';
+            if (html5QrcodeScanner.getState() !== 2) {
+                inicializarEscaner();
+            }
+        }
+    }
+
+    function exportarReporte() {
+        const selector = document.getElementById('export-filter');
+        const filtro = selector.value;
+        if (!filtro) return;
+
+        let csvContent = "data:text/csv;charset=utf-8,Codigo,Nombre,Tipo,Estado,Hora_Ingreso,Apartado\n";
+        const fechaHoy = new Date().toISOString().split('T')[0];
+        
+        const modosARevisar = filtro === 'todos' ? ['clase', 'elegidos', 'masterclass', 'festival'] : [filtro];
+
+        modosARevisar.forEach(modo => {
+            let data = dbCache[modo];
+            for (let id in data) {
+                let t = data[id];
+                if (modo === 'clase') {
+                    let asistioHoy = (t.asistencias && t.asistencias[fechaHoy]) ? 'ASISTIÓ HOY' : 'NO ASISTIÓ HOY';
+                    let hora = (t.asistencias && t.asistencias[fechaHoy]) ? t.asistencias[fechaHoy] : '-';
+                    csvContent += `${id},"${t.nombre}",${t.tipo},${asistioHoy},${hora},${modo.toUpperCase()}\n`;
+                } else {
+                    csvContent += `${id},"${t.nombre}",${t.tipo},${t.usado ? 'INGRESADO' : 'NO ASISTIO'},${t.fechaIngreso || '-'},${modo.toUpperCase()}\n`;
+                }
+            }
+        });
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `reporte_${filtro}_${fechaHoy}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        selector.value = ""; 
+    }
+
+    window.onload = () => {
+        inicializarNubeSiEsNecesario();
+        escucharCambiosEnTiempoReal();
+        inicializarEscaner();
+    };
 </script>
+
 </body>
 </html>
