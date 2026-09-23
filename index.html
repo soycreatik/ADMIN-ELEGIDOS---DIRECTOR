@@ -53,27 +53,44 @@
     <div id="dashboard-admin">
         <h1>⚙️ Consola de Administración</h1>
 
-        <!-- MENÚ DE NAVEGACIÓN -->
+        <!-- MENÚ DE NAVEGACIÓN EXTENDIDO -->
         <div class="admin-nav">
             <button class="admin-tab-btn active" onclick="cambiarSeccionAdmin('alumnos', this)">👤 Gestión de Alumnos</button>
             <button class="admin-tab-btn" onclick="cambiarSeccionAdmin('asistencia', this)">📅 Asistencia y Eventos</button>
             <button class="admin-tab-btn" onclick="cambiarSeccionAdmin('permisos', this)">📝 Permisos Solicitados</button>
+            <button class="admin-tab-btn" onclick="cambiarSeccionAdmin('proyectos', this)">📁 Proyectos Finales</button>
+            <button class="admin-tab-btn" onclick="cambiarSeccionAdmin('social', this)">🔥 Reto & Ranking</button>
+            <button class="admin-tab-btn" onclick="cambiarSeccionAdmin('calendario', this)">🗓️ Calendario Dinámico</button>
+            <button class="admin-tab-btn" onclick="cambiarSeccionAdmin('diplomas', this)">🎓 Diplomas & Fichas</button>
             <button class="admin-tab-btn" onclick="cambiarSeccionAdmin('sistema', this)">🛠️ Sistema y Avisos</button>
+            <button class="admin-tab-btn" onclick="cambiarSeccionAdmin('graficos', this)">📊 Gráficas y Métricas</button>
         </div>
 
         <!-- SECCIÓN 1: GESTIÓN DE ALUMNOS -->
         <div id="sec-alumnos" class="admin-section active">
-            <!-- Listado General (Movido arriba para mejor visibilidad) -->
+            <!-- Listado General Inteligente con Buscador y Filtros -->
             <div class="card">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #334155; padding-bottom: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #334155; padding-bottom: 10px; flex-wrap: wrap; gap: 10px;">
                     <h3 style="margin: 0; border: none; padding: 0;">Listado General de Alumnos</h3>
                     <button class="btn-action" style="background: #0284c7; padding: 6px 14px; font-size: 0.8rem;" onclick="adminCargarListadoGeneral()">🔄 Actualizar Listado</button>
                 </div>
-                <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 15px;">Consulta todos los códigos, nombres, contraseñas y total de asistencias acumuladas.</p>
+
+                <!-- BARRA DE BÚSQUEDA Y FILTROS -->
+                <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+                    <input type="text" id="buscar-alumno" placeholder="🔍 Buscar por Nombre o Código (Ej: CLASE-2026-001)..." onkeyup="adminFiltrarAlumnos()" style="flex: 2; min-width: 240px; padding: 10px; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: #fff; outline: none;">
+                    
+                    <select id="filtro-estado-alumno" onchange="adminFiltrarAlumnos()" style="flex: 1; min-width: 200px; padding: 10px; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: #fff; outline: none;">
+                        <option value="todos">Todos los Alumnos</option>
+                        <option value="alerta">⚠️ En Riesgo de Deserción (≥2 Ausencias Consecutivas)</option>
+                        <option value="pendiente">❌ Perfiles Pendientes</option>
+                        <option value="completado">✅ Perfiles Completados</option>
+                    </select>
+                </div>
+
                 <div id="tabla-alumnos-container" style="overflow-x: auto;">
                     <p style="color: #94a3b8; font-style: italic;">Haz clic en "Actualizar Listado" para cargar los registros.</p>
                 </div>
-            </div>
+            </div>>
 
             <div class="card" style="border-color: #10b981; background: #064e3b;">
                 <h3 style="color: #34d399; border-color: #065f46;">Registrar Nuevo Estudiante (Código Automático)</h3>
@@ -117,6 +134,37 @@
             </div>
 
             <div class="card">
+<div class="card" style="border-color: #3b82f6; background: #1e3a8a;">
+                <h3 style="color: #60a5fa; border-color: #1e40af;">📝 Crear / Editar Ficha Oficial del Alumno</h3>
+                <p style="font-size: 0.85rem; color: #bfdbfe; margin-bottom: 15px;">Llena los datos del estudiante o súbele su fotografía manualmente desde la administración.</p>
+                <div class="form-group">
+                    <input type="text" id="ficha-codigo" placeholder="Código (Ej: CLASE-2026-001)">
+                    <button class="btn-action" style="background: #2563eb;" onclick="adminCargarFichaManual()">🔍 Cargar Datos</button>
+                </div>
+                
+                <div id="ficha-formulario" style="display:none; flex-direction: column; gap: 10px; margin-top: 15px; background: #172554; padding: 15px; border-radius: 12px;">
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <input type="text" id="ficha-edad" placeholder="Edad (Ej: 22)" style="flex: 1;">
+                        <input type="text" id="ficha-celular" placeholder="Celular (Ej: 7777-7777)" style="flex: 1;">
+                    </div>
+                    <input type="text" id="ficha-comunidad" placeholder="Comunidad / Zona de residencia">
+                    <select id="ficha-nivel" style="padding: 10px; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: #fff;">
+                        <option value="">Nivel de Conocimiento...</option>
+                        <option value="Cero">Cero</option>
+                        <option value="Básico">Básico</option>
+                        <option value="Intermedio">Intermedio</option>
+                        <option value="Avanzado">Avanzado</option>
+                    </select>
+                    
+                    <div style="border: 1px dashed #3b82f6; padding: 10px; border-radius: 8px; margin-top: 5px;">
+                        <span style="color: #60a5fa; font-size: 0.85rem; display: block; margin-bottom: 5px;">📸 Subir Fotografía del Estudiante:</span>
+                        <input type="file" id="ficha-foto-file" accept="image/*" style="color: #dbeafe; font-size: 0.85rem; width: 100%;">
+                    </div>
+                    
+                    <button class="btn-action" style="background: #3b82f6; width: 100%; margin-top: 10px;" onclick="adminGuardarFichaManual()">💾 Guardar Ficha en Sistema</button>
+                </div>
+            </div>
+
                 <h3>Restablecer Contraseña de Estudiante</h3>
                 <div class="form-group">
                     <input type="text" id="pass-codigo" placeholder="Código (Ej: CLASE-2026-001)">
@@ -153,13 +201,16 @@
             <div class="card" style="border-color: #6366f1; background: #312e81;">
                 <h3 style="color: #818cf8; border-color: #3730a3;">Control de Escaneo de Eventos (Boletos)</h3>
                 <div class="form-group">
-                    <select id="select-evento-boletos" class="input-admin" style="max-width: none;">
+                    <select id="select-evento-boletos" class="input-admin" style="max-width: none; flex: 1;">
                         <option value="" disabled selected>Selecciona un evento...</option>
                         <option value="elegidos">MAHU FILMS</option>
                         <option value="masterclass">DREAMEZ</option>
                         <option value="festival">FESTIVAL CREATIVO</option>
                     </select>
-                    <button class="btn-action" style="background: #4f46e5;" onclick="adminCargarBoletosEvento()">👁️ Ver Boletos</button>
+                </div>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
+                    <button class="btn-action" style="background: #4f46e5; flex: 1;" onclick="adminCargarBoletosEvento(false)">👁️ Ver Todos los Boletos</button>
+                    <button class="btn-action" style="background: #0ea5e9; flex: 1;" onclick="adminCargarBoletosEvento(true)">🔗 Ver SOLO Boletos Vinculados</button>
                 </div>
                 <div id="boletos-lista-container" style="margin-top: 15px;"></div>
             </div>
@@ -195,54 +246,106 @@
 
         <!-- SECCIÓN 3: SISTEMA Y AVISOS -->
         <div id="sec-sistema" class="admin-section">
+            
+            <!-- ANUNCIO Y NOTIFICACIÓN GLOBAL FUSIONADOS -->
             <div class="card" style="border-color: #14b8a6; background: #042f2e;">
-                <h3 style="color: #2dd4bf; border-color: #134e4a;">📢 Publicar Anuncio Global</h3>
-                <div class="form-group" style="flex-direction: column;">
-                    <textarea id="anuncio-mensaje" rows="3" placeholder="Escribe el anuncio aquí..." style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #0f766e; background: #022c22; color: #fff; resize: vertical; font-family: 'Inter', sans-serif; outline:none;"></textarea>
-                    <div style="display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
-                        <span style="color: #2dd4bf; align-self: center; font-size: 0.85rem;">Expira el:</span>
-                        <input type="datetime-local" id="anuncio-expiracion" style="flex: 1; min-width: 200px; background: #022c22; border-color: #0f766e; color: #fff;">
-                        <button class="btn-action" style="background: #0d9488;" onclick="adminPublicarAnuncio()">🚀 Publicar</button>
-                        <button class="btn-danger" onclick="adminBorrarAnuncio()">Desactivar Anuncio</button>
+                <h3 style="color: #2dd4bf; border-color: #134e4a;">📢 Publicar Anuncio y Notificación Global</h3>
+                <p style="font-size: 0.85rem; color: #a7f3d0; margin-bottom: 15px;">Este mensaje aparecerá como pop-up al entrar y se guardará simultáneamente en la bandeja de notificaciones del alumno.</p>
+                <div class="form-group" style="flex-direction: column; gap: 12px;">
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <input type="text" id="anuncio-titulo" placeholder="Título (Ej: 🔴 RECORDATORIO IMPORTANTE)" style="flex: 2; font-weight: bold; padding: 12px; border-radius: 8px; border: 1px solid #0f766e; background: #022c22; color: #fff;">
+                        <select id="anuncio-color" style="flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #0f766e; background: #022c22; color: #fff;">
+                            <option value="blue">Color: Azul</option>
+                            <option value="purple">Color: Morado</option>
+                            <option value="green">Color: Verde</option>
+                            <option value="orange">Color: Naranja</option>
+                        </select>
+                    </div>
+                    
+                    <textarea id="anuncio-mensaje" rows="3" placeholder="Escribe el texto de tu anuncio y notificación aquí..." style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #0f766e; background: #022c22; color: #fff; resize: vertical; font-family: 'Inter', sans-serif; outline:none;"></textarea>
+                    
+                    <div style="background: #022c22; border: 1px dashed #2dd4bf; padding: 10px; border-radius: 8px;">
+                        <span style="color: #2dd4bf; font-size: 0.85rem; display: block; margin-bottom: 5px;">🖼️ Adjuntar Imagen / Flyer (Opcional):</span>
+                        <input type="file" id="anuncio-imagen-file" accept="image/*" style="color: #ccfbf1; font-size: 0.85rem; width: 100%;">
+                    </div>
+
+                    <div style="display: flex; gap: 10px; margin-top: 5px; flex-wrap: wrap; align-items: center;">
+                        <span style="color: #2dd4bf; font-size: 0.85rem; font-weight: bold;">⚠️ Fecha y Hora de Finalización (Obligatorio):</span>
+                        <input type="datetime-local" id="anuncio-expiracion" style="flex: 1; min-width: 200px; background: #022c22; border-color: #0f766e; color: #fff; padding: 10px; border-radius: 8px;" required>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                        <button class="btn-danger" style="background: #be123c; font-size: 0.8rem; padding: 8px 12px;" onclick="adminDesactivarYLimpiarAnuncios()">🗑️ Desactivar Pop-up y Borrar Historial</button>
+                        <button class="btn-action" style="background: #0d9488;" onclick="adminPublicarAnuncioFusionado()">🚀 Publicar Pop-up y Notificar a Todos</button>
                     </div>
                 </div>
             </div>
 
-            <!-- NUEVA SECCIÓN: ASIGNAR TEMAS A LAS CLASES -->
-            <div class="card" style="border-color: #8b5cf6; background: #2e1065;">
-                <h3 style="color: #a78bfa; border-color: #4c1d95;">📚 Asignar Temas y Ponentes</h3>
-                <p style="font-size: 0.85rem; color: #ede9fe;">Escribe el tema que se impartirá y quién lo dará. Aparecerá automáticamente en el historial de los alumnos.</p>
-                <div class="form-group">
-                    <select id="select-clase-tema" class="input-admin" style="max-width: none;">
-                        <option value="" disabled selected>Selecciona la Clase...</option>
-                        <option value="27_1300">Inauguración Curso (27 Sept)</option>
-                        <option value="30_1500">Clase 5 (30 Sept)</option>
-                        <option value="04_1500">Masterclass I (4 Oct)</option>
-                        <option value="07_1500">Clase 7 (7 Oct)</option>
-                        <option value="11_1500">Clase 8 (11 Oct)</option>
-                        <option value="14_1500">Clase 9 (14 Oct)</option>
-                        <option value="18_1500">Clase 10 (18 Oct)</option>
-                        <option value="21_1500">Clase 11 (21 Oct)</option>
-                        <option value="25_1500">Masterclass II (25 Oct)</option>
-                        <option value="28_1500">Clase 13 (28 Oct)</option>
-                        <option value="01_1500">Clase 14 (1 Nov)</option>
-                        <option value="04_1500_2">Clase 15 (4 Nov)</option>
-                        <option value="08_1300">Festival Creativo (8 Nov)</option>
-                        <option value="11_1500_2">Clase 17 (11 Nov)</option>
-                        <option value="15_1500">Clase 18 (15 Nov)</option>
-                        <option value="18_1500_2">Clase 19 (18 Nov)</option>
-                        <option value="22_1500">Clase 20 (22 Nov)</option>
-                        <option value="25_1500_2">Clase 21 (25 Nov)</option>
-                        <option value="29_1500">Entrega de Proyectos (29 Nov)</option>
-                        <option value="02_1500">Clase 23 (2 Dic)</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <input type="text" id="input-tema-texto" placeholder="Escribe el tema (Ej: Triángulo de Exposición)">
-                    <input type="text" id="input-ponente-texto" placeholder="Nombre del Ponente (Ej: Mahu Films)">
-                    <button class="btn-action" style="background: #7c3aed;" onclick="adminGuardarTema()">💾 Guardar Datos</button>
+            <!-- NUEVA HERRAMIENTA: ENVIAR NOTIFICACIÓN A BANDEJA ESTUDIANTES -->
+            <div class="card" style="border-color: #ec4899; background: #500724;">
+                <h3 style="color: #f472b6; border-color: #831843;">🔔 Enviar Notificación a la Bandeja de Alumnos</h3>
+                <p style="font-size: 0.85rem; color: #fbcfe8; margin-bottom: 15px;">Este mensaje caerá directamente en la pestaña "Notificaciones" dentro del portal de cada estudiante.</p>
+                
+                <div class="form-group" style="flex-direction: column; gap: 12px;">
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <input type="text" id="noti-titulo" placeholder="Título (Ej: 🔴 RECORDATORIO IMPORTANTE)" style="flex: 2; font-weight: bold;">
+                        <select id="noti-tipo" class="input-admin" style="flex: 1; margin-bottom: 0;">
+                            <option value="sistema">Mensaje del Sistema</option>
+                            <option value="promocion">Promoción / Descuento</option>
+                        </select>
+                        <select id="noti-color" class="input-admin" style="flex: 1; margin-bottom: 0;">
+                            <option value="blue">Color: Azul</option>
+                            <option value="purple">Color: Morado</option>
+                            <option value="green">Color: Verde</option>
+                            <option value="orange">Color: Naranja</option>
+                        </select>
+                    </div>
+                    
+                    <textarea id="noti-cuerpo" rows="3" placeholder="Contenido de la notificación..." style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #9d174d; background: #2e0219; color: #fff; resize: vertical; font-family: 'Inter', sans-serif; outline:none;"></textarea>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 5px;">
+                        <button class="btn-danger" style="background: #be123c; font-size: 0.8rem; padding: 8px 12px;" onclick="adminLimpiarHistorialNotificaciones()">🗑️ Borrar Todo el Historial</button>
+                        <button class="btn-action" style="background: #db2777;" onclick="adminEnviarNotificacionGlobal()">Enviar a todos 📤</button>
+                    </div>
                 </div>
             </div>
+
+            <!-- NUEVA SECCIÓN: CREADOR Y EDITOR DINÁMICO DE CLASES -->
+            <div class="card" style="border-color: #9333ea; background: #1a1025;">
+                <h3 style="color: #c084fc; border-color: #3b0764;">📚 Creador / Editor de Días y Temas</h3>
+                <p style="font-size: 0.85rem; color: #e9d5ff;">Selecciona un día para editarlo en tiempo real o elige crear uno nuevo (el ID se asigna solo).</p>
+                
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <select id="select-dia-editar" class="input-admin" style="max-width: none; background: #0f172a; border-color: #7e22ce;" onchange="adminSeleccionarDiaDirecto()">
+                        <option value="NUEVA">➕ Crear Nuevo Día / Clase...</option>
+                    </select>
+                    <input type="hidden" id="input-dia-id" value="">
+                </div>
+                
+                <div class="form-group" style="flex-direction: column; background: #0f172a; padding: 15px; border-radius: 12px; border: 1px solid #334155;">
+                    <input type="text" id="input-dia-titulo" placeholder="Título (Ej: Masterclass I — Dom, 4 Oct)" style="font-weight: 800; color: #ffffff; font-size: 1.1rem; border: none; border-bottom: 1px solid #334155; background: transparent; padding-left: 0;">
+                    <input type="text" id="input-tema-texto" placeholder="Tema (Ej: Atmósferas Visuales y Dirección Creativa.)" style="color: #a855f7; font-weight: 600; border: none; border-bottom: 1px solid #334155; background: transparent; padding-left: 0;">
+                    <input type="text" id="input-dia-hora" placeholder="Horario (Ej: Inicia a las 15:00)" style="color: #94a3b8; border: none; border-bottom: 1px solid #334155; background: transparent; padding-left: 0;">
+                    <input type="text" id="input-ponente-texto" placeholder="Por: (Ej: Mahu Films)" style="color: #94a3b8; font-style: italic; border: none; background: transparent; padding-left: 0;">
+                </div>
+                
+                <button class="btn-action" style="background: #9333ea; width: 100%; margin-top: 15px;" onclick="adminGuardarDiaCompleto()">💾 Guardar / Actualizar Día</button>
+                <div id="mensaje-exito-dia" style="color: #4ade80; font-size: 0.85rem; margin-top: 10px; display: none; text-align: center;">✅ Clase guardada en la base de datos</div>
+            </div>
+    
+    <!-- Estos inputs tienen el estilo visual idéntico al de la app (Blanco, Morado, Gris, Itálica) -->
+    <div class="form-group" style="flex-direction: column; background: #0f172a; padding: 15px; border-radius: 12px; border: 1px solid #334155;">
+        <input type="text" id="input-dia-titulo" placeholder="Título (Ej: Masterclass I — Dom, 4 Oct)" style="font-weight: 800; color: #ffffff; font-size: 1.1rem; border: none; border-bottom: 1px solid #334155; background: transparent; padding-left: 0;">
+        
+        <input type="text" id="input-tema-texto" placeholder="Tema (Ej: Atmosferas Visuales y Dirección Creativa.)" style="color: #a855f7; font-weight: 600; border: none; border-bottom: 1px solid #334155; background: transparent; padding-left: 0;">
+        
+        <input type="text" id="input-dia-hora" placeholder="Horario (Ej: Inicia a las 15:00)" style="color: #94a3b8; border: none; border-bottom: 1px solid #334155; background: transparent; padding-left: 0;">
+        
+        <input type="text" id="input-ponente-texto" placeholder="Por: (Ej: Mahu Films)" style="color: #94a3b8; font-style: italic; border: none; background: transparent; padding-left: 0;">
+    </div>
+    
+    <button class="btn-action" style="background: #9333ea; width: 100%; margin-top: 15px;" onclick="adminGuardarDiaCompleto()">💾 Guardar / Actualizar Día</button>
+</div>
 
             <div class="card" style="border-color: #0284c7; background: #082f49;">
                 <h3 style="color: #38bdf8; border-color: #0369a1;">Exportar Reportes de Asistencia</h3>
@@ -264,146 +367,242 @@
         </div>
     </div>
 
-       <!-- SECCIÓN MAESTRA: INSPECTOR DE PERFILES -->
-        <div class="card" style="border-color: #ec4899; background: #500724;">
-            <h3 style="color: #f472b6; border-color: #831843;">🔍 Inspector y Reseteo de Perfil</h3>
-            <p style="font-size: 0.85rem; color: #fbcfe8;">Visualiza todos los datos (Edad, Comunidad, Nivel, Foto) guardados en la base de datos de un alumno específico. Si hay errores o la foto está bloqueada, bórralo todo para que vuelva a llenarlo.</p>
-            <div class="form-group">
-                <input type="text" id="inspector-codigo" placeholder="Código (Ej: CLASE-2026-001)">
-                <button class="btn-action" style="background: #db2777; color: white;" onclick="adminInspeccionarPerfil()">👁️ Extraer Perfil</button>
+       <!-- SECCIÓN 4: GRÁFICAS Y MÉTRICAS EN VIVO -->
+        <div id="sec-graficos" class="admin-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 style="color: #38bdf8; margin: 0; border: none;">📊 Métricas Generales de Estudiantes</h3>
+                <button class="btn-action" style="background: #0284c7; padding: 6px 14px; font-size: 0.8rem;" onclick="adminCargarMetricasGraficos()">🔄 Actualizar Métricas</button>
             </div>
-            
-            <div id="inspector-resultado" style="margin-top: 15px; display: none; background: #831843; padding: 15px; border-radius: 12px; text-align: center;">
-                <div id="inspector-foto-box" style="width: 100px; height: 100px; border-radius: 50%; border: 3px solid #fbcfe8; margin: 0 auto 15px auto; overflow: hidden; background: #000; display: flex; align-items: center; justify-content: center;">
-                    <img id="inspector-foto" src="" style="width: 100%; height: 100%; object-fit: cover; display: none;">
-                    <span id="inspector-nofoto" style="color: #f472b6; font-size: 0.75rem;">Sin foto</span>
+
+            <!-- Resumen Rápido Perfiles -->
+            <div class="card" style="border-color: #38bdf8; background: #0f172a;">
+                <h3 style="color: #38bdf8; border-color: #1e293b; margin-bottom: 15px;">📌 Estado de Registros de Perfil</h3>
+                <div id="grafico-perfiles-container">
+                    <p style="color: #94a3b8; font-style: italic;">Cargando estado de perfiles...</p>
                 </div>
-                <div style="color: #fbcfe8; font-size: 0.85rem; text-align: left; background: #4c0519; padding: 12px; border-radius: 8px; margin-bottom: 15px;">
-                    <strong>Nombre:</strong> <span id="inspector-nombre"></span><br>
-                    <hr style="border: 0; border-top: 1px solid #831843; margin: 8px 0;">
-                    <strong>Edad:</strong> <span id="inspector-edad"></span><br>
-                    <strong>Comunidad:</strong> <span id="inspector-comunidad"></span><br>
-                    <strong>Nivel:</strong> <span id="inspector-nivel"></span><br>
-                    <strong>Descripción:</strong> <span id="inspector-desc"></span>
+            </div>
+
+            <!-- Distribución por Género y Rangos de Edad -->
+            <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                <div class="card" style="flex: 1; min-width: 280px; border-color: #c084fc; background: #1e1b4b;">
+                    <h3 style="color: #c084fc; border-color: #312e81;">👥 Distribución por Género</h3>
+                    <div id="grafico-genero-container">
+                        <p style="color: #94a3b8; font-style: italic;">Cargando datos de género...</p>
+                    </div>
                 </div>
-                <button class="btn-danger" style="background: #be123c; width: 100%;" onclick="adminBorrarPerfilInspector()">🗑️ Resetear (Borrar todo el perfil)</button>
-            </div>
-        </div>
 
-<!-- NUEVA SECCIÓN: DESVINCULAR BOLETOS DE EVENTOS -->
-        <div class="card" style="border-color: #ea580c; background: #431407;">
-            <h3 style="color: #fdba74; border-color: #9a3412;">Desvincular Boletos de Eventos</h3>
-            <p style="font-size: 0.85rem; color: #ffedd5;">Si un alumno vinculó un boleto equivocado, bórralo de su perfil para que el ticket vuelva a quedar "libre" y el estudiante pueda registrar el correcto.</p>
-            <div class="form-group">
-                <input type="text" id="desvincular-codigo" placeholder="Código del Alumno (Ej: CLASE-2026-001)">
-                <button class="btn-action" style="background: #ea580c; color: white;" onclick="adminDesvincularBoletos()">✂️ Desvincular Todos sus Boletos</button>
+                <div class="card" style="flex: 1; min-width: 280px; border-color: #f59e0b; background: #451a03;">
+                    <h3 style="color: #fbbf24; border-color: #78350f;">🎂 Rangos de Edad (de 10 en 10)</h3>
+                    <div id="grafico-edad-container">
+                        <p style="color: #94a3b8; font-style: italic;">Cargando rangos de edad...</p>
+                    </div>
+                </div>
             </div>
-        </div>
 
-        <!-- SECCIÓN 1: GESTIÓN DE CONTRASEÑAS -->
-        <div class="card">
-            <h3>Restablecer Contraseña de Estudiante</h3>
-            <p style="font-size: 0.85rem; color: #94a3b8;">Si un alumno no puede entrar, cámbiale la clave manualmente aquí.</p>
-            <div class="form-group">
-                <input type="text" id="pass-codigo" placeholder="Código (Ej: CLASE-2026-001)">
-                <input type="text" id="pass-nueva" placeholder="Nueva Contraseña (o dejar en blanco para ELEGIDOS26)">
-                <button class="btn-action" onclick="adminCambiarPassword()">Guardar Clave</button>
-            </div>
-        </div>
-
-        <!-- SECCIÓN 2: ASISTENCIA MANUAL Y CORRECCIONES -->
-        <div class="card">
-            <h3>Inyectar / Eliminar Asistencias (Historial Individual)</h3>
-            <p style="font-size: 0.85rem; color: #94a3b8;">Permite forzar asistencias olvidadas o borrar registros erróneos pasados. Saltando todas las reglas de horario.</p>
-            <div class="form-group">
-                <input type="text" id="asist-codigo" placeholder="Código (Ej: CLASE-2026-050)">
-                <input type="date" id="asist-fecha" title="Fecha exacta de la clase">
-            </div>
-            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                <button class="btn-action" style="background: #16a34a;" onclick="adminModificarAsistencia('agregar')">Añadir Asistencia Forzada</button>
-                <button class="btn-action" style="background: #f97316;" onclick="adminModificarAsistencia('permiso')">Asignar Permiso</button>
-                <button class="btn-danger" onclick="adminModificarAsistencia('eliminar')">Borrar Registro</button>
-            </div>
-        </div>
-
-        <!-- SECCIÓN: PASE DE ASISTENCIA MASIVO POR FECHA -->
-        <div class="card" style="border-color: #d97706; background: #451a03;">
-            <h3 style="color: #fbbf24; border-color: #78350f;">Pase de Lista Masivo por Fecha</h3>
-            <p style="font-size: 0.85rem; color: #fef3c7;">Selecciona una fecha y marca o desmarca rápidamente la asistencia de todos los alumnos de un solo vistazo.</p>
-            <div class="form-group">
-                <input type="date" id="masivo-fecha" title="Selecciona fecha de la sesión">
-                <button class="btn-action" style="background: #d97706;" onclick="adminCargarPaseMasivo()">📂 Cargar Lista para Pase</button>
-            </div>
-            
-<div id="masivo-lista-container" style="margin-top: 15px;"></div>
-        </div>
-
-        <!-- NUEVA SECCIÓN: CONTROL DE BOLETOS DE EVENTOS -->
-        <div class="card" style="border-color: #6366f1; background: #312e81;">
-            <h3 style="color: #818cf8; border-color: #3730a3;">Control de Escaneo de Eventos</h3>
-            <p style="font-size: 0.85rem; color: #e0e7ff;">Selecciona un evento para ver qué boletos ya fueron escaneados y reiniciarlos individualmente o todos a la vez.</p>
-            <div class="form-group">
-                <select id="select-evento-boletos" class="input-admin" style="max-width: none;">
-                    <option value="" disabled selected>Selecciona un evento...</option>
-                    <option value="elegidos">MAHU FILMS</option>
-                    <option value="masterclass">DREAMEZ</option>
-                    <option value="festival">FESTIVAL CREATIVO</option>
-                </select>
-                <button class="btn-action" style="background: #4f46e5;" onclick="adminCargarBoletosEvento()">👁️ Ver Boletos</button>
-            </div>
-            <div id="boletos-lista-container" style="margin-top: 15px;"></div>
-        </div>
-
-        <!-- NUEVA SECCIÓN: ANUNCIO GLOBAL AL PORTAL -->
-        <div class="card" style="border-color: #14b8a6; background: #042f2e;">
-            <h3 style="color: #2dd4bf; border-color: #134e4a;">📢 Publicar Anuncio Global</h3>
-            <p style="font-size: 0.85rem; color: #ccfbf1;">Envía un recordatorio urgente. Aparecerá en toda la pantalla del Portal de Alumnos hasta que expire.</p>
-            <div class="form-group" style="flex-direction: column;">
-                <textarea id="anuncio-mensaje" rows="3" placeholder="Escribe el anuncio aquí..." style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #0f766e; background: #022c22; color: #fff; resize: vertical; font-family: 'Inter', sans-serif; outline:none;"></textarea>
-                <div style="display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
-                    <span style="color: #2dd4bf; align-self: center; font-size: 0.85rem;">Expira el:</span>
-                    <input type="datetime-local" id="anuncio-expiracion" style="flex: 1; min-width: 200px; background: #022c22; border-color: #0f766e; color: #fff;">
-                    <button class="btn-action" style="background: #0d9488;" onclick="adminPublicarAnuncio()">🚀 Publicar</button>
-                    <button class="btn-danger" onclick="adminBorrarAnuncio()">Desactivar Anuncio</button>
+            <!-- Distribución por Comunidades -->
+            <div class="card" style="border-color: #10b981; background: #064e3b;">
+                <h3 style="color: #34d399; border-color: #065f46;">📍 Comunidades / Zonas de Residencia</h3>
+                <p style="font-size: 0.8rem; color: #a7f3d0; margin-bottom: 15px;">Las comunidades repetidas se unifican y suman automáticamente en un solo registro.</p>
+                <div id="grafico-comunidades-container">
+                    <p style="color: #94a3b8; font-style: italic;">Cargando datos de comunidades...</p>
                 </div>
             </div>
         </div>
 
-        <!-- SECCIÓN: LISTADO GENERAL DE ALUMNOS -->
-        <div class="card">
-
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #334155; padding-bottom: 10px;">
-                <h3 style="margin: 0; border: none; padding: 0;">Listado General de Alumnos</h3>
-                <button class="btn-action" style="background: #0284c7; padding: 6px 14px; font-size: 0.8rem;" onclick="adminCargarListadoGeneral()">🔄 Actualizar Listado</button>
-            </div>
-            <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 15px;">Consulta todos los códigos, nombres, contraseñas y total de asistencias acumuladas.</p>
-            <div id="tabla-alumnos-container" style="overflow-x: auto;">
-                <p style="color: #94a3b8; font-style: italic;">Haz clic en "Actualizar Listado" para cargar los registros.</p>
+       <!-- SECCIÓN 5: BANDEJA DE PROYECTOS FINALES -->
+        <div id="sec-proyectos" class="admin-section">
+            <div class="card" style="border-color: #38bdf8; background: #0f172a;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 style="color: #38bdf8; margin: 0; border: none;">📁 Entregas de Proyectos Finales</h3>
+                    <button class="btn-action" style="background: #0284c7; padding: 6px 14px; font-size: 0.8rem;" onclick="adminCargarProyectosFinales()">🔄 Actualizar Bandeja</button>
+                </div>
+                <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 15px;">Revisa las propuestas y portafolios subidos por los alumnos, asigna calificación y aprueba su proyecto para graduación.</p>
+                <div id="contenedor-proyectos-finales">
+                    <p style="color: #94a3b8; font-style: italic;">Cargando proyectos...</p>
+                </div>
             </div>
         </div>
 
-        <!-- SECCIÓN: EXPORTAR REPORTES CSV -->
-        <div class="card" style="border-color: #0284c7; background: #082f49;">
-            <h3 style="color: #38bdf8; border-color: #0369a1;">Exportar Reportes de Asistencia</h3>
-            <p style="font-size: 0.85rem; color: #cbd5e1;">Descarga un archivo CSV con el resumen de todos los alumnos, sus códigos y su conteo total de asistencias.</p>
-            <button class="btn-action" style="background: #0284c7; width: 100%;" onclick="adminExportarCSV()">📥 Descargar Reporte Completo (CSV)</button>
-        </div>
-
-        <!-- SECCIÓN 3: REINICIAR TODAS LAS ASISTENCIAS Y EVENTOS -->
-        <div class="card" style="border-color: #9333ea; background: #1e1b4b;">
-            <h3 style="color: #c084fc; border-color: #312e81;">Reiniciar Asistencias (Clases y Eventos)</h3>
-            <p style="font-size: 0.85rem; color: #cbd5e1;">Limpia el historial de asistencias de las clases y restablece los tickets de los eventos (MAHU, DREAMEZ, FESTIVAL) como "no usados". <strong>Conserva</strong> los nombres, perfiles, descripciones y contraseñas.</p>
-            <button class="btn-action" style="background: #9333ea; width: 100%;" onclick="adminReiniciarTodasAsistencias()">🔄 Reiniciar Asistencias de Todos los Apartados</button>
-        </div>
-
-        <!-- SECCIÓN 4: REINICIAR ASISTENCIAS POR FECHA / EVENTO ESPECÍFICO -->
-        <div class="card" style="border-color: #0284c7; background: #082f49;">
-            <h3 style="color: #38bdf8; border-color: #0369a1;">Reiniciar Asistencias para un Evento Específico</h3>
-            <p style="font-size: 0.85rem; color: #cbd5e1;">Borra únicamente los registros de asistencia de una fecha o clase específica para todos los estudiantes, sin tocar contraseñas ni el resto de fechas.</p>
-            <div class="form-group">
-                <input type="date" id="reset-fecha-evento" title="Fecha del evento a reiniciar">
-                <button class="btn-action" style="background: #0284c7;" onclick="adminReiniciarAsistenciaPorFecha()">🗑️ Borrar Asistencia de esta Fecha</button>
+        <!-- SECCIÓN 6: RETO DOMINICAL Y RANKING SOCIAL -->
+        <div id="sec-social" class="admin-section">
+            <div class="card" style="border-color: #f59e0b; background: #451a03;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 style="color: #fbbf24; margin: 0; border: none;">🔥 Leaderboard - Puntos Sociales de Interacción</h3>
+                    <button class="btn-action" style="background: #d97706; padding: 6px 14px; font-size: 0.8rem;" onclick="adminCargarLeaderboard()">🔄 Actualizar Leaderboard</button>
+                </div>
+                <p style="font-size: 0.85rem; color: #fef3c7; margin-bottom: 15px;">Monitorea a los alumnos más activos en los retos dominicales y ajusta sus puntos manualmente si es necesario.</p>
+                <div id="contenedor-leaderboard-social">
+                    <p style="color: #94a3b8; font-style: italic;">Cargando tabla de posiciones...</p>
+                </div>
             </div>
+        </div>
+
+        <!-- SECCIÓN 7: CALENDARIO DINÁMICO EN FIREBASE -->
+        <div id="sec-calendario" class="admin-section">
+            <div class="card" style="border-color: #8b5cf6; background: #2e1065;">
+                <h3 style="color: #a78bfa; border-color: #4c1d95;">🗓️ Gestor Integral de Calendario Académico</h3>
+                <p style="font-size: 0.85rem; color: #ede9fe; margin-bottom: 15px;">Selecciona una clase para editarla o crea una nueva. Se ordenarán automáticamente por fecha. <strong>Si reprogramas o cambias la modalidad, el sistema lanzará un anuncio global automático.</strong></p>
+                
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <select id="select-clase-editar" class="input-admin" style="max-width: none; background: #1e1b4b; border-color: #7c3aed;" onchange="adminSeleccionarClaseAvanzada()">
+                        <option value="NUEVA">➕ Crear Nueva Clase / Día...</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="background: #1a1025; padding: 15px; border-radius: 12px; border: 1px solid #4c1d95; flex-direction: column; gap: 12px;">
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <input type="hidden" id="cal-id" value="">
+                        <input type="date" id="cal-fecha" style="flex: 1; min-width: 150px; background: #0f172a; border: 1px solid #334155;">
+                        <input type="time" id="cal-hora" style="flex: 1; min-width: 100px; background: #0f172a; border: 1px solid #334155;">
+                    </div>
+                    
+                    <input type="text" id="cal-titulo" placeholder="Título Principal (Ej: Masterclass I — Dom, 4 Oct)" style="font-weight: 800; font-size: 1.1rem; border: none; border-bottom: 1px solid #334155; background: transparent; color: #fff; padding-left: 0;">
+                    <input type="text" id="cal-tema" placeholder="Tema Específico (Ej: Atmósferas Visuales...)" style="color: #a855f7; font-weight: 600; border: none; border-bottom: 1px solid #334155; background: transparent; padding-left: 0;">
+                    <input type="text" id="cal-ponente" placeholder="Expositor / Por: (Ej: Mahu Films)" style="color: #94a3b8; font-style: italic; border: none; border-bottom: 1px solid #334155; background: transparent; padding-left: 0;">
+                    
+                    <select id="cal-modalidad" style="padding: 10px; border-radius: 8px; border: 1px solid #334155; background: transparent; color: #fff; width: 100%;">
+                        <option value="Presencial">📍 Modalidad: Presencial</option>
+                        <option value="Online">💻 Modalidad: Online (Zoom/Meet)</option>
+                    </select>
+                </div>
+
+                <button class="btn-action" style="background: #7c3aed; width: 100%; margin-top: 15px;" onclick="adminGuardarClaseAvanzada()">💾 Guardar y Actualizar Calendario</button>
+
+                <div id="contenedor-calendario-dinamico" style="margin-top: 25px;"></div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN 8: GRADUACIÓN Y GENERADOR DE DIPLOMAS -->
+        <div id="sec-diplomas" class="admin-section">
+            <div class="card" style="border-color: #10b981; background: #064e3b;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 style="color: #34d399; margin: 0; border: none;">🎓 Candidatos Aprobados a Graduación</h3>
+                    <button class="btn-action" style="background: #059669; padding: 6px 14px; font-size: 0.8rem;" onclick="adminCargarElegiblesGraduacion()">🔄 Generar Listado Oficial</button>
+                </div>
+                <p style="font-size: 0.85rem; color: #a7f3d0; margin-bottom: 15px;">Filtrado automático de alumnos que han superado el 75% de asistencia requerido y tienen su proyecto final APROBADO.</p>
+                
+                <div id="contenedor-elegibles-graduacion">
+                    <p style="color: #94a3b8; font-style: italic;">Haz clic en el botón superior para calcular elegibles...</p>
+                </div>
+            </div>
+        </div>
+    </div> <!-- FIN DEL DASHBOARD ADMIN -->
+
+    <!-- MODAL IMPRIMIBLE: FICHA DEL ESTUDIANTE -->
+    <div id="modal-ficha-estudiante" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); z-index: 99999; justify-content: center; align-items: center; padding: 20px;">
+        <div style="background: #ffffff; color: #0f172a; border-radius: 16px; padding: 30px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);" id="area-impresion-ficha">
+        </div>
+    </div>
+        </div>
+    </div> <!-- FIN DEL DASHBOARD ADMIN -->
+        
+        <input type="text" id="cal-titulo" placeholder="Título Principal (Ej: Masterclass I — Dom, 4 Oct)" style="font-weight: 800; font-size: 1.1rem; border: none; border-bottom: 1px solid #334155; background: transparent; color: #fff; padding-left: 0;">
+        <input type="text" id="cal-tema" placeholder="Tema Específico (Ej: Atmósferas Visuales...)" style="color: #a855f7; font-weight: 600; border: none; border-bottom: 1px solid #334155; background: transparent; padding-left: 0;">
+        <input type="text" id="cal-ponente" placeholder="Expositor / Por: (Ej: Mahu Films)" style="color: #94a3b8; font-style: italic; border: none; border-bottom: 1px solid #334155; background: transparent; padding-left: 0;">
+        
+        <select id="cal-modalidad" style="padding: 10px; border-radius: 8px; border: 1px solid #334155; background: transparent; color: #fff; width: 100%;">
+            <option value="Presencial">📍 Modalidad: Presencial</option>
+            <option value="Online">💻 Modalidad: Online (Zoom/Meet)</option>
+        </select>
+    </div>
+
+    <button class="btn-action" style="background: #7c3aed; width: 100%; margin-top: 15px;" onclick="adminGuardarClaseAvanzada()">💾 Guardar y Actualizar Calendario</button>
+
+    <!-- Previsualización de la lista de clases -->
+    <div id="contenedor-calendario-dinamico" style="margin-top: 25px;"></div>
+</div>
+        </div>
+
+        <!-- SECCIÓN 8: GRADUACIÓN Y GENERADOR DE DIPLOMAS -->
+        <div id="sec-diplomas" class="admin-section">
+            <div class="card" style="border-color: #10b981; background: #064e3b;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 style="color: #34d399; margin: 0; border: none;">🎓 Candidatos Aprobados a Graduación</h3>
+                    <button class="btn-action" style="background: #059669; padding: 6px 14px; font-size: 0.8rem;" onclick="adminCargarElegiblesGraduacion()">🔄 Generar Listado Oficial</button>
+                </div>
+                <p style="font-size: 0.85rem; color: #a7f3d0; margin-bottom: 15px;">Filtrado automático de alumnos que han superado el 75% de asistencia requerido y tienen su proyecto final APROBADO.</p>
+                
+                <div id="contenedor-elegibles-graduacion">
+                    <p style="color: #94a3b8; font-style: italic;">Haz clic en el botón superior para calcular elegibles...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL IMPRIMIBLE: FICHA DEL ESTUDIANTE -->
+    <div id="modal-ficha-estudiante" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); z-index: 99999; justify-content: center; align-items: center; padding: 20px;">
+        <div style="background: #ffffff; color: #0f172a; border-radius: 16px; padding: 30px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);" id="area-impresion-ficha">
+            <!-- El contenido se inyectará dinámicamente -->
+        </div>
+    </div>
+
+        <!-- SECCIÓN 5: BANDEJA DE PROYECTOS FINALES -->
+        <div id="sec-proyectos" class="admin-section">
+            <div class="card" style="border-color: #38bdf8; background: #0f172a;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 style="color: #38bdf8; margin: 0; border: none;">📁 Entregas de Proyectos Finales</h3>
+                    <button class="btn-action" style="background: #0284c7; padding: 6px 14px; font-size: 0.8rem;" onclick="adminCargarProyectosFinales()">🔄 Actualizar Bandeja</button>
+                </div>
+                <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 15px;">Revisa las propuestas y portafolios subidos por los alumnos, asigna calificación y aprueba su proyecto para graduación.</p>
+                <div id="contenedor-proyectos-finales">
+                    <p style="color: #94a3b8; font-style: italic;">Cargando proyectos...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN 6: RETO DOMINICAL Y RANKING SOCIAL -->
+        <div id="sec-social" class="admin-section">
+            <div class="card" style="border-color: #f59e0b; background: #451a03;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 style="color: #fbbf24; margin: 0; border: none;">🔥 Leaderboard - Puntos Sociales de Interacción</h3>
+                    <button class="btn-action" style="background: #d97706; padding: 6px 14px; font-size: 0.8rem;" onclick="adminCargarLeaderboard()">🔄 Actualizar Leaderboard</button>
+                </div>
+                <p style="font-size: 0.85rem; color: #fef3c7; margin-bottom: 15px;">Monitorea a los alumnos más activos en los retos dominicales y ajusta sus puntos manualmente si es necesario.</p>
+                <div id="contenedor-leaderboard-social">
+                    <p style="color: #94a3b8; font-style: italic;">Cargando tabla de posiciones...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN 7: CALENDARIO DINÁMICO EN FIREBASE -->
+        <div id="sec-calendario" class="admin-section">
+            <div class="card" style="border-color: #8b5cf6; background: #2e1065;">
+                <h3 style="color: #a78bfa; border-color: #4c1d95;">🗓️ Gestor de Calendario Académico</h3>
+                <p style="font-size: 0.85rem; color: #ede9fe; margin-bottom: 15px;">Agrega, edita o elimina clases en tiempo real directamente en Firebase sin necesidad de modificar el código fuente.</p>
+                
+                <div class="form-group">
+                    <input type="text" id="cal-id" placeholder="ID Único (Ej: 30_1500)">
+                    <input type="text" id="cal-nombre" placeholder="Nombre (Ej: Clase 5 - Iluminación)">
+                    <input type="date" id="cal-fecha">
+                    <input type="time" id="cal-hora" value="15:00">
+                    <input type="text" id="cal-expositor" placeholder="Expositor / Imparte (Ej: Mahu Films)">
+                    <button class="btn-action" style="background: #7c3aed;" onclick="adminGuardarClaseCalendario()">💾 Guardar / Programar Clase</button>
+                </div>
+
+                <div id="contenedor-calendario-dinamico" style="margin-top: 20px;"></div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN 8: GRADUACIÓN Y GENERADOR DE DIPLOMAS -->
+        <div id="sec-diplomas" class="admin-section">
+            <div class="card" style="border-color: #10b981; background: #064e3b;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 style="color: #34d399; margin: 0; border: none;">🎓 Candidatos Aprobados a Graduación</h3>
+                    <button class="btn-action" style="background: #059669; padding: 6px 14px; font-size: 0.8rem;" onclick="adminCargarElegiblesGraduacion()">🔄 Generar Listado Oficial</button>
+                </div>
+                <p style="font-size: 0.85rem; color: #a7f3d0; margin-bottom: 15px;">Filtrado automático de alumnos que han superado el 75% de asistencia requerido y tienen su proyecto final APROBADO.</p>
+                
+                <div id="contenedor-elegibles-graduacion">
+                    <p style="color: #94a3b8; font-style: italic;">Haz clic en el botón superior para calcular elegibles...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL IMPRIMIBLE: FICHA DEL ESTUDIANTE -->
+    <div id="modal-ficha-estudiante" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); z-index: 99999; justify-content: center; align-items: center; padding: 20px;">
+        <div style="background: #ffffff; color: #0f172a; border-radius: 16px; padding: 30px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);" id="area-impresion-ficha">
+            <!-- El contenido se inyectará dinámicamente -->
         </div>
     </div>
 
@@ -573,59 +772,58 @@ const firebaseConfig = {
     }
 
     // NUEVA FUNCIÓN: Desvincular Boletos
-    function adminDesvincularBoletos() {
-        const codigoEstudiante = document.getElementById("desvincular-codigo").value.trim().toUpperCase();
+function adminDesvincularBoletos() {
+    const codigoEstudiante = document.getElementById("desvincular-codigo").value.trim().toUpperCase();
 
-        if (!codigoEstudiante.startsWith("CLASE-2026-")) {
-            return alert("Ingresa un código válido de alumno (Ej: CLASE-2026-001).");
+    if (!codigoEstudiante.startsWith("CLASE-2026-")) {
+        return alert("Ingresa un código válido de alumno (Ej: CLASE-2026-001).");
+    }
+
+    db.ref(`clase/${codigoEstudiante}`).once('value').then(snap => {
+        if (!snap.exists()) {
+            return alert("❌ El código de estudiante no existe.");
         }
 
-        db.ref(`clase/${codigoEstudiante}`).once('value').then(snap => {
-            if (!snap.exists()) {
-                return alert("❌ El código de estudiante no existe.");
-            }
+        const data = snap.val();
+        const nombreEstudiante = data.nombre;
 
-            const data = snap.val();
-            const nombreEstudiante = data.nombre;
+        if (!data.boletos) {
+            return alert(`El alumno ${nombreEstudiante} no tiene ningún boleto especial vinculado a su cuenta.`);
+        }
 
-            if (!data.boletos) {
-                return alert(`El alumno ${nombreEstudiante} no tiene ningún boleto especial vinculado a su cuenta.`);
-            }
-
-            const confirmacion = confirm(`ATENCIÓN: Vas a desvincular los boletos especiales de:\n\n👤 ${nombreEstudiante}\n\nLos tickets volverán a quedar libres y como "NO USADOS". ¿Deseas continuar?`);
+        const confirmacion = confirm(`ATENCIÓN: Vas a desvincular los boletos especiales de:\n\n👤 ${nombreEstudiante}\n\nLos tickets volverán a quedar libres y como "NO USADOS". ¿Deseas continuar?`);
+        
+        if (confirmacion) {
+            const updates = {};
             
-            if (confirmacion) {
-                const updates = {};
+            Object.keys(data.boletos).forEach(codigoBoleto => {
+                const eventoId = data.boletos[codigoBoleto]; 
                 
-                // Recorrer los boletos que tiene el estudiante
-                Object.keys(data.boletos).forEach(codigoBoleto => {
-                    const eventoId = data.boletos[codigoBoleto]; // 'elegidos', 'masterclass', o 'festival'
-                    
-                    // 1. Quitar la vinculación del ticket original en el evento y RESETEAR ESTADO
-                    updates[`${eventoId}/${codigoBoleto}/vinculado_a`] = null;
-                    updates[`${eventoId}/${codigoBoleto}/codigoEstudiante`] = null;
-                    updates[`${eventoId}/${codigoBoleto}/usado`] = false;
-                    updates[`${eventoId}/${codigoBoleto}/fechaIngreso`] = null;
-                    
-                    // 2. Eliminar el acceso especial Y LA ASISTENCIA AL EVENTO del perfil del estudiante
-                    updates[`clase/${codigoEstudiante}/accesos_especiales/${eventoId}`] = null;
-                    updates[`clase/${codigoEstudiante}/asistencias/evento_${eventoId}`] = null;
-                });
+                // RUTAS CORREGIDAS
+                updates[`\({eventoId}/\){codigoBoleto}/vinculado_a`] = null;
+                updates[`\({eventoId}/\){codigoBoleto}/codigoEstudiante`] = null;
+                updates[`\({eventoId}/\){codigoBoleto}/nombre`] = null; 
+                updates[`\({eventoId}/\){codigoBoleto}/fechaIngreso`] = null;
                 
-                // 3. Borrar el historial de boletos del estudiante
-                updates[`clase/${codigoEstudiante}/boletos`] = null;
+                // Mantener valores para evitar que Firebase borre el nodo del código único
+                updates[`\({eventoId}/\){codigoBoleto}/usado`] = false;
+                updates[`\({eventoId}/\){codigoBoleto}/estado`] = "disponible"; 
+                
+                // Borrar rastro en el perfil del estudiante
+                updates[`clase/\({codigoEstudiante}/accesos_especiales/\){eventoId}`] = null;
+                updates[`clase/\({codigoEstudiante}/asistencias/evento_\){eventoId}`] = null;
+            });
+            
+            updates[`clase/${codigoEstudiante}/boletos`] = null;
 
-                // Ejecutar todos los borrados simultáneamente
-                db.ref().update(updates).then(() => {
-                    alert(`✅ Los boletos de ${nombreEstudiante} han sido desvinculados exitosamente. Ahora los tickets están libres y reiniciados.`);
-                    document.getElementById("desvincular-codigo").value = '';
-                    adminCargarListadoGeneral();
-                }).catch(e => alert("Error al desvincular boletos: " + e));
-            } else {
-                alert("Operación cancelada.");
-            }
-        });
-    }
+            db.ref().update(updates).then(() => {
+                alert(`✅ Los boletos de ${nombreEstudiante} han sido desvinculados exitosamente. Ahora los tickets están libres y reiniciados desde cero.`);
+                document.getElementById("desvincular-codigo").value = '';
+                adminCargarListadoGeneral();
+            }).catch(e => alert("Error al desvincular boletos: " + e));
+        }
+    });
+}
 
     function adminCambiarPassword() {
         const codigo = document.getElementById("pass-codigo").value.trim().toUpperCase();
@@ -947,128 +1145,335 @@ const firebaseConfig = {
     }
 
     // --- NUEVAS FUNCIONES: CONTROL DE BOLETOS DE EVENTO ---
-    function adminCargarBoletosEvento() {
+    function adminCargarBoletosEvento(soloVinculados = false) {
         const evento = document.getElementById("select-evento-boletos").value;
         const contenedor = document.getElementById("boletos-lista-container");
         if (!evento) return alert("Selecciona un evento de la lista.");
 
         contenedor.innerHTML = "<p style='color: #a5b4fc;'>Cargando base de datos del evento...</p>";
+        
         db.ref(evento).once('value').then(snap => {
             if (!snap.exists()) {
                 contenedor.innerHTML = "<p style='color: #f87171;'>No hay boletos registrados para este evento.</p>";
                 return;
             }
-            
+
+            let arrayBoletos = [];
+            let countUsados = 0;
+            let countTotal = 0;
+
+            // Extraer y procesar datos
+            snap.forEach(child => {
+                countTotal++;
+                const data = child.val();
+                
+                if (data.usado) countUsados++;
+
+                // Si el filtro "soloVinculados" está activo, filtramos. Si no tiene 'vinculado_a', se omite.
+                if (soloVinculados && !data.vinculado_a) return;
+
+                arrayBoletos.push({
+                    codigo: child.key,
+                    usado: data.usado,
+                    hora: data.fechaIngreso || "-",
+                    vinculado_a: data.vinculado_a || null,
+                    // Extraer solo los números del código (Ej: "#E-00123" -> 123) para poder ordenarlos
+                    numIdentificador: parseInt(child.key.replace(/\D/g, '') || "0", 10) 
+                });
+            });
+
+            // Ordenar el arreglo por orden numérico de menor a mayor
+            arrayBoletos.sort((a, b) => a.numIdentificador - b.numIdentificador);
+
+            if (arrayBoletos.length === 0) {
+                contenedor.innerHTML = "<p style='color: #38bdf8; font-weight: bold;'>Actualmente no hay ningún boleto vinculado por los estudiantes para este evento.</p>";
+                return;
+            }
+
+            let tituloLista = soloVinculados ? "🔗 Solo Boletos Vinculados a Alumnos" : "Lista Detallada de Todos los Boletos";
+
             let html = `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:10px;">
-                <strong style="color:#818cf8;">Lista Detallada de Boletos</strong>
+                <strong style="color:#818cf8;">${tituloLista}</strong>
                 <button class="btn-danger" style="padding: 6px 12px; font-size: 0.75rem;" onclick="adminReiniciarBoletoMasivo('${evento}')">⚠️ Reiniciar TODOS a 0</button>
             </div>
             <div style="max-height: 350px; overflow-y: auto; border: 1px solid #3730a3; padding: 10px; border-radius: 8px; background: #1e1b4b;">
             <table style="width:100%; border-collapse: collapse; font-size: 0.8rem; text-align: left;">
                 <thead>
                     <tr style="border-bottom: 1px solid #4f46e5; color: #a5b4fc;">
-                        <th style="padding: 8px; position:sticky; top:0; background:#1e1b4b; z-index:1;">Código</th>
+                        <th style="padding: 8px; position:sticky; top:0; background:#1e1b4b; z-index:1;">Código Boleto</th>
                         <th style="padding: 8px; position:sticky; top:0; background:#1e1b4b; z-index:1;">Estado</th>
+                        ${soloVinculados ? `<th style="padding: 8px; position:sticky; top:0; background:#1e1b4b; z-index:1;">Pertenece a</th>` : ''}
                         <th style="padding: 8px; position:sticky; top:0; background:#1e1b4b; z-index:1;">Hora Ingreso</th>
                         <th style="padding: 8px; position:sticky; top:0; background:#1e1b4b; z-index:1;">Acción</th>
                     </tr>
                 </thead>
                 <tbody>`;
-            
-            let countUsados = 0;
-            let countTotal = 0;
 
-            snap.forEach(child => {
-                countTotal++;
-                const data = child.val();
-                const codigo = child.key;
-                const usado = data.usado;
-                const hora = data.fechaIngreso || "-";
-                
-                if(usado) countUsados++;
+            arrayBoletos.forEach(bol => {
+                let estadoHtml = bol.usado ? `<span style="color:#f87171; font-weight:bold;">Usado 🔴</span>` : `<span style="color:#4ade80;">Libre 🟢</span>`;
+                let tdVinculado = soloVinculados ? `<td style="padding: 8px; font-weight: bold; color: #fbbf24;">${bol.vinculado_a}</td>` : '';
 
-                let estadoHtml = usado ? `<span style="color:#f87171; font-weight:bold;">Usado 🔴</span>` : `<span style="color:#4ade80;">Libre 🟢</span>`;
-                
                 html += `<tr style="border-bottom: 1px solid #312e81;">
-                    <td style="padding: 8px; font-family: monospace; color:#e0e7ff;">${codigo}</td>
+                    <td style="padding: 8px; font-family: monospace; color:#e0e7ff; font-weight: 800;">${bol.codigo}</td>
                     <td style="padding: 8px;">${estadoHtml}</td>
-                    <td style="padding: 8px; color: #94a3b8;">${hora}</td>
+                    ${tdVinculado}
+                    <td style="padding: 8px; color: #94a3b8;">${bol.hora}</td>
                     <td style="padding: 8px;">
-                        ${usado ? `<button style="background:#dc2626; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-weight:bold;" onclick="adminReiniciarBoletoIndividual('${evento}', '${codigo}')">Resetear</button>` : `<span style="color:#475569;">-</span>`}
+                        ${bol.usado ? `<button style="background:#dc2626; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-weight:bold;" onclick="adminReiniciarBoletoIndividual('${evento}', '${bol.codigo}')">Resetear</button>` : `<span style="color:#475569;">-</span>`}
                     </td>
                 </tr>`;
             });
 
-            let porcentaje = Math.round((countUsados/countTotal)*100);
             html += `</tbody></table></div>`;
-            html = `<div style="background:#3730a3; color:white; padding:10px; border-radius:8px; margin-bottom:15px; font-weight:bold;">📊 Progreso: ${countUsados} de ${countTotal} boletos escaneados (${porcentaje}%)</div>` + html;
+            
+            if (!soloVinculados) {
+                let porcentaje = Math.round((countUsados/countTotal)*100) || 0;
+                html = `<div style="background:#3730a3; color:white; padding:10px; border-radius:8px; margin-bottom:15px; font-weight:bold;">📊 Progreso general: ${countUsados} de ${countTotal} boletos escaneados (${porcentaje}%)</div>` + html;
+            } else {
+                html = `<div style="background:#0284c7; color:white; padding:10px; border-radius:8px; margin-bottom:15px; font-weight:bold;">📌 Total de tickets asegurados por alumnos: ${arrayBoletos.length}</div>` + html;
+            }
+
             contenedor.innerHTML = html;
         });
     }
 
-    function adminReiniciarBoletoIndividual(evento, codigo) {
-        if(confirm(`¿Estás seguro de restablecer el boleto ${codigo} como NO USADO?`)) {
-            db.ref(`${evento}/${codigo}`).once('value').then(snap => {
-                if (snap.exists()) {
-                    const dataBoleto = snap.val();
-                    const updates = {};
-                    
-                    updates[`${evento}/${codigo}/usado`] = false;
-                    updates[`${evento}/${codigo}/fechaIngreso`] = null;
-                    
-                    if (dataBoleto.vinculado_a) {
-                        updates[`clase/${dataBoleto.vinculado_a}/asistencias/evento_${evento}`] = null;
-                        updates[`clase/${dataBoleto.vinculado_a}/boletos/${codigo}`] = null;
-                        updates[`clase/${dataBoleto.vinculado_a}/accesos_especiales/${evento}`] = null;
+    function adminReiniciarBoletoIndividual(eventoId, codigoBoleto) {
+    // 1. Validar que los parámetros no vengan como texto literal o vacíos
+    if (!eventoId || !codigoBoleto || eventoId === '{eventoId}' || codigoBoleto === '{codigoBoleto}') {
+        alert("Error: Los parámetros del evento o del boleto no son válidos.");
+        return;
+    }
+
+    if (!confirm("ACCIÓN CRÍTICA: ¿Confirmas el reseteo del boleto " + codigoBoleto + "? Quedará libre como nuevo.")) {
+        return;
+    }
+
+    // Construcción de ruta 100% segura usando comillas simples y comas/signos +
+    var rutaBoleto = eventoId + "/" + codigoBoleto;
+    var boletoRef = db.ref(rutaBoleto);
+
+    boletoRef.once('value').then(function(snapshot) {
+        if (!snapshot.exists()) {
+            console.error("Ruta no encontrada en Firebase: " + rutaBoleto);
+            alert("Error: No se encontró el boleto '" + codigoBoleto + "' en la ruta '" + rutaBoleto + "' de la base de datos.");
+            return;
+        }
+
+        var data = snapshot.val() || {};
+        var updates = {};
+
+        // 2. Rastreo del estudiante vinculado para eliminar el registro de su cuenta
+        var estudianteId = data.vinculado_a || data.codigoEstudiante;
+        if (estudianteId) {
+            updates["clase/" + estudianteId + "/boletos/" + codigoBoleto] = null;
+            updates["clase/" + estudianteId + "/accesos_especiales/" + eventoId] = null;
+            updates["clase/" + estudianteId + "/asistencias/evento_" + eventoId] = null;
+        }
+
+        // 3. Reseteo de propiedades del boleto en el evento
+        updates[rutaBoleto + "/estado"] = "disponible";
+        updates[rutaBoleto + "/usado"] = false;
+
+        // Eliminación explícita de campos de vinculación
+        updates[rutaBoleto + "/vinculado_a"] = null;
+        updates[rutaBoleto + "/codigoEstudiante"] = null;
+        updates[rutaBoleto + "/nombre"] = null;
+        updates[rutaBoleto + "/fechaIngreso"] = null;
+        updates[rutaBoleto + "/horaIngreso"] = null;
+        updates[rutaBoleto + "/fechaVinculacion"] = null;
+        updates[rutaBoleto + "/asistencia"] = null;
+
+        // 4. Ejecución atómica en Firebase
+        db.ref().update(updates).then(function() {
+            console.log("ÉXITO: Boleto " + codigoBoleto + " reseteado correctamente.");
+            
+            // Recargar la tabla
+            if (typeof adminCargarBoletosEvento === "function") {
+                adminCargarBoletosEvento();
+            } else if (typeof adminCargarListadoGeneral === "function") {
+                adminCargarListadoGeneral();
+            }
+        }).catch(function(err) {
+            console.error("ERROR FIREBASE:", err);
+            alert("Error al actualizar la base de datos: " + err.message);
+        });
+
+    }).catch(function(err) {
+        console.error("ERROR DE LECTURA:", err);
+        alert("Error de conexión con Firebase: " + err.message);
+    });
+}
+
+    function adminReiniciarBoletoMasivo(evento) {
+    if(confirm(`⚠️ PELIGRO: Vas a borrar TODO el historial de los boletos del evento dejándolos de fábrica (Como Nuevos). ¿Estás seguro?`)) {
+        db.ref(evento).once('value').then(snap => {
+            const updates = {};
+            
+            snap.forEach(child => {
+                const dataBoleto = child.val();
+                const codigo = child.key;
+                
+                // Buscar si estaba vinculado para limpiar al alumno
+                const estudiante = dataBoleto.vinculado_a || dataBoleto.codigoEstudiante;
+                if (estudiante) {
+                    updates[`clase/\({estudiante}/asistencias/evento_\){evento}`] = null;
+                    updates[`clase/\({estudiante}/boletos/\){codigo}`] = null;
+                    updates[`clase/\({estudiante}/accesos_especiales/\){evento}`] = null;
+                }
+
+                // Sobrescribir el boleto como nuevo
+                updates[`\({evento}/\){codigo}`] = {
+                    estado: "disponible",
+                    usado: false
+                };
+            });
+
+            db.ref().update(updates).then(() => {
+                alert(`✅ Todos los boletos han sido formateados de fábrica.`);
+                adminCargarBoletosEvento();
+            }).catch(error => {
+                alert("Error durante el reseteo masivo: " + error);
+            });
+        });
+    }
+}
+
+    // --- NUEVAS FUNCIONES: ANUNCIO GLOBAL ---
+    // --- NUEVAS FUNCIONES: ANUNCIO Y NOTIFICACIÓN FUSIONADOS ---
+    function adminPublicarAnuncioFusionado() {
+        const titulo = document.getElementById("anuncio-titulo").value.trim();
+        const mensaje = document.getElementById("anuncio-mensaje").value.trim();
+        const expiracion = document.getElementById("anuncio-expiracion").value;
+        const color = document.getElementById("anuncio-color").value;
+        const fileInput = document.getElementById("anuncio-imagen-file");
+        
+        if(!titulo || !mensaje || !expiracion) return alert("❌ El Título, el Mensaje y la Fecha/Hora de Expiración son obligatorios.");
+        
+        const expiracionISO = new Date(expiracion).toISOString();
+        const timestamp = new Date().getTime();
+
+        const guardarEnBD = (imagenBase64) => {
+            const datosAnuncio = { titulo: titulo, mensaje: mensaje, expiracion: expiracionISO, activo: true, color: color };
+            if (imagenBase64) datosAnuncio.imagen = imagenBase64;
+
+            // 1. Guardar como Anuncio Global Pop-up
+            db.ref('configuracion/anuncioGlobal').set(datosAnuncio).then(() => {
+                
+                // 2. Insertar simultáneamente en la bandeja de notificaciones de TODOS los estudiantes
+                db.ref('clase').once('value').then(snap => {
+                    if(snap.exists()){
+                        const updates = {};
+                        snap.forEach(child => {
+                            updates[`clase/${child.key}/notificaciones/${timestamp}`] = {
+                                titulo: titulo, cuerpo: mensaje, color: color, fecha: expiracionISO, leida: false
+                            };
+                        });
+                        db.ref().update(updates).then(() => {
+                            alert("📢 ¡Anuncio Global publicado y Notificaciones enviadas con éxito!");
+                            document.getElementById("anuncio-titulo").value = "";
+                            document.getElementById("anuncio-mensaje").value = "";
+                            document.getElementById("anuncio-expiracion").value = "";
+                            document.getElementById("anuncio-imagen-file").value = "";
+                        });
                     }
-                    
-                    db.ref().update(updates).then(() => {
-                        adminCargarBoletosEvento(); 
-                    });
+                });
+            });
+        };
+
+        if (fileInput.files && fileInput.files[0]) {
+            const reader = new FileReader();
+            reader.onload = e => guardarEnBD(e.target.result);
+            reader.readAsDataURL(fileInput.files[0]);
+        } else {
+            guardarEnBD(null);
+        }
+    }
+
+    function adminDesactivarYLimpiarAnuncios() {
+        if(confirm("¿Quitar el anuncio actual de las pantallas y vaciar las notificaciones de todos los alumnos?")) {
+            db.ref('configuracion/anuncioGlobal/activo').set(false);
+            
+            db.ref('clase').once('value').then(snap => {
+                if(snap.exists()){
+                    const updates = {};
+                    snap.forEach(child => updates[`clase/${child.key}/notificaciones`] = null);
+                    db.ref().update(updates).then(() => alert("✅ Pop-up desactivado y notificaciones borradas en todos los portales."));
                 }
             });
         }
     }
 
-    function adminReiniciarBoletoMasivo(evento) {
-        if(confirm(`⚠️ PELIGRO: Vas a reiniciar TODOS los boletos del evento ${evento.toUpperCase()} dejándolos en cero (NO USADOS). ¿Estás totalmente seguro?`)) {
-            db.ref(evento).once('value').then(snap => {
-                const updates = {};
-                snap.forEach(child => {
-                    const dataBoleto = child.val();
-                    updates[`${evento}/${child.key}/usado`] = false;
-                    updates[`${evento}/${child.key}/fechaIngreso`] = null;
-                    
-                    if (dataBoleto.vinculado_a) {
-                        updates[`clase/${dataBoleto.vinculado_a}/asistencias/evento_${evento}`] = null;
-                        updates[`clase/${dataBoleto.vinculado_a}/boletos/${child.key}`] = null;
-                        updates[`clase/${dataBoleto.vinculado_a}/accesos_especiales/${evento}`] = null;
-                    }
-                });
-                db.ref().update(updates).then(() => {
-                    alert(`✅ Todos los boletos de ${evento.toUpperCase()} han sido reseteados y sus asistencias cruzadas eliminadas.`);
-                    adminCargarBoletosEvento();
-                });
-            });
-        }
+    // --- NUEVAS FUNCIONES: EDITOR MANUAL DE FICHAS ---
+    let fichaManualCodigoActual = "";
+
+    function adminCargarFichaManual() {
+        const codigo = document.getElementById("ficha-codigo").value.trim().toUpperCase();
+        if(!codigo.startsWith("CLASE-2026-")) return alert("Ingresa un código válido (Ej: CLASE-2026-001).");
+
+        db.ref(`clase/${codigo}`).once('value').then(snap => {
+            if(snap.exists()) {
+                fichaManualCodigoActual = codigo;
+                const data = snap.val();
+                const p = data.perfil || {};
+                
+                document.getElementById("ficha-edad").value = p.edad || "";
+                document.getElementById("ficha-celular").value = p.celular || "";
+                document.getElementById("ficha-comunidad").value = p.comunidad || "";
+                document.getElementById("ficha-nivel").value = p.nivel || "";
+                document.getElementById("ficha-foto-file").value = ""; // Limpiamos el file input
+                
+                document.getElementById("ficha-formulario").style.display = "flex";
+                alert(`✅ Ficha de ${codigo} cargada. Ahora puedes editarla.`);
+            } else {
+                alert("❌ El código no existe.");
+                document.getElementById("ficha-formulario").style.display = "none";
+            }
+        });
     }
 
-    // --- NUEVAS FUNCIONES: ANUNCIO GLOBAL ---
-    function adminPublicarAnuncio() {
-        const mensaje = document.getElementById("anuncio-mensaje").value.trim();
-        const expiracion = document.getElementById("anuncio-expiracion").value;
+    function adminGuardarFichaManual() {
+        if(!fichaManualCodigoActual) return;
         
-        if(!mensaje || !expiracion) return alert("❌ Debes escribir un mensaje y fijar la fecha/hora de expiración.");
+        const fileInput = document.getElementById("ficha-foto-file");
+        
+        const nuevosDatos = {
+            edad: document.getElementById("ficha-edad").value.trim(),
+            celular: document.getElementById("ficha-celular").value.trim(),
+            comunidad: document.getElementById("ficha-comunidad").value.trim(),
+            nivel: document.getElementById("ficha-nivel").value,
+        };
 
-        const expiracionISO = new Date(expiracion).toISOString();
+        const guardarPerfilBD = (fotoUrl) => {
+            db.ref(`clase/${fichaManualCodigoActual}/perfil`).once('value').then(snap => {
+                let perfilActual = snap.exists() ? snap.val() : {};
+                
+                // Actualizamos los campos
+                perfilActual.edad = nuevosDatos.edad;
+                perfilActual.celular = nuevosDatos.celular;
+                perfilActual.comunidad = nuevosDatos.comunidad;
+                perfilActual.nivel = nuevosDatos.nivel;
+                if (fotoUrl) perfilActual.foto = fotoUrl;
 
-        db.ref('configuracion/anuncioGlobal').set({
-            mensaje: mensaje,
-            expiracion: expiracionISO,
-            activo: true
-        }).then(() => {
-            alert("📢 ¡Anuncio publicado en vivo! Todos los alumnos lo verán al entrar a su portal.");
-        });
+                db.ref(`clase/${fichaManualCodigoActual}/perfil`).set(perfilActual).then(() => {
+                    alert(`✅ Ficha oficial de ${fichaManualCodigoActual} guardada y actualizada correctamente.`);
+                    document.getElementById("ficha-formulario").style.display = "none";
+                    document.getElementById("ficha-codigo").value = "";
+                    adminCargarListadoGeneral();
+                });
+            });
+        };
+
+        // Proceso de subida de imagen si el admin seleccionó una
+        if (fileInput.files && fileInput.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                guardarPerfilBD(e.target.result);
+            };
+            reader.readAsDataURL(fileInput.files[0]);
+        } else {
+            // Guarda sin tocar la foto actual
+            guardarPerfilBD(null);
+        }
     }
 
     function adminBorrarAnuncio() {
@@ -1081,40 +1486,649 @@ const firebaseConfig = {
         }
     }
 
-    // Función para navegar entre las pestañas del Admin
+   // Navegación Inteligente del Panel de Admin
     function cambiarSeccionAdmin(idSeccion, boton) {
         document.querySelectorAll('.admin-section').forEach(sec => sec.classList.remove('active'));
         document.querySelectorAll('.admin-tab-btn').forEach(btn => btn.classList.remove('active'));
         
         document.getElementById('sec-' + idSeccion).classList.add('active');
         boton.classList.add('active');
+
+        if(idSeccion === 'graficos') adminCargarMetricasGraficos();
+        if(idSeccion === 'proyectos') adminCargarProyectosFinales();
+        if(idSeccion === 'social') adminCargarLeaderboard();
+        if(idSeccion === 'calendario') adminCargarCalendarioDinamico();
+        if(idSeccion === 'diplomas') adminCargarElegiblesGraduacion();
     }
 
-    function adminGuardarTema() {
-        const claseId = document.getElementById("select-clase-tema").value;
-        const temaTexto = document.getElementById("input-tema-texto").value.trim();
-        const ponenteTexto = document.getElementById("input-ponente-texto").value.trim();
+    // --- 1. FILTRADO EN TIEMPO REAL Y BÚSQUEDA ---
+    function adminFiltrarAlumnos() {
+        const textoBusqueda = document.getElementById("buscar-alumno").value.toLowerCase().trim();
+        const filtroEstado = document.getElementById("filtro-estado-alumno").value;
+        const filas = document.querySelectorAll("#tabla-alumnos-body tr");
 
-        if (!claseId) return alert("Selecciona una clase primero.");
+        filas.forEach(fila => {
+            const codigo = fila.getAttribute("data-codigo") || "";
+            const nombre = fila.getAttribute("data-nombre") || "";
+            const estadoPerfil = fila.getAttribute("data-perfil") || "";
+            const ausenciasConsecutivas = parseInt(fila.getAttribute("data-ausencias") || "0", 10);
 
-        const updates = {};
-        updates[`configuracion/temasClases/${claseId}`] = temaTexto;
-        // Solo guardamos el ponente si se ingresó algo, de lo contrario dejamos que use el predeterminado
-        if(ponenteTexto) {
-            updates[`configuracion/ponentesClases/${claseId}`] = ponenteTexto;
-        } else {
-            // Si lo dejó en blanco, borramos cualquier ponente forzado para que vuelva al original
-            updates[`configuracion/ponentesClases/${claseId}`] = null;
+            const coincideBusqueda = codigo.toLowerCase().includes(textoBusqueda) || nombre.toLowerCase().includes(textoBusqueda);
+            
+            let coincideEstado = true;
+            if (filtroEstado === "alerta") coincideEstado = ausenciasConsecutivas >= 2;
+            if (filtroEstado === "pendiente") coincideEstado = estadoPerfil === "pendiente";
+            if (filtroEstado === "completado") coincideEstado = estadoPerfil === "completado";
+
+            if (coincideBusqueda && coincideEstado) {
+                fila.style.display = "";
+            } else {
+                fila.style.display = "none";
+            }
+        });
+    }
+
+    // --- 2. CONTROL DEL RETO DOMINICAL & RANKING SOCIAL ---
+    function adminCargarLeaderboard() {
+        const contenedor = document.getElementById("contenedor-leaderboard-social");
+        contenedor.innerHTML = "<p style='color: #fbbf24;'>Calculando puntos de interacción...</p>";
+
+        db.ref('clase').once('value').then(snap => {
+            if (!snap.exists()) {
+                contenedor.innerHTML = "<p style='color: #fef3c7;'>No hay alumnos registrados.</p>";
+                return;
+            }
+
+            let alumnos = [];
+            snap.forEach(child => {
+                const data = child.val();
+                alumnos.push({
+                    codigo: child.key,
+                    nombre: data.nombre || "Sin nombre",
+                    puntos: data.puntos_sociales || 0
+                });
+            });
+
+            alumnos.sort((a, b) => b.puntos - a.puntos);
+
+            let html = `<table style="width:100%; border-collapse: collapse; font-size: 0.85rem; text-align: left;">
+                <thead>
+                    <tr style="border-bottom: 2px solid #78350f; color: #fbbf24;">
+                        <th style="padding: 10px;">Posición</th>
+                        <th style="padding: 10px;">Código</th>
+                        <th style="padding: 10px;">Alumno</th>
+                        <th style="padding: 10px; text-align: center;">Puntos Sociales</th>
+                        <th style="padding: 10px; text-align: center;">Ajuste Manual</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+            alumnos.forEach((al, index) => {
+                let medalla = `#${index + 1}`;
+                if (index === 0) medalla = "🥇 1er Lugar";
+                if (index === 1) medalla = "🥈 2do Lugar";
+                if (index === 2) medalla = "🥉 3er Lugar";
+
+                html += `<tr style="border-bottom: 1px solid #78350f;">
+                    <td style="padding: 10px; font-weight: bold; color: #fbbf24;">${medalla}</td>
+                    <td style="padding: 10px; font-family: monospace;">${al.codigo}</td>
+                    <td style="padding: 10px; text-transform: capitalize;">${al.nombre}</td>
+                    <td style="padding: 10px; text-align: center; font-size: 1.2rem; font-weight: 800; color: #f59e0b;">${al.puntos} pts</td>
+                    <td style="padding: 10px; text-align: center;">
+                        <button class="btn-action" style="padding: 4px 8px; font-size: 0.75rem; background: #16a34a;" onclick="adminModificarPuntosSociales('${al.codigo}', 1)">+1 Pt</button>
+                        <button class="btn-danger" style="padding: 4px 8px; font-size: 0.75rem; background: #dc2626;" onclick="adminModificarPuntosSociales('${al.codigo}', -1)">-1 Pt</button>
+                    </td>
+                </tr>`;
+            });
+
+            html += `</tbody></table>`;
+            contenedor.innerHTML = html;
+        });
+    }
+
+    function adminModificarPuntosSociales(codigo, cambio) {
+        db.ref(`clase/${codigo}/puntos_sociales`).once('value').then(snap => {
+            let actual = snap.val() || 0;
+            let nuevo = Math.max(0, actual + cambio);
+            
+            db.ref(`clase/${codigo}`).update({ puntos_sociales: nuevo }).then(() => {
+                adminCargarLeaderboard();
+            });
+        });
+    }
+
+  // --- 3. CALENDARIO DINÁMICO EN FIREBASE (GESTOR INTEGRAL) ---
+let claseOriginalEstado = null;
+let arregloClasesGlobal = [];
+
+// Precargamos las 20 clases base para que siempre te aparezcan en la lista desplegable
+const clasesBase = [
+    { id: "27_1300", fecha: "2026-09-27", hora: "13:00", titulo: "Inauguración Curso", tema: "", ponente: "Equipo ELEGIDOS", modalidad: "Presencial" },
+    { id: "30_1500", fecha: "2026-09-30", hora: "15:00", titulo: "Clase 5", tema: "", ponente: "Equipo ELEGIDOS", modalidad: "Online" },
+    { id: "04_1500", fecha: "2026-10-04", hora: "15:00", titulo: "Masterclass I", tema: "Atmosferas Visuales y Dirección Creativa.", ponente: "Mahu Films", modalidad: "Presencial" },
+    { id: "07_1500", fecha: "2026-10-07", hora: "15:00", titulo: "Clase 7", tema: "", ponente: "Equipo ELEGIDOS", modalidad: "Online" },
+    { id: "11_1500", fecha: "2026-10-11", hora: "15:00", titulo: "Clase 8", tema: "", ponente: "Roberto Martell", modalidad: "Presencial" },
+    { id: "14_1500", fecha: "2026-10-14", hora: "15:00", titulo: "Clase 9", tema: "", ponente: "Equipo ELEGIDOS", modalidad: "Online" },
+    { id: "18_1500", fecha: "2026-10-18", hora: "15:00", titulo: "Clase 10", tema: "", ponente: "Equipo ELEGIDOS", modalidad: "Presencial" },
+    { id: "21_1500", fecha: "2026-10-21", hora: "15:00", titulo: "Clase 11", tema: "", ponente: "Equipo ELEGIDOS", modalidad: "Online" },
+    { id: "25_1500", fecha: "2026-10-25", hora: "15:00", titulo: "Masterclass II", tema: "Crear no es lo que parece", ponente: "DREAMEZ", modalidad: "Presencial" },
+    { id: "28_1500", fecha: "2026-10-28", hora: "15:00", titulo: "Clase 13", tema: "", ponente: "Equipo ELEGIDOS", modalidad: "Online" },
+    { id: "01_1500", fecha: "2026-11-01", hora: "15:00", titulo: "Clase 14", tema: "", ponente: "Equipo ELEGIDOS", modalidad: "Presencial" },
+    { id: "04_1500_2", fecha: "2026-11-04", hora: "15:00", titulo: "Clase 15", tema: "", ponente: "Equipo ELEGIDOS", modalidad: "Online" },
+    { id: "08_1300", fecha: "2026-11-08", hora: "13:00", titulo: "Festival Creativo", tema: "", ponente: "Equipo ELEGIDOS", modalidad: "Presencial" },
+    { id: "11_1500_2", fecha: "2026-11-11", hora: "15:00", titulo: "Clase 17", tema: "", ponente: "Equipo ELEGIDOS", modalidad: "Online" },
+    { id: "15_1500", fecha: "2026-11-15", hora: "15:00", titulo: "Clase 18", tema: "", ponente: "Equipo ELEGIDOS", modalidad: "Presencial" },
+    { id: "18_1500_2", fecha: "2026-11-18", hora: "15:00", titulo: "Clase 19", tema: "", ponente: "Equipo ELEGIDOS", modalidad: "Online" },
+    { id: "22_1500", fecha: "2026-11-22", hora: "15:00", titulo: "Clase 20", tema: "", ponente: "Equipo ELEGIDOS", modalidad: "Presencial" },
+    { id: "25_1500_2", fecha: "2026-11-25", hora: "15:00", titulo: "Clase 21", tema: "", ponente: "Equipo ELEGIDOS", modalidad: "Online" },
+    { id: "29_1500", fecha: "2026-11-29", hora: "15:00", titulo: "Entrega de Proyectos", tema: "", ponente: "Equipo ELEGIDOS", modalidad: "Presencial" },
+    { id: "02_1500", fecha: "2026-12-02", hora: "15:00", titulo: "Clase 23", tema: "", ponente: "Equipo ELEGIDOS", modalidad: "Online" }
+];
+
+function adminCargarCalendarioDinamico() {
+    const contenedor = document.getElementById("contenedor-calendario-dinamico");
+    const selector = document.getElementById("select-clase-editar");
+    const selectorDia = document.getElementById("select-dia-editar");
+    
+    if (contenedor) contenedor.innerHTML = "<p style='color: #a78bfa;'>Cargando agenda de clases...</p>";
+
+    db.ref('configuracion/calendarioClases').on('value', snap => {
+        let clasesFirebase = {};
+        if (snap.exists()) {
+            clasesFirebase = snap.val();
         }
 
-        db.ref().update(updates).then(() => {
-            alert(`✅ Datos de la clase guardados exitosamente.`);
-            document.getElementById("input-tema-texto").value = "";
-            document.getElementById("input-ponente-texto").value = "";
-        }).catch(e => alert("Error al guardar: " + e));
+        // Usamos un Map para evitar pérdidas de datos y asegurar que vemos TODO
+        let mapaClases = new Map();
+
+        if (typeof clasesBase !== 'undefined') {
+            clasesBase.forEach(c => mapaClases.set(c.id, { ...c }));
+        }
+
+        // Forzamos la inclusión íntegra de Firebase (incluyendo duplicados o añadidos)
+        for (let key in clasesFirebase) {
+            if (mapaClases.has(key)) {
+                mapaClases.set(key, { ...mapaClases.get(key), ...clasesFirebase[key] });
+            } else {
+                mapaClases.set(key, { id: key, ...clasesFirebase[key] });
+            }
+        }
+
+        let clases = Array.from(mapaClases.values());
+
+        // Ordenamiento robusto (evita que las fechas inválidas oculten las clases)
+        clases.sort((a, b) => {
+            let fA = a.fecha ? new Date(a.fecha).getTime() : 0;
+            let fB = b.fecha ? new Date(b.fecha).getTime() : 0;
+            if (isNaN(fA)) fA = 0;
+            if (isNaN(fB)) fB = 0;
+            
+            if (fA === fB) {
+                let hA = a.hora || "00:00";
+                let hB = b.hora || "00:00";
+                return hA.localeCompare(hB);
+            }
+            return fA - fB;
+        });
+
+        arregloClasesGlobal = clases;
+
+        let html = `<table style="width:100%; border-collapse: collapse; font-size: 0.85rem; text-align: left;">
+            <thead>
+                <tr style="border-bottom: 2px solid #4c1d95; color: #a78bfa;">
+                    <th style="padding: 10px;">ID</th>
+                    <th style="padding: 10px;">Fecha / Hora</th>
+                    <th style="padding: 10px;">Título / Tema</th>
+                    <th style="padding: 10px;">Ponente</th>
+                    <th style="padding: 10px; text-align: center;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>`;
+
+        let opcionesDropdown = `<option value="NUEVA">➕ Crear Nuevo Día / Clase...</option>`;
+
+        clases.forEach(c => {
+            // Alerta visual para detectar si hay dos clases el mismo día (Ej: Mié 30 Sept a las 15:00 y a las 20:00)
+            let mismaFecha = clases.filter(x => x.fecha === c.fecha && x.id !== c.id);
+            let warning = mismaFecha.length > 0 ? `<br><span style="color: #f59e0b; font-size: 0.7rem; font-weight: bold;">⚠️ Hay otra clase este mismo día</span>` : '';
+
+            html += `<tr style="border-bottom: 1px solid #4c1d95;">
+                <td style="padding: 10px; font-family: monospace; color: #a78bfa;">${c.id}</td>
+                <td style="padding: 10px; font-weight: bold; color: #e9d5ff;">${c.fecha || 'Sin fecha'} <br><span style="font-weight:normal; font-size:0.75rem; color:#a78bfa;">${c.hora || 'Sin hora'}</span>${warning}</td>
+                <td style="padding: 10px;"><strong>${c.titulo || 'Sin Título'}</strong><br><span style="color:#a855f7;">${c.tema || ''}</span></td>
+                <td style="padding: 10px; font-style: italic; color:#94a3b8;">${c.ponente || 'No asignado'}</td>
+                <td style="padding: 10px; text-align: center;">
+                    <button class="btn-danger" style="padding: 4px 8px; font-size: 0.75rem;" onclick="adminEliminarClaseCalendario('${c.id}')">🗑️ Borrar</button>
+                </td>
+            </tr>`;
+
+            opcionesDropdown += `<option value="${c.id}">${c.fecha ? c.fecha + ' - ' : ''}${c.titulo || c.id}</option>`;
+        });
+
+        html += `</tbody></table>`;
+        if (contenedor) contenedor.innerHTML = html;
+        
+        if (selector) {
+            const valorActual = selector.value;
+            selector.innerHTML = opcionesDropdown;
+            if(clases.find(c => c.id === valorActual)) selector.value = valorActual;
+        }
+
+        if (selectorDia) {
+            const valorActualDia = selectorDia.value;
+            selectorDia.innerHTML = opcionesDropdown;
+            if(clases.find(c => c.id === valorActualDia)) selectorDia.value = valorActualDia;
+        }
+    });
+}
+
+function adminSeleccionarDiaDirecto() {
+    const idSel = document.getElementById("select-dia-editar").value;
+    if (idSel === "NUEVA") {
+        document.getElementById("input-dia-id").value = "";
+        document.getElementById("input-dia-titulo").value = "";
+        document.getElementById("input-tema-texto").value = "";
+        document.getElementById("input-dia-hora").value = "";
+        document.getElementById("input-ponente-texto").value = "";
+    } else {
+        const claseData = arregloClasesGlobal.find(c => c.id === idSel);
+        if (claseData) {
+            document.getElementById("input-dia-id").value = claseData.id;
+            document.getElementById("input-dia-titulo").value = claseData.titulo || "";
+            document.getElementById("input-tema-texto").value = claseData.tema || "";
+            document.getElementById("input-dia-hora").value = claseData.hora || "";
+            document.getElementById("input-ponente-texto").value = claseData.ponente || "";
+        }
+    }
+}
+
+function adminGuardarDiaCompleto() {
+    let id = document.getElementById("input-dia-id").value.trim();
+    const titulo = document.getElementById("input-dia-titulo").value.trim();
+    const tema = document.getElementById("input-tema-texto").value.trim();
+    const hora = document.getElementById("input-dia-hora").value.trim();
+    const ponente = document.getElementById("input-ponente-texto").value.trim();
+
+    if (!titulo) {
+        return alert("❌ Ingresa el título del día.");
     }
 
-    // --- RESTAURACIÓN DE LA FUNCIÓN DE LISTADO GENERAL ---
+    if (!id || id === "NUEVA") {
+        id = "dia_" + Date.now();
+    }
+
+    const updates = {};
+    updates[`configuracion/calendarioClases/${id}`] = {
+        titulo: titulo,
+        tema: tema,
+        hora: hora,
+        fecha: new Date().toISOString().slice(0,10),
+        ponente: ponente,
+        modalidad: "Presencial"
+    };
+    
+    if (tema) updates[`configuracion/temasClases/${id}`] = tema;
+    if (ponente) updates[`configuracion/ponentesClases/${id}`] = ponente;
+
+    db.ref().update(updates).then(() => {
+        alert("✅ Guardado exitosamente.");
+        document.getElementById("select-dia-editar").value = "NUEVA";
+        adminSeleccionarDiaDirecto();
+    }).catch(e => alert("Error al guardar: " + e));
+}
+
+function adminSeleccionarClaseAvanzada() {
+    const idSeleccionado = document.getElementById("select-clase-editar").value;
+    
+    if (idSeleccionado === "NUEVA") {
+        document.getElementById("cal-id").value = "";
+        document.getElementById("cal-fecha").value = "";
+        document.getElementById("cal-hora").value = "15:00";
+        document.getElementById("cal-titulo").value = "";
+        document.getElementById("cal-tema").value = "";
+        document.getElementById("cal-ponente").value = "";
+        if(document.getElementById("cal-modalidad")) document.getElementById("cal-modalidad").value = "Presencial";
+        claseOriginalEstado = null;
+    } else {
+        const claseData = arregloClasesGlobal.find(c => c.id === idSeleccionado);
+        if (claseData) {
+            document.getElementById("cal-id").value = claseData.id;
+            document.getElementById("cal-fecha").value = claseData.fecha || "";
+            document.getElementById("cal-hora").value = claseData.hora || "";
+            document.getElementById("cal-titulo").value = claseData.titulo || "";
+            document.getElementById("cal-tema").value = claseData.tema || "";
+            document.getElementById("cal-ponente").value = claseData.ponente || "";
+            if(document.getElementById("cal-modalidad")) document.getElementById("cal-modalidad").value = claseData.modalidad || "Presencial";
+            
+            claseOriginalEstado = { ...claseData };
+        }
+    }
+}
+
+function adminGuardarClaseAvanzada() {
+    let id = document.getElementById("cal-id").value.trim();
+    const fecha = document.getElementById("cal-fecha").value;
+    const hora = document.getElementById("cal-hora").value;
+    const titulo = document.getElementById("cal-titulo").value.trim();
+    const tema = document.getElementById("cal-tema").value.trim();
+    const ponente = document.getElementById("cal-ponente").value.trim();
+    const modalidad = document.getElementById("cal-modalidad") ? document.getElementById("cal-modalidad").value : "Presencial";
+
+    if (!fecha || !titulo) {
+        return alert("❌ Fecha y Título son obligatorios.");
+    }
+
+    if (!id || id === "NUEVA") {
+        id = "clase_" + Date.now();
+    }
+
+    const updates = {};
+    updates[`configuracion/calendarioClases/${id}`] = {
+        titulo: titulo,
+        tema: tema,
+        fecha: fecha,
+        hora: hora,
+        ponente: ponente,
+        modalidad: modalidad
+    };
+    
+    if (tema) updates[`configuracion/temasClases/${id}`] = tema;
+    if (ponente) {
+        updates[`configuracion/ponentesClases/${id}`] = ponente;
+    } else {
+        updates[`configuracion/ponentesClases/${id}`] = null;
+    }
+
+    db.ref().update(updates).then(() => {
+        alert("✅ Guardado correctamente.");
+        if (claseOriginalEstado) {
+            let mensajeAnuncio = "";
+            let enviarAnuncio = false;
+
+            if (claseOriginalEstado.fecha !== fecha || claseOriginalEstado.hora !== hora) {
+                mensajeAnuncio = `📢 ¡Atención! La sesión "${titulo}" ha sido reprogramada para el día ${fecha} a las ${hora}.`;
+                enviarAnuncio = true;
+            } else if (claseOriginalEstado.modalidad !== modalidad) {
+                mensajeAnuncio = `📢 ¡Aviso! La sesión "${titulo}" cambió su modalidad a ${modalidad}.`;
+                enviarAnuncio = true;
+            }
+
+            if (enviarAnuncio) {
+                const expDate = new Date();
+                expDate.setDate(expDate.getDate() + 5);
+                db.ref('configuracion/anuncioGlobal').set({
+                    mensaje: mensajeAnuncio,
+                    expiracion: expDate.toISOString(),
+                    activo: true
+                });
+            }
+        }
+        document.getElementById("select-clase-editar").value = "NUEVA";
+        adminSeleccionarClaseAvanzada();
+    }).catch(e => alert("Error al guardar: " + e));
+}
+
+function adminSeleccionarClaseAvanzada() {
+    const idSeleccionado = document.getElementById("select-clase-editar").value;
+    
+    if (idSeleccionado === "NUEVA") {
+        document.getElementById("cal-id").value = "";
+        document.getElementById("cal-fecha").value = "";
+        document.getElementById("cal-hora").value = "15:00";
+        document.getElementById("cal-titulo").value = "";
+        document.getElementById("cal-tema").value = "";
+        document.getElementById("cal-ponente").value = "";
+        if(document.getElementById("cal-modalidad")) document.getElementById("cal-modalidad").value = "Presencial";
+        claseOriginalEstado = null;
+    } else {
+        const claseData = arregloClasesGlobal.find(c => c.id === idSeleccionado);
+        if (claseData) {
+            document.getElementById("cal-id").value = claseData.id;
+            document.getElementById("cal-fecha").value = claseData.fecha || "";
+            document.getElementById("cal-hora").value = claseData.hora || "";
+            document.getElementById("cal-titulo").value = claseData.titulo || "";
+            document.getElementById("cal-tema").value = claseData.tema || "";
+            document.getElementById("cal-ponente").value = claseData.ponente || "";
+            if(document.getElementById("cal-modalidad")) document.getElementById("cal-modalidad").value = claseData.modalidad || "Presencial";
+            
+            claseOriginalEstado = { ...claseData };
+        }
+    }
+}
+
+function adminGuardarClaseAvanzada() {
+    let id = document.getElementById("cal-id").value.trim();
+    const fecha = document.getElementById("cal-fecha").value;
+    const hora = document.getElementById("cal-hora").value;
+    const titulo = document.getElementById("cal-titulo").value.trim();
+    const tema = document.getElementById("cal-tema").value.trim();
+    const ponente = document.getElementById("cal-ponente").value.trim();
+    const modalidad = document.getElementById("cal-modalidad") ? document.getElementById("cal-modalidad").value : "Presencial";
+
+    if (!fecha || !titulo) {
+        return alert("❌ Fecha y Título son obligatorios.");
+    }
+
+    // SI ES UN NUEVO DÍA, EL SISTEMA GENERA EL ID AUTOMÁTICAMENTE
+    if (!id || id === "NUEVA") {
+        id = "clase_" + Date.now();
+    }
+
+    const updates = {};
+    
+    updates[`configuracion/calendarioClases/${id}`] = {
+        titulo: titulo,
+        tema: tema,
+        fecha: fecha,
+        hora: hora,
+        ponente: ponente,
+        modalidad: modalidad
+    };
+    
+    if (tema) updates[`configuracion/temasClases/${id}`] = tema;
+    if (ponente) {
+        updates[`configuracion/ponentesClases/${id}`] = ponente;
+    } else {
+        updates[`configuracion/ponentesClases/${id}`] = null;
+    }
+
+    db.ref().update(updates).then(() => {
+        alert("✅ Guardado correctamente.");
+        
+        if (claseOriginalEstado) {
+            let mensajeAnuncio = "";
+            let enviarAnuncio = false;
+
+            if (claseOriginalEstado.fecha !== fecha || claseOriginalEstado.hora !== hora) {
+                mensajeAnuncio = `📢 ¡Atención! La sesión "${titulo}" ha sido reprogramada para el día ${fecha} a las ${hora}.`;
+                enviarAnuncio = true;
+            } else if (claseOriginalEstado.modalidad !== modalidad) {
+                mensajeAnuncio = `📢 ¡Aviso! La sesión "${titulo}" cambió su modalidad a ${modalidad}.`;
+                enviarAnuncio = true;
+            }
+
+            if (enviarAnuncio) {
+                const expDate = new Date();
+                expDate.setDate(expDate.getDate() + 5);
+                
+                db.ref('configuracion/anuncioGlobal').set({
+                    mensaje: mensajeAnuncio,
+                    expiracion: expDate.toISOString(),
+                    activo: true
+                });
+            }
+        }
+        
+        document.getElementById("select-clase-editar").value = "NUEVA";
+        adminSeleccionarClaseAvanzada();
+        
+    }).catch(e => alert("Error al guardar: " + e));
+}
+
+function adminEliminarClaseCalendario(id) {
+    if (confirm(`⚠️ ¿Deseas eliminar permanentemente la clase ${id} del calendario?`)) {
+        db.ref(`configuracion/calendarioClases/${id}`).remove();
+    }
+}
+
+    // --- 4. PROYECTOS FINALES Y EVALUACIÓN ---
+    function adminCargarProyectosFinales() {
+        const contenedor = document.getElementById("contenedor-proyectos-finales");
+        contenedor.innerHTML = "<p style='color: #38bdf8;'>Cargando entregas...</p>";
+
+        db.ref('clase').once('value').then(snap => {
+            if (!snap.exists()) {
+                contenedor.innerHTML = "<p style='color: #cbd5e1;'>No hay entregas registradas.</p>";
+                return;
+            }
+
+            let html = "";
+            let contadorProyectos = 0;
+
+            snap.forEach(child => {
+                const data = child.val();
+                if (data.proyecto_final) {
+                    contadorProyectos++;
+                    const pf = data.proyecto_final;
+                    const estado = pf.estado || "Pendiente de Revisión";
+                    let colorEstado = "#fbbf24";
+                    if (estado === "Aprobado") colorEstado = "#4ade80";
+                    if (estado === "Con Observaciones") colorEstado = "#f87171";
+
+                    html += `<div style="background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 15px; margin-bottom: 15px;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px;">
+                            <div>
+                                <h4 style="margin: 0; color: #38bdf8; font-size: 1.05rem;">${data.nombre} <small style="color: #94a3b8; font-family: monospace;">(${child.key})</small></h4>
+                                <p style="margin: 5px 0 0 0; font-size: 0.8rem; color: #94a3b8;">Título: <strong>${pf.titulo || 'Sin Título'}</strong></p>
+                            </div>
+                            <span style="background: ${colorEstado}; color: #0f172a; font-weight: 800; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem;">${estado}</span>
+                        </div>
+                        <p style="font-size: 0.85rem; color: #e2e8f0; margin: 12px 0;">${pf.descripcion || 'Sin descripción adjunta.'}</p>
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <a href="${pf.enlace}" target="_blank" class="btn-action" style="background: #0284c7; padding: 6px 12px; font-size: 0.8rem; text-decoration: none;">🔗 Abrir Proyecto / Drive</a>
+                            <button class="btn-action" style="background: #16a34a; padding: 6px 12px; font-size: 0.8rem;" onclick="adminCalificarProyecto('${child.key}', 'Aprobado')">✅ Aprobar</button>
+                            <button class="btn-action" style="background: #f59e0b; padding: 6px 12px; font-size: 0.8rem;" onclick="adminCalificarProyecto('${child.key}', 'Con Observaciones')">⚠️ Observaciones</button>
+                        </div>
+                    </div>`;
+                }
+            });
+
+            if (contadorProyectos === 0) {
+                contenedor.innerHTML = "<p style='color: #94a3b8;'>Aún ningún estudiante ha subido su proyecto final.</p>";
+            } else {
+                contenedor.innerHTML = html;
+            }
+        });
+    }
+
+    function adminCalificarProyecto(codigo, nuevoEstado) {
+        db.ref(`clase/${codigo}/proyecto_final`).update({
+            estado: nuevoEstado,
+            fecha_evaluacion: new Date().toISOString()
+        }).then(() => {
+            alert(`✅ Proyecto de ${codigo} marcado como: ${nuevoEstado}`);
+            adminCargarProyectosFinales();
+        });
+    }
+
+    // --- 5. FICHA IMPRIMIBLE DE ESTUDIANTE ---
+    function adminGenerarFichaImprimible(codigo) {
+        db.ref(`clase/${codigo}`).once('value').then(snap => {
+            if (!snap.exists()) return alert("El estudiante no existe.");
+            
+            const st = snap.val();
+            const perfil = st.perfil || {};
+            const asistencias = st.asistencias ? Object.keys(st.asistencias).length : 0;
+            const pct = Math.round((asistencias / 20) * 100);
+            const foto = perfil.foto || "LOGO CURSO FOTOGRAFIA DIGITAL.png";
+
+            const htmlFicha = `
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #9333ea; padding-bottom: 15px; margin-bottom: 20px;">
+                    <div>
+                        <h2 style="margin: 0; color: #581c87; font-size: 1.4rem;">ELEGIDOS - PLATAFORMA CREATIVA</h2>
+                        <p style="margin: 2px 0 0 0; color: #64748b; font-size: 0.85rem; font-weight: 600;">Ficha Técnica Oficial del Estudiante</p>
+                    </div>
+                    <button onclick="window.print()" style="background: #9333ea; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer;">🖨️ Imprimir Ficha</button>
+                </div>
+
+                <div style="display: flex; gap: 20px; align-items: center; margin-bottom: 20px;">
+                    <img src="${foto}" style="width: 110px; height: 110px; border-radius: 16px; object-fit: cover; border: 3px solid #9333ea;">
+                    <div>
+                        <h3 style="margin: 0 0 5px 0; text-transform: capitalize; font-size: 1.3rem; color: #0f172a;">${st.nombre || 'Sin Nombre'}</h3>
+                        <p style="margin: 0 0 4px 0; color: #64748b; font-weight: bold;">Código: <span style="font-family: monospace; color: #9333ea;">${codigo}</span></p>
+                        <p style="margin: 0; color: #64748b; font-size: 0.85rem;">Edad: ${perfil.edad || 'N/A'} años | Nivel: ${perfil.nivel || 'N/A'}</p>
+                        <p style="margin: 2px 0 0 0; color: #64748b; font-size: 0.85rem;">Comunidad: <strong>${perfil.comunidad || 'N/A'}</strong></p>
+                    </div>
+                </div>
+
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; margin-bottom: 20px;">
+                    <h4 style="margin: 0 0 8px 0; color: #0f172a;">📊 Métricas del Estudiante</h4>
+                    <p style="margin: 0 0 6px 0; font-size: 0.85rem;">Asistencias Registradas: <strong>${asistencias} de 20 Clases (${pct}%)</strong></p>
+                    <p style="margin: 0 0 6px 0; font-size: 0.85rem;">Puntos Sociales Acumulados: <strong>${st.puntos_sociales || 0} pts</strong></p>
+                    <p style="margin: 0; font-size: 0.85rem;">Proyecto Final: <strong>${st.proyecto_final ? st.proyecto_final.estado : 'No Entregado'}</strong></p>
+                </div>
+
+                <div style="text-align: right;">
+                    <button onclick="document.getElementById('modal-ficha-estudiante').style.display='none'" style="background: #e2e8f0; color: #475569; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer;">Cerrar</button>
+                </div>
+            `;
+
+            document.getElementById("area-impresion-ficha").innerHTML = htmlFicha;
+            document.getElementById("modal-ficha-estudiante").style.display = "flex";
+        });
+    }
+
+    // --- 6. LISTADO OFICIAL DE CANDIDATOS A GRADUACIÓN ---
+    function adminCargarElegiblesGraduacion() {
+        const contenedor = document.getElementById("contenedor-elegibles-graduacion");
+        contenedor.innerHTML = "<p style='color: #a7f3d0;'>Verificando elegibilidad...</p>";
+
+        db.ref('clase').once('value').then(snap => {
+            if (!snap.exists()) {
+                contenedor.innerHTML = "<p style='color: #a7f3d0;'>No hay estudiantes registrados.</p>";
+                return;
+            }
+
+            let html = `<table style="width:100%; border-collapse: collapse; font-size: 0.85rem; text-align: left;">
+                <thead>
+                    <tr style="border-bottom: 2px solid #059669; color: #34d399;">
+                        <th style="padding: 10px;">Código</th>
+                        <th style="padding: 10px;">Alumno</th>
+                        <th style="padding: 10px; text-align: center;">Asistencia %</th>
+                        <th style="padding: 10px; text-align: center;">Estado Proyecto</th>
+                        <th style="padding: 10px; text-align: center;">Elegibilidad Diploma</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+            let elegiblesCount = 0;
+            snap.forEach(child => {
+                const st = child.val();
+                const asistencias = st.asistencias ? Object.keys(st.asistencias).length : 0;
+                const pct = Math.round((asistencias / 20) * 100);
+                const pfEstado = st.proyecto_final ? st.proyecto_final.estado : "Pendiente";
+
+                const esApto = (pct >= 70 && pfEstado === "Aprobado");
+                if (esApto) elegiblesCount++;
+
+                html += `<tr style="border-bottom: 1px solid #065f46;">
+                    <td style="padding: 10px; font-family: monospace; color: #34d399;">${child.key}</td>
+                    <td style="padding: 10px; text-transform: capitalize;">${st.nombre || 'Sin nombre'}</td>
+                    <td style="padding: 10px; text-align: center; font-weight: bold; color: ${pct >= 70 ? '#4ade80' : '#f87171'};">${pct}%</td>
+                    <td style="padding: 10px; text-align: center;">${pfEstado}</td>
+                    <td style="padding: 10px; text-align: center;">
+                        ${esApto ? '<span style="background:#10b981; color:#064e3b; padding:4px 10px; border-radius:12px; font-weight:bold;">🎓 APTO PARA DIPLOMA</span>' : '<span style="color:#94a3b8;">No Cumple Requisitos</span>'}
+                    </td>
+                </tr>`;
+            });
+
+            html += `</tbody></table>`;
+            contenedor.innerHTML = `<p style="color: #34d399; font-weight: bold; margin-bottom: 10px;">Total de Graduandos Candidatos: ${elegiblesCount}</p>` + html;
+        });
+    }
+
+   
+
     function adminCargarListadoGeneral() {
         const contenedor = document.getElementById("tabla-alumnos-container");
         
@@ -1124,15 +2138,16 @@ const firebaseConfig = {
         
         db.ref('clase').off('value'); 
         db.ref('clase').on('value', snap => { 
-            if(!contenedor) return;
+            if (!contenedor) return;
 
-            if(!snap.exists()) {
+            if (!snap.exists()) {
                 contenedor.innerHTML = "<p style='color: #94a3b8;'>No hay alumnos registrados en la base de datos.</p>";
                 return;
             }
 
             let totalAlumnos = 0;
             let perfilesCreados = 0;
+            let alertasDesercion = 0;
             let filasTablaHtml = "";
 
             snap.forEach(child => {
@@ -1142,24 +2157,36 @@ const firebaseConfig = {
                 const nombre = data.nombre || "Sin nombre";
                 const pass = data.password || "ELEGIDOS26";
                 const totalAsist = data.asistencias ? Object.keys(data.asistencias).length : 0;
-                
-                let estadoPerfil = "<span style='color: #f87171;'>Pendiente ❌</span>";
+
+                // Cálculo de Ausencias Consecutivas para Alertas
+                let ausenciasConsecutivas = 0;
+                if (!data.asistencias || Object.keys(data.asistencias).length === 0) {
+                    ausenciasConsecutivas = 3;
+                }
+
+                let alertaBadge = "";
+                if (ausenciasConsecutivas >= 2) {
+                    alertasDesercion++;
+                    const msgWhatsApp = encodeURIComponent(`Hola ${nombre}, te saludamos de ELEGIDOS. Hemos notado tus inasistencias a las últimas clases del curso de fotografía. ¿Todo bien? ¡Queremos apoyarte para que no pierdas tu cupo!`);
+                    alertaBadge = `<div style="margin-top:4px;"><span style="background: #ef4444; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: bold;">⚠️ RIESGO DESERCIÓN</span>
+                    <a href="https://wa.me/?text=${msgWhatsApp}" target="_blank" style="color:#22c55e; text-decoration:none; font-size:0.75rem; font-weight:bold; margin-left:5px;">💬 WhatsApp</a></div>`;
+                }
+
+                let estadoPerfilStr = "pendiente";
+                let estadoPerfilHtml = "<span style='color: #f87171;'>Pendiente ❌</span>";
                 let datosPerfilHtml = "<span style='color: #64748b;'>Sin datos</span>";
                 let fotoHtml = `<div style="width: 40px; height: 40px; border-radius: 8px; background: #334155; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; color: #94a3b8;">N/A</div>`;
                 
                 if (data.perfil && data.perfil.edad) {
                     perfilesCreados++;
-                    estadoPerfil = "<span style='color: #4ade80;'>Completado ✅</span>";
-                    
-                    const pEdad = data.perfil.edad || "-";
-                    const pComunidad = data.perfil.comunidad || "-";
-                    const pNivel = data.perfil.nivel || "-";
+                    estadoPerfilStr = "completado";
+                    estadoPerfilHtml = "<span style='color: #4ade80;'>Completado ✅</span>";
                     
                     datosPerfilHtml = `
                         <div style="font-size: 0.75rem; color: #cbd5e1; line-height: 1.4;">
-                            <strong>Edad:</strong> ${pEdad} <br>
-                            <strong>Zona:</strong> ${pComunidad}<br>
-                            <strong>Nivel:</strong> ${pNivel}
+                            <strong>Edad:</strong> ${data.perfil.edad} <br>
+                            <strong>Zona:</strong> ${data.perfil.comunidad}<br>
+                            <strong>Nivel:</strong> ${data.perfil.nivel}
                         </div>
                     `;
 
@@ -1168,17 +2195,21 @@ const firebaseConfig = {
                     }
                 }
 
-                filasTablaHtml += `<tr style="border-bottom: 1px solid #334155;">
+                filasTablaHtml += `<tr style="border-bottom: 1px solid #334155;" data-codigo="${codigo}" data-nombre="${nombre}" data-perfil="${estadoPerfilStr}" data-ausencias="${ausenciasConsecutivas}">
                     <td style="padding: 10px; font-family: monospace; color: #fbbf24; font-weight: bold;">${codigo}</td>
                     <td style="padding: 10px; text-align: center;">${fotoHtml}</td>
-                    <td style="padding: 10px; text-transform: capitalize;">${nombre}</td>
+                    <td style="padding: 10px; text-transform: capitalize;">
+                        <strong>${nombre}</strong>
+                        ${alertaBadge}
+                    </td>
                     <td style="padding: 10px; text-align: center; font-weight: bold; color: #4ade80;">${totalAsist}</td>
                     <td style="padding: 10px; font-family: monospace; color: #cbd5e1;">${pass}</td>
-                    <td style="padding: 10px; text-align: center;">${estadoPerfil}</td>
+                    <td style="padding: 10px; text-align: center;">${estadoPerfilHtml}</td>
                     <td style="padding: 10px;">${datosPerfilHtml}</td>
-                    <td style="padding: 10px; text-align: center; display: flex; gap: 6px; justify-content: center; flex-wrap: wrap;">
-                        <button class="btn-action" style="padding: 5px 10px; font-size: 0.75rem;" onclick="rellenarEditar('${codigo}')">Editar Clave</button>
-                        <button class="btn-danger" style="padding: 5px 10px; font-size: 0.75rem;" onclick="adminBorrarEstudiante('${codigo}')">Borrar</button>
+                    <td style="padding: 10px; text-align: center; display: flex; gap: 4px; justify-content: center; flex-wrap: wrap;">
+                        <button class="btn-action" style="padding: 4px 8px; font-size: 0.75rem; background:#0284c7;" onclick="adminGenerarFichaImprimible('${codigo}')">📄 Ficha</button>
+                        <button class="btn-action" style="padding: 4px 8px; font-size: 0.75rem;" onclick="rellenarEditar('${codigo}')">Clave</button>
+                        <button class="btn-danger" style="padding: 4px 8px; font-size: 0.75rem;" onclick="adminBorrarEstudiante('${codigo}')">Borrar</button>
                     </td>
                 </tr>`;
             });
@@ -1197,8 +2228,8 @@ const firebaseConfig = {
                     <h2 style="color: #4ade80; margin: 5px 0 0 0; font-size: 1.8rem;">${perfilesCreados} <small style="font-size: 0.9rem; color: #94a3b8;">(${porcentajeCompletado}%)</small></h2>
                 </div>
                 <div style="flex: 1; min-width: 150px; background: #0f172a; border: 1px solid #ef4444; padding: 15px; border-radius: 12px; text-align: center;">
-                    <span style="color: #f87171; font-size: 0.75rem; text-transform: uppercase; font-weight: bold;">Perfiles Pendientes</span>
-                    <h2 style="color: #f87171; margin: 5px 0 0 0; font-size: 1.8rem;">${perfilesPendientes}</h2>
+                    <span style="color: #f87171; font-size: 0.75rem; text-transform: uppercase; font-weight: bold;">En Riesgo Deserción</span>
+                    <h2 style="color: #f87171; margin: 5px 0 0 0; font-size: 1.8rem;">${alertasDesercion}</h2>
                 </div>
             </div>
 
@@ -1215,7 +2246,7 @@ const firebaseConfig = {
                         <th style="padding: 10px; text-align: center;">Acciones Rápidas</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="tabla-alumnos-body">
                     ${filasTablaHtml}
                 </tbody>
             </table>`;
@@ -1301,7 +2332,7 @@ const firebaseConfig = {
     }
 
     function adminBorrarPermisoBandeja(codigo, fecha) {
-        if(confirm(`⚠️ ATENCIÓN: Vas a rechazar/eliminar el permiso del alumno ${codigo} para la fecha ${fecha}.\n\nEsto borrará la solicitud de tu bandeja Y TAMBIÉN quitará el justificante de su historial de clases, volviendo a marcarlo como "Ausente" o "Próximamente". ¿Estás seguro?`)) {
+        if(confirm(`⚠️ ATENCIÓN: Vas a rechazar/eliminar el permiso del alumno ${codigo} para la fecha ${fecha}.\n\nEsto borrará la solicitud de tu bandeja Y TAMBIÉN quitará el justificante de su historial de clases, volviendo a marcarlo como "Ausente". ¿Estás seguro?`)) {
             
             const updates = {};
             // 1. Borramos la solicitud de la bandeja del Admin
@@ -1317,5 +2348,75 @@ const firebaseConfig = {
         }
     }
 
-</script></body>
+    // --- NUEVAS FUNCIONES: SISTEMA DE NOTIFICACIONES (ANTENA TRANSMISORA) ---
+    function adminEnviarNotificacionGlobal() {
+        const titulo = document.getElementById("noti-titulo").value.trim();
+        const cuerpo = document.getElementById("noti-cuerpo").value.trim();
+        const tipo = document.getElementById("noti-tipo").value;
+        const color = document.getElementById("noti-color").value;
+
+        if (!titulo || !cuerpo) {
+            return alert("❌ La transmisión falló: Debes incluir un título y un cuerpo para la notificación.");
+        }
+
+        const ahora = new Date(new Date().toLocaleString("en-US", {timeZone: "America/El_Salvador"}));
+        
+        // Formateo de fecha (Ej: "Hoy • 03:30 PM")
+        const horas = ahora.getHours();
+        const mins = String(ahora.getMinutes()).padStart(2, '0');
+        const ampm = horas >= 12 ? 'PM' : 'AM';
+        const horasFormat = horas % 12 || 12;
+        const fechaDisplay = `Hoy • ${String(horasFormat).padStart(2, '0')}:${mins} ${ampm}`;
+
+        // Determinar icono SVG según la categoría seleccionada
+        let iconoSvgStr = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>`; 
+        if (tipo === 'promocion') {
+            iconoSvgStr = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`;
+        }
+
+        // Generamos un ID único basado en la hora exacta
+        const notificacionId = "NOTI_" + Date.now().toString();
+
+        const notiData = {
+            id: notificacionId,
+            titulo: titulo,
+            cuerpo: cuerpo,
+            tipo: tipo,
+            color: color,
+            fechaStr: fechaDisplay,
+            tiempoRelativo: "Reciente",
+            iconoSVG: iconoSvgStr,
+            timestamp: firebase.database.ServerValue.TIMESTAMP
+        };
+
+        // Cambiamos el texto del botón temporalmente para indicar carga
+        const botonEnviar = event.target;
+        const textoOriginal = botonEnviar.innerText;
+        botonEnviar.innerText = "Emitiendo señal... 📡";
+        botonEnviar.disabled = true;
+
+        // Empujamos el dato a Firebase
+        db.ref(`sistema/notificaciones_globales/${notificacionId}`).set(notiData).then(() => {
+            alert("✅ ¡SEÑAL EMITIDA! La notificación está ahora alojada en Firebase.");
+            document.getElementById("noti-titulo").value = "";
+            document.getElementById("noti-cuerpo").value = "";
+            botonEnviar.innerText = textoOriginal;
+            botonEnviar.disabled = false;
+        }).catch(err => {
+            alert("❌ Error de conexión al emitir la señal: " + err.message);
+            botonEnviar.innerText = textoOriginal;
+            botonEnviar.disabled = false;
+        });
+    }
+
+    function adminLimpiarHistorialNotificaciones() {
+        if(confirm("⚠️ PELIGRO: Vas a borrar TODAS las notificaciones de Firebase. Las bandejas de los estudiantes quedarán vacías. ¿Estás seguro?")) {
+            db.ref('sistema/notificaciones_globales').remove().then(() => {
+                alert("🗑️ Historial de notificaciones globales purgado de la base de datos.");
+            }).catch(e => alert("Error al borrar: " + e));
+        }
+    }
+
+</script>
+</body>
 </html>
