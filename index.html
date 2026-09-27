@@ -542,13 +542,15 @@ let antenaPermisosActiva = false;
         const contenedor = document.getElementById("bandeja-permisos-container");
         if (!contenedor) return;
 
+        contenedor.innerHTML = "<p style='color: #fdba74;'>📡 Conectando con Firebase y escuchando permisos...</p>";
+
         if (!antenaPermisosActiva) {
             antenaPermisosActiva = true;
-            contenedor.innerHTML = "<p style='color: #fdba74;'>📡 Antena activa: Escuchando permisos en tiempo real...</p>";
-            
+
+            // Escuchar la base de datos registrando éxito O captura de error
             db.ref('clase').on('value', snap => {
                 if (!snap.exists()) {
-                    contenedor.innerHTML = "<p style='color: #ffedd5;'>No hay solicitudes en la bandeja.</p>";
+                    contenedor.innerHTML = "<p style='color: #ffedd5;'>No hay alumnos registrados en la base de datos.</p>";
                     return;
                 }
 
@@ -558,23 +560,23 @@ let antenaPermisosActiva = false;
                 snap.forEach(child => {
                     const data = child.val();
                     const alumnoCodigo = child.key;
-                    
-                    if (data.permisos_solicitados) {
+
+                    if (data && data.permisos_solicitados) {
                         Object.keys(data.permisos_solicitados).forEach(claseId => {
                             countPermisos++;
                             const p = data.permisos_solicitados[claseId];
-                            
+
                             const fotoHtml = p.foto 
                                 ? `<button class="btn-action" style="background:#ea580c; padding:4px 8px; font-size:0.75rem; margin-top:8px;" onclick="document.getElementById('img-modal-permiso').src='${p.foto}'; document.getElementById('modal-foto-permiso').style.display='flex';">📸 Ver Justificante</button>` 
                                 : `<span style="color:#78350f; font-size:0.75rem; display:block; margin-top:8px;">Sin justificante adjunto</span>`;
-                            
+
                             html += `
                             <div style="background: #291504; border: 1px solid #78350f; border-radius: 12px; padding: 14px; margin-bottom: 12px; position: relative;">
                                 <div style="display: flex; justify-content: space-between; margin-bottom: 6px; flex-wrap: wrap; gap: 5px;">
                                     <strong style="color: #fdba74; font-size: 0.95rem;">${data.nombre || alumnoCodigo} <span style="font-family: monospace; color: #f59e0b; font-size: 0.8rem;">(${alumnoCodigo})</span></strong>
                                     <span style="font-size: 0.75rem; color: #ffedd5; background: #78350f; padding: 2px 8px; border-radius: 6px; font-weight: bold;">Clase: ${p.fecha_clase || claseId}</span>
                                 </div>
-                                <p style="color: #fbbf24; font-size: 0.85rem; margin: 0 0 5px 0;"><strong>Motivo:</strong> ${p.razon}</p>
+                                <p style="color: #fbbf24; font-size: 0.85rem; margin: 0 0 5px 0;"><strong>Motivo:</strong> ${p.razon || 'Sin motivo especificado'}</p>
                                 <p style="color: #d97706; font-size: 0.75rem; margin: 0;">Enviado: ${p.timestamp ? new Date(p.timestamp).toLocaleString() : 'Reciente'}</p>
                                 
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
@@ -587,29 +589,29 @@ let antenaPermisosActiva = false;
                 });
 
                 if (countPermisos === 0) {
-                    contenedor.innerHTML = "<p style='color: #ffedd5;'>Bandeja vacía. No hay permisos pendientes.</p>";
+                    contenedor.innerHTML = "<p style='color: #ffedd5;'>✅ Bandeja vacía. No hay permisos pendientes por revisar.</p>";
                 } else {
-                    contenedor.innerHTML = `<div style="color: #4ade80; font-size: 0.8rem; font-weight: bold; margin-bottom: 12px;">🔴 Solicitudes Entrantes (${countPermisos}):</div>` + html;
+                    contenedor.innerHTML = `<div style="color: #4ade80; font-size: 0.85rem; font-weight: bold; margin-bottom: 12px;">🔴 Solicitudes Entrantes (${countPermisos}):</div>` + html;
                 }
+            }, error => {
+                // Captura fallos de permisos o de conexión local
+                console.error("Error en Firebase:", error);
+                contenedor.innerHTML = `
+                    <div style="background: #450a0a; border: 1px solid #fca5a5; color: #fca5a5; padding: 12px; border-radius: 8px;">
+                        ❌ <strong>Fallo al conectar con la base de datos:</strong> ${error.message}<br>
+                        <small style="color: #f87171;">Si estás abriendo el archivo localmente desde tu escritorio, despliega el panel en Vercel o revisa tus Reglas de Seguridad en Firebase Console.</small>
+                    </div>`;
+                antenaPermisosActiva = false;
             });
         }
     }
-
-    function adminBorrarSolicitudPermiso(alumnoCodigo, claseId) {
-        if (confirm(`¿Deseas eliminar la solicitud de permiso del alumno ${alumnoCodigo}?`)) {
-            db.ref(`clase/${alumnoCodigo}/permisos_solicitados/${claseId}`).remove().then(() => {
-                alert("🗑️ Solicitud removida de la bandeja.");
-            });
-        }
-    }
-
     // Variable global para controlar la clase base de datos
     let FECHAS_CURSO_ADMIN = [];
 
-    window.onload = function() {
+   window.onload = function() {
         adminCargarListadoGeneral();
         adminCargarCalendarioParaMotor();
-        adminCargarPermisos(); // <--- Inicia la antena en segundo plano inmediatamente
+        adminCargarPermisos(); // <--- Inicia la escucha en segundo plano
         iniciarMotorAdministrador();
     };
     // --- MOTOR DE GENERACIÓN AUTOMÁTICA DE PIN (00:00) ---
@@ -648,7 +650,7 @@ let antenaPermisosActiva = false;
         }, 60000);
     }
 
-    function cambiarSeccionAdmin(idSeccion, boton) {
+   function cambiarSeccionAdmin(idSeccion, boton) {
         document.querySelectorAll('.admin-section').forEach(sec => sec.classList.remove('active'));
         document.querySelectorAll('.admin-tab-btn').forEach(btn => btn.classList.remove('active'));
         
@@ -667,14 +669,15 @@ let antenaPermisosActiva = false;
         const contenedor = document.getElementById("tabla-alumnos-container");
         const bannerActivos = document.getElementById("active-students-banner");
 
-        if (contenedor && contenedor.innerHTML.trim() === "") contenedor.innerHTML = "<p style='color: #94a3b8;'>Cargando listado general...</p>";
+        if (contenedor) contenedor.innerHTML = "<p style='color: #38bdf8;'>📡 Conectando a la base de datos de Firebase...</p>";
+        if (bannerActivos) bannerActivos.innerHTML = "<p style='color: #86efac;'>Escaneando actividad de estudiantes en el portal...</p>";
         
         db.ref('clase').off('value'); 
         db.ref('clase').on('value', snap => { 
             if(!contenedor) return;
             if(!snap.exists()) {
-                contenedor.innerHTML = "<p style='color: #94a3b8;'>No hay alumnos registrados en la base de datos.</p>";
-                if (bannerActivos) bannerActivos.innerHTML = "<p style='color: #86efac; font-size: 0.85rem;'>No hay alumnos registrados.</p>";
+                contenedor.innerHTML = "<p style='color: #fbbf24;'>⚠️ No hay alumnos registrados en el nodo 'clase' de la base de datos.</p>";
+                if (bannerActivos) bannerActivos.innerHTML = "<p style='color: #94a3b8;'>⚪ No hay alumnos en la base de datos.</p>";
                 return;
             }
 
@@ -689,14 +692,12 @@ let antenaPermisosActiva = false;
                 const pass = data.password || "ELEGIDOS26";
                 let totalAsist = data.asistencias ? Object.keys(data.asistencias).filter(k => !String(data.asistencias[k]).toLowerCase().includes("permiso")).length : 0;
 
-// Sincronización oficial: Si tiene boleto, cuenta como asistencia en el Admin Panel
-if (data.accesos_especiales) {
-    if ((data.accesos_especiales["elegidos"] || data.accesos_especiales["mahu"]) && (!data.asistencias || (!data.asistencias["04_1500"] && !data.asistencias["2026-10-04"]))) totalAsist++;
-    if ((data.accesos_especiales["masterclass"] || data.accesos_especiales["dreamez"]) && (!data.asistencias || (!data.asistencias["25_1500"] && !data.asistencias["2026-10-25"] && !data.asistencias["2026-10-27"]))) totalAsist++;
-    if (data.accesos_especiales["festival"] && (!data.asistencias || (!data.asistencias["08_1300"] && !data.asistencias["2026-11-08"]))) totalAsist++;
-}
+                if (data.accesos_especiales) {
+                    if ((data.accesos_especiales["elegidos"] || data.accesos_especiales["mahu"]) && (!data.asistencias || (!data.asistencias["04_1500"] && !data.asistencias["2026-10-04"]))) totalAsist++;
+                    if ((data.accesos_especiales["masterclass"] || data.accesos_especiales["dreamez"]) && (!data.asistencias || (!data.asistencias["25_1500"] && !data.asistencias["2026-10-25"] && !data.asistencias["2026-10-27"]))) totalAsist++;
+                    if (data.accesos_especiales["festival"] && (!data.asistencias || (!data.asistencias["08_1300"] && !data.asistencias["2026-11-08"]))) totalAsist++;
+                }
                 
-                // DETECCIÓN AVANZADA DE ESTADO CONECTADO (ONLINE Y ÚLTIMA CONEXIÓN)
                 const estaOnline = data.online === true;
                 let horaUltimaConexionStr = "Sin datos";
                 if (data.ultima_conexion) {
@@ -764,7 +765,6 @@ if (data.accesos_especiales) {
                 </tr>`;
             });
 
-            // Actualización del banner de detección activa
             if (bannerActivos) {
                 if (conectadosCount > 0) {
                     bannerActivos.innerHTML = htmlAlumnosActivos;
@@ -809,6 +809,19 @@ if (data.accesos_especiales) {
                 </thead>
                 <tbody id="tabla-alumnos-body">${filasTablaHtml}</tbody>
             </table>`;
+        }, error => {
+            console.error("Error al cargar alumnos:", error);
+            if (contenedor) {
+                contenedor.innerHTML = `
+                <div style="background: #450a0a; border: 1px solid #ef4444; padding: 15px; border-radius: 12px; color: #fca5a5; margin: 10px 0;">
+                    ❌ <strong>ERROR DE CONEXIÓN A FIREBASE:</strong> ${error.message}<br><br>
+                    <small style="color: #f87171;">
+                    • Si estás abriendo la página desde el escritorio (file:///C:/Users/...), los navegadores bloquean Firebase.<br>
+                    • Para probarlo localmente sin errores, usa VS Code Live Server o sube el archivo a Vercel.<br>
+                    • Revisa en Firebase Console que las Reglas de Realtime Database permitan lectura (".read": true).
+                    </small>
+                </div>`;
+            }
         });
     }
 
