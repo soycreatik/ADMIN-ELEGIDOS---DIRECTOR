@@ -36,7 +36,6 @@
         .admin-section { display: none; animation: fadeIn 0.3s ease; }
         .admin-section.active { display: block; }
         
-        /* Animaciones avanzadas de detección activa */
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes pulseGlow {
             0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
@@ -77,8 +76,6 @@
 
         <!-- SECCIÓN 1: GESTIÓN DE ALUMNOS -->
         <div id="sec-alumnos" class="admin-section active">
-            
-            <!-- TARJETA ADVANCED LIVE DETECTOR DE PORTAL ACTIVO -->
             <div class="card" style="border-color: #22c55e; background: #052e16;">
                 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #14532d; padding-bottom: 10px; margin-bottom: 15px;">
                     <h3 style="color: #4ade80; margin: 0; border: none; padding: 0;">📡 Detector en Tiempo Real de Portal Activo</h3>
@@ -232,7 +229,6 @@
                 <div id="boletos-lista-container" style="margin-top: 15px;"></div>
             </div>
 
-            <!-- NUEVA TARJETA: GESTOR DE TICKETS VIRTUALES -->
             <div class="card" style="border-color: #8b5cf6; background: #2e1065;">
                 <h3 style="color: #a78bfa; border-color: #4c1d95;">🎟️ Gestor de Tickets Virtuales</h3>
                 <p style="font-size: 0.85rem; color: #ede9fe; margin-bottom: 15px;">Añade o retira tickets digitales a los estudiantes para los eventos obligatorios.</p>
@@ -247,15 +243,15 @@
                 </div>
 
                 <p style="font-size: 0.8rem; color: #c4b5fd; font-weight: bold; margin-bottom: 8px;">2. Control Individual:</p>
-<div class="form-group" style="margin-bottom: 20px;">
-    <input type="text" id="ticket-codigo-individual" placeholder="Código Alumno (Ej: CLASE-2026-001)" style="border-color: #7c3aed; background: #1a1025;">
-    <input type="text" id="ticket-codigo-boleto" placeholder="Código de Boleto (Ej: ELEGIDOS-2026-015)" style="border-color: #7c3aed; background: #1a1025;">
-    
-    <div style="display: flex; gap: 5px; flex: 1;">
-        <button class="btn-action" style="background: #16a34a; flex: 1;" onclick="adminAsignarTicketIndividual()">➕ Asignar</button>
-        <button class="btn-danger" style="background: #dc2626; flex: 1;" onclick="adminDesvincularTicketIndividual()">❌ Quitar</button>
-    </div>
-</div>
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <input type="text" id="ticket-codigo-individual" placeholder="Código Alumno (Ej: CLASE-2026-001)" style="border-color: #7c3aed; background: #1a1025;">
+                    <input type="text" id="ticket-codigo-boleto" placeholder="Código de Boleto (Ej: ELEGIDOS-2026-015)" style="border-color: #7c3aed; background: #1a1025;">
+                    
+                    <div style="display: flex; gap: 5px; flex: 1;">
+                        <button class="btn-action" style="background: #16a34a; flex: 1;" onclick="adminAsignarTicketIndividual()">➕ Asignar</button>
+                        <button class="btn-danger" style="background: #dc2626; flex: 1;" onclick="adminDesvincularTicketIndividual()">❌ Quitar</button>
+                    </div>
+                </div>
 
                 <p style="font-size: 0.8rem; color: #c4b5fd; font-weight: bold; margin-bottom: 8px;">3. Control Masivo (Todos los Alumnos):</p>
                 <div style="display: flex; gap: 10px;">
@@ -431,7 +427,6 @@
 
         <!-- NUEVA SECCIÓN 10: CONTROLES EN VIVO (PIN, RULETA, MODO PRUEBA) -->
         <div id="sec-live" class="admin-section">
-            
             <div class="card" style="border-color: #22c55e; background: #052e16;">
                 <h3 style="color: #4ade80; border-color: #14532d; display: flex; align-items: center; gap: 10px;">
                     <span style="font-size: 1.5rem;">⏱️</span> Asistencia Virtual y Generador de PIN
@@ -506,37 +501,70 @@
     </div>
 
 <script>
+    // INICIALIZACIÓN DE FIREBASE CON SINCRO OFICIAL DEL PORTAL
+    const firebaseConfig = {
+        apiKey: "AIzaSyAL_1473Guz-pf8_kcNtHU6iUT4e1DOlrY",
+        authDomain: "elegidosvalidador.firebaseapp.com",
+        databaseURL: "https://elegidosvalidador-default-rtdb.firebaseio.com",
+        projectId: "elegidosvalidador",
+        storageBucket: "elegidosvalidador.firebasestorage.app",
+        messagingSenderId: "944242599608",
+        appId: "1:944242599608:web:8fae4e722cf19a8820f64d"
+    };
 
-function adminReiniciarAsistenciaPorFecha() {
-    const fecha = document.getElementById("reset-fecha-evento").value;
-    if (!fecha) return alert("Por favor, selecciona una fecha válida en el calendario.");
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-    if (confirm(`⚠️ ¿Estás completamente seguro de ELIMINAR TODAS las asistencias registradas en la fecha ${fecha} para TODOS los alumnos?`)) {
-        db.ref('clase').once('value').then(snap => {
-            if (!snap.exists()) return alert("No hay alumnos en la base de datos.");
-            
-            const updates = {};
-            let borrados = 0;
-            
-            snap.forEach(child => {
-                if (child.val().asistencias && child.val().asistencias[fecha]) {
-                    updates[`clase/${child.key}/asistencias/${fecha}`] = null;
-                    borrados++;
-                }
+    let FECHAS_CURSO_ADMIN = [];
+
+    window.onload = function() {
+        firebase.auth().signInAnonymously()
+            .then(() => {
+                iniciarCargaAdmin();
+            })
+            .catch((error) => {
+                console.error("Error Auth Anónima:", error);
+                iniciarCargaAdmin();
             });
-            
-            if (borrados === 0) return alert(`No se encontraron asistencias para la fecha ${fecha}.`);
+    };
 
-            db.ref().update(updates).then(() => {
-                alert(`✅ Operación exitosa. Se borraron ${borrados} asistencias de la fecha ${fecha}.`);
-                document.getElementById("reset-fecha-evento").value = "";
-                adminCargarListadoGeneral(); // Refresca la tabla
-            }).catch(err => alert("Error al borrar asistencias: " + err.message));
-        });
+    function iniciarCargaAdmin() {
+        adminCargarListadoGeneral();
+        adminCargarCalendarioParaMotor();
+        adminCargarPermisos();
+        iniciarMotorAdministrador();
     }
-}
 
-let antenaPermisosActiva = false;
+    function adminReiniciarAsistenciaPorFecha() {
+        const fecha = document.getElementById("reset-fecha-evento").value;
+        if (!fecha) return alert("Por favor, selecciona una fecha válida en el calendario.");
+
+        if (confirm(`⚠️ ¿Estás completamente seguro de ELIMINAR TODAS las asistencias registradas en la fecha ${fecha} para TODOS los alumnos?`)) {
+            db.ref('clase').once('value').then(snap => {
+                if (!snap.exists()) return alert("No hay alumnos en la base de datos.");
+                
+                const updates = {};
+                let borrados = 0;
+                
+                snap.forEach(child => {
+                    if (child.val().asistencias && child.val().asistencias[fecha]) {
+                        updates[`clase/${child.key}/asistencias/${fecha}`] = null;
+                        borrados++;
+                    }
+                });
+                
+                if (borrados === 0) return alert(`No se encontraron asistencias para la fecha ${fecha}.`);
+
+                db.ref().update(updates).then(() => {
+                    alert(`✅ Operación exitosa. Se borraron ${borrados} asistencias de la fecha ${fecha}.`);
+                    document.getElementById("reset-fecha-evento").value = "";
+                    adminCargarListadoGeneral();
+                }).catch(err => alert("Error al borrar asistencias: " + err.message));
+            });
+        }
+    }
+
+    let antenaPermisosActiva = false;
 
     function adminCargarPermisos() {
         const contenedor = document.getElementById("bandeja-permisos-container");
@@ -547,7 +575,6 @@ let antenaPermisosActiva = false;
         if (!antenaPermisosActiva) {
             antenaPermisosActiva = true;
 
-            // Escuchar la base de datos registrando éxito O captura de error
             db.ref('clase').on('value', snap => {
                 if (!snap.exists()) {
                     contenedor.innerHTML = "<p style='color: #ffedd5;'>No hay alumnos registrados en la base de datos.</p>";
@@ -594,27 +621,24 @@ let antenaPermisosActiva = false;
                     contenedor.innerHTML = `<div style="color: #4ade80; font-size: 0.85rem; font-weight: bold; margin-bottom: 12px;">🔴 Solicitudes Entrantes (${countPermisos}):</div>` + html;
                 }
             }, error => {
-                // Captura fallos de permisos o de conexión local
                 console.error("Error en Firebase:", error);
                 contenedor.innerHTML = `
                     <div style="background: #450a0a; border: 1px solid #fca5a5; color: #fca5a5; padding: 12px; border-radius: 8px;">
-                        ❌ <strong>Fallo al conectar con la base de datos:</strong> ${error.message}<br>
-                        <small style="color: #f87171;">Si estás abriendo el archivo localmente desde tu escritorio, despliega el panel en Vercel o revisa tus Reglas de Seguridad en Firebase Console.</small>
+                        ❌ <strong>Fallo al conectar con la base de datos:</strong> ${error.message}
                     </div>`;
                 antenaPermisosActiva = false;
             });
         }
     }
-    // Variable global para controlar la clase base de datos
-    let FECHAS_CURSO_ADMIN = [];
 
-   window.onload = function() {
-        adminCargarListadoGeneral();
-        adminCargarCalendarioParaMotor();
-        adminCargarPermisos(); // <--- Inicia la escucha en segundo plano
-        iniciarMotorAdministrador();
-    };
-    // --- MOTOR DE GENERACIÓN AUTOMÁTICA DE PIN (00:00) ---
+    function adminBorrarSolicitudPermiso(alumnoCodigo, claseId) {
+        if (confirm(`¿Deseas eliminar la solicitud de permiso de ${alumnoCodigo}?`)) {
+            db.ref(`clase/${alumnoCodigo}/permisos_solicitados/${claseId}`).remove().then(() => {
+                alert("🗑️ Solicitud borrada.");
+            });
+        }
+    }
+
     function adminCargarCalendarioParaMotor() {
         db.ref('configuracion/calendarioClases').once('value').then(snap => {
             if (snap.exists()) {
@@ -625,19 +649,15 @@ let antenaPermisosActiva = false;
     }
 
     function iniciarMotorAdministrador() {
-        // Ejecuta un chequeo cada minuto (60000ms) para ver si cambió de día
         setInterval(() => {
             const ahora = new Date(new Date().toLocaleString("en-US", {timeZone: "America/El_Salvador"}));
             
-            // Si es exactamente la medianoche (entre las 00:00 y las 00:01)
             if (ahora.getHours() === 0 && ahora.getMinutes() === 0) {
                 const hoy = ahora.getFullYear() + '-' + String(ahora.getMonth() + 1).padStart(2, '0') + '-' + String(ahora.getDate()).padStart(2, '0');
                 
-                // Verifica si hay clase Online hoy
                 const hayClaseOnlineHoy = FECHAS_CURSO_ADMIN.some(c => c.fecha === hoy && c.modalidad === 'Online');
                 
                 if (hayClaseOnlineHoy) {
-                    // Verifica si el PIN ya fue generado para no re-escribir
                     db.ref('sistema/asistencia_virtual/' + hoy).once('value').then(snap => {
                         if (!snap.exists()) {
                             const pinGenerado = Math.floor(1000 + Math.random() * 9000).toString();
@@ -650,14 +670,14 @@ let antenaPermisosActiva = false;
         }, 60000);
     }
 
-   function cambiarSeccionAdmin(idSeccion, boton) {
+    function cambiarSeccionAdmin(idSeccion, boton) {
         document.querySelectorAll('.admin-section').forEach(sec => sec.classList.remove('active'));
         document.querySelectorAll('.admin-tab-btn').forEach(btn => btn.classList.remove('active'));
         
         document.getElementById('sec-' + idSeccion).classList.add('active');
         boton.classList.add('active');
 
-        if(idSeccion === 'permisos') adminCargarPermisos(); // <--- ¡Conecta la antena al hacer clic!
+        if(idSeccion === 'permisos') adminCargarPermisos();
         if(idSeccion === 'proyectos') adminCargarProyectosFinales();
         if(idSeccion === 'social') adminCargarLeaderboard();
         if(idSeccion === 'calendario') adminCargarCalendarioDinamico();
@@ -681,134 +701,138 @@ let antenaPermisosActiva = false;
                 return;
             }
 
-            let totalAlumnos = 0, perfilesCreados = 0, alertasDesercion = 0, conectadosCount = 0, filasTablaHtml = "";
-            let htmlAlumnosActivos = "";
+            db.ref('estudiantes_online').once('value').then(onlineSnap => {
+                const nodosOnline = onlineSnap.exists() ? onlineSnap.val() : {};
 
-            snap.forEach(child => {
-                totalAlumnos++;
-                const data = child.val();
-                const codigo = child.key;
-                const nombre = data.nombre || "Sin nombre";
-                const pass = data.password || "ELEGIDOS26";
-                let totalAsist = data.asistencias ? Object.keys(data.asistencias).filter(k => !String(data.asistencias[k]).toLowerCase().includes("permiso")).length : 0;
+                let totalAlumnos = 0, perfilesCreados = 0, alertasDesercion = 0, conectadosCount = 0, filasTablaHtml = "";
+                let htmlAlumnosActivos = "";
 
-                if (data.accesos_especiales) {
-                    if ((data.accesos_especiales["elegidos"] || data.accesos_especiales["mahu"]) && (!data.asistencias || (!data.asistencias["04_1500"] && !data.asistencias["2026-10-04"]))) totalAsist++;
-                    if ((data.accesos_especiales["masterclass"] || data.accesos_especiales["dreamez"]) && (!data.asistencias || (!data.asistencias["25_1500"] && !data.asistencias["2026-10-25"] && !data.asistencias["2026-10-27"]))) totalAsist++;
-                    if (data.accesos_especiales["festival"] && (!data.asistencias || (!data.asistencias["08_1300"] && !data.asistencias["2026-11-08"]))) totalAsist++;
+                snap.forEach(child => {
+                    totalAlumnos++;
+                    const data = child.val();
+                    const codigo = child.key;
+                    const nombre = data.nombre || "Sin nombre";
+                    const pass = data.password || "ELEGIDOS26";
+                    let totalAsist = data.asistencias ? Object.keys(data.asistencias).filter(k => !String(data.asistencias[k]).toLowerCase().includes("permiso")).length : 0;
+
+                    if (data.accesos_especiales) {
+                        if ((data.accesos_especiales["elegidos"] || data.accesos_especiales["mahu"]) && (!data.asistencias || (!data.asistencias["04_1500"] && !data.asistencias["2026-10-04"]))) totalAsist++;
+                        if ((data.accesos_especiales["masterclass"] || data.accesos_especiales["dreamez"]) && (!data.asistencias || (!data.asistencias["25_1500"] && !data.asistencias["2026-10-25"] && !data.asistencias["2026-10-27"]))) totalAsist++;
+                        if (data.accesos_especiales["festival"] && (!data.asistencias || (!data.asistencias["08_1300"] && !data.asistencias["2026-11-08"]))) totalAsist++;
+                    }
+                    
+                    const estaOnline = data.online === true || (nodosOnline[codigo] && Object.keys(nodosOnline[codigo]).length > 0);
+                    let horaUltimaConexionStr = "Sin datos";
+                    if (data.ultima_conexion) {
+                        horaUltimaConexionStr = new Date(data.ultima_conexion).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    }
+
+                    if (estaOnline) {
+                        conectadosCount++;
+                        htmlAlumnosActivos += `
+                        <div style="background: #166534; border: 1px solid #22c55e; border-radius: 10px; padding: 8px 14px; display: flex; align-items: center; gap: 10px; animation: pulseGlow 2s infinite;">
+                            <span style="font-size: 1.2rem;">🟢</span>
+                            <div>
+                                <strong style="color: #f0fdf4; font-size: 0.85rem; display: block;">${nombre}</strong>
+                                <span style="color: #bbf7d0; font-size: 0.75rem; font-family: monospace;">${codigo} | ${horaUltimaConexionStr}</span>
+                            </div>
+                        </div>`;
+                    }
+
+                    const badgeConexion = estaOnline 
+                        ? `<span class="badge-live-online">🟢 Portal Activo (${horaUltimaConexionStr})</span>`
+                        : `<span style="background: #334155; color: #94a3b8; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem;">⚪ Desconectado</span>`;
+
+                    let ausenciasConsecutivas = (!data.asistencias || Object.keys(data.asistencias).length === 0) ? 3 : 0;
+                    let alertaBadge = "";
+                    
+                    if (ausenciasConsecutivas >= 2) {
+                        alertasDesercion++;
+                        const msgWhatsApp = encodeURIComponent(`Hola ${nombre}, te saludamos de ELEGIDOS. Hemos notado tus inasistencias a las últimas clases...`);
+                        alertaBadge = `<div style="margin-top:4px;"><span style="background: #ef4444; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: bold;">⚠️ RIESGO DESERCIÓN</span>
+                        <a href="https://wa.me/?text=${msgWhatsApp}" target="_blank" style="color:#22c55e; text-decoration:none; font-size:0.75rem; font-weight:bold; margin-left:5px;">💬 WhatsApp</a></div>`;
+                    }
+
+                    let estadoPerfilStr = "pendiente";
+                    let estadoPerfilHtml = "<span style='color: #f87171;'>Pendiente ❌</span>";
+                    let datosPerfilHtml = "<span style='color: #64748b;'>Sin datos</span>";
+                    let fotoHtml = `<div style="width: 40px; height: 40px; border-radius: 8px; background: #334155; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; color: #94a3b8;">N/A</div>`;
+                    
+                    if (data.perfil && data.perfil.edad) {
+                        perfilesCreados++;
+                        estadoPerfilStr = "completado";
+                        estadoPerfilHtml = "<span style='color: #4ade80;'>Completado ✅</span>";
+                        datosPerfilHtml = `<div style="font-size: 0.75rem; color: #cbd5e1; line-height: 1.4;">
+                            <strong>Edad:</strong> ${data.perfil.edad} <br>
+                            <strong>Zona:</strong> ${data.perfil.comunidad}<br>
+                            <strong>Nivel:</strong> ${data.perfil.nivel}
+                        </div>`;
+                        if (data.perfil.foto) fotoHtml = `<img src="${data.perfil.foto}" style="width: 40px; height: 40px; border-radius: 8px; object-fit: cover; border: 1px solid #4ade80;">`;
+                    }
+
+                    filasTablaHtml += `<tr style="border-bottom: 1px solid #334155;" data-codigo="${codigo}" data-nombre="${nombre}" data-perfil="${estadoPerfilStr}" data-ausencias="${ausenciasConsecutivas}" data-online="${estaOnline}">
+                        <td style="padding: 10px; font-family: monospace; color: #fbbf24; font-weight: bold;">${codigo}</td>
+                        <td style="padding: 10px; text-align: center;">${fotoHtml}</td>
+                        <td style="padding: 10px; text-transform: capitalize;">
+                            <strong>${nombre}</strong> <br>${badgeConexion} ${alertaBadge}
+                        </td>
+                        <td style="padding: 10px; text-align: center; font-weight: bold; color: #4ade80;">${totalAsist}</td>
+                        <td style="padding: 10px; font-family: monospace; color: #cbd5e1;">${pass}</td>
+                        <td style="padding: 10px; text-align: center;">${estadoPerfilHtml}</td>
+                        <td style="padding: 10px;">${datosPerfilHtml}</td>
+                        <td style="padding: 10px; text-align: center; display: flex; gap: 4px; justify-content: center; flex-wrap: wrap;">
+                            <button class="btn-action" style="padding: 4px 8px; font-size: 0.75rem; background:#0284c7;" onclick="adminGenerarFichaImprimible('${codigo}')">📄 Ficha</button>
+                            <button class="btn-action" style="padding: 4px 8px; font-size: 0.75rem;" onclick="rellenarEditar('${codigo}')">Clave</button>
+                            <button class="btn-danger" style="padding: 4px 8px; font-size: 0.75rem;" onclick="adminBorrarEstudiante('${codigo}')">Borrar</button>
+                        </td>
+                    </tr>`;
+                });
+
+                if (bannerActivos) {
+                    if (conectadosCount > 0) {
+                        bannerActivos.innerHTML = htmlAlumnosActivos;
+                    } else {
+                        bannerActivos.innerHTML = `<div style="color: #94a3b8; font-size: 0.85rem; font-style: italic;">⚪ No hay estudiantes dentro del portal en este instante.</div>`;
+                    }
                 }
-                
-                const estaOnline = data.online === true;
-                let horaUltimaConexionStr = "Sin datos";
-                if (data.ultima_conexion) {
-                    horaUltimaConexionStr = new Date(data.ultima_conexion).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                }
 
-                if (estaOnline) {
-                    conectadosCount++;
-                    htmlAlumnosActivos += `
-                    <div style="background: #166534; border: 1px solid #22c55e; border-radius: 10px; padding: 8px 14px; display: flex; align-items: center; gap: 10px; animation: pulseGlow 2s infinite;">
-                        <span style="font-size: 1.2rem;">🟢</span>
-                        <div>
-                            <strong style="color: #f0fdf4; font-size: 0.85rem; display: block;">${nombre}</strong>
-                            <span style="color: #bbf7d0; font-size: 0.75rem; font-family: monospace;">${codigo} | ${horaUltimaConexionStr}</span>
-                        </div>
-                    </div>`;
-                }
+                const porcentajeCompletado = totalAlumnos > 0 ? Math.round((perfilesCreados / totalAlumnos) * 100) : 0;
 
-                const badgeConexion = estaOnline 
-                    ? `<span class="badge-live-online">🟢 Portal Activo (${horaUltimaConexionStr})</span>`
-                    : `<span style="background: #334155; color: #94a3b8; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem;">⚪ Desconectado</span>`;
-
-                let ausenciasConsecutivas = (!data.asistencias || Object.keys(data.asistencias).length === 0) ? 3 : 0;
-                let alertaBadge = "";
-                
-                if (ausenciasConsecutivas >= 2) {
-                    alertasDesercion++;
-                    const msgWhatsApp = encodeURIComponent(`Hola ${nombre}, te saludamos de ELEGIDOS. Hemos notado tus inasistencias a las últimas clases...`);
-                    alertaBadge = `<div style="margin-top:4px;"><span style="background: #ef4444; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: bold;">⚠️ RIESGO DESERCIÓN</span>
-                    <a href="https://wa.me/?text=${msgWhatsApp}" target="_blank" style="color:#22c55e; text-decoration:none; font-size:0.75rem; font-weight:bold; margin-left:5px;">💬 WhatsApp</a></div>`;
-                }
-
-                let estadoPerfilStr = "pendiente";
-                let estadoPerfilHtml = "<span style='color: #f87171;'>Pendiente ❌</span>";
-                let datosPerfilHtml = "<span style='color: #64748b;'>Sin datos</span>";
-                let fotoHtml = `<div style="width: 40px; height: 40px; border-radius: 8px; background: #334155; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; color: #94a3b8;">N/A</div>`;
-                
-                if (data.perfil && data.perfil.edad) {
-                    perfilesCreados++;
-                    estadoPerfilStr = "completado";
-                    estadoPerfilHtml = "<span style='color: #4ade80;'>Completado ✅</span>";
-                    datosPerfilHtml = `<div style="font-size: 0.75rem; color: #cbd5e1; line-height: 1.4;">
-                        <strong>Edad:</strong> ${data.perfil.edad} <br>
-                        <strong>Zona:</strong> ${data.perfil.comunidad}<br>
-                        <strong>Nivel:</strong> ${data.perfil.nivel}
-                    </div>`;
-                    if (data.perfil.foto) fotoHtml = `<img src="${data.perfil.foto}" style="width: 40px; height: 40px; border-radius: 8px; object-fit: cover; border: 1px solid #4ade80;">`;
-                }
-
-                filasTablaHtml += `<tr style="border-bottom: 1px solid #334155;" data-codigo="${codigo}" data-nombre="${nombre}" data-perfil="${estadoPerfilStr}" data-ausencias="${ausenciasConsecutivas}" data-online="${estaOnline}">
-                    <td style="padding: 10px; font-family: monospace; color: #fbbf24; font-weight: bold;">${codigo}</td>
-                    <td style="padding: 10px; text-align: center;">${fotoHtml}</td>
-                    <td style="padding: 10px; text-transform: capitalize;">
-                        <strong>${nombre}</strong> <br>${badgeConexion} ${alertaBadge}
-                    </td>
-                    <td style="padding: 10px; text-align: center; font-weight: bold; color: #4ade80;">${totalAsist}</td>
-                    <td style="padding: 10px; font-family: monospace; color: #cbd5e1;">${pass}</td>
-                    <td style="padding: 10px; text-align: center;">${estadoPerfilHtml}</td>
-                    <td style="padding: 10px;">${datosPerfilHtml}</td>
-                    <td style="padding: 10px; text-align: center; display: flex; gap: 4px; justify-content: center; flex-wrap: wrap;">
-                        <button class="btn-action" style="padding: 4px 8px; font-size: 0.75rem; background:#0284c7;" onclick="adminGenerarFichaImprimible('${codigo}')">📄 Ficha</button>
-                        <button class="btn-action" style="padding: 4px 8px; font-size: 0.75rem;" onclick="rellenarEditar('${codigo}')">Clave</button>
-                        <button class="btn-danger" style="padding: 4px 8px; font-size: 0.75rem;" onclick="adminBorrarEstudiante('${codigo}')">Borrar</button>
-                    </td>
-                </tr>`;
+                contenedor.innerHTML = `
+                <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 140px; background: #0f172a; border: 1px solid #334155; padding: 15px; border-radius: 12px; text-align: center;">
+                        <span style="color: #94a3b8; font-size: 0.75rem; text-transform: uppercase; font-weight: bold;">Total Alumnos</span>
+                        <h2 style="color: #38bdf8; margin: 5px 0 0 0; font-size: 1.8rem;">${totalAlumnos}</h2>
+                    </div>
+                    <div style="flex: 1; min-width: 140px; background: #0f172a; border: 1px solid #22c55e; padding: 15px; border-radius: 12px; text-align: center;">
+                        <span style="color: #4ade80; font-size: 0.75rem; text-transform: uppercase; font-weight: bold;">🟢 En Portal Ahora</span>
+                        <h2 style="color: #4ade80; margin: 5px 0 0 0; font-size: 1.8rem;">${conectadosCount}</h2>
+                    </div>
+                    <div style="flex: 1; min-width: 140px; background: #0f172a; border: 1px solid #10b981; padding: 15px; border-radius: 12px; text-align: center;">
+                        <span style="color: #34d399; font-size: 0.75rem; text-transform: uppercase; font-weight: bold;">Perfiles Creados</span>
+                        <h2 style="color: #34d399; margin: 5px 0 0 0; font-size: 1.8rem;">${perfilesCreados} <small style="font-size: 0.8rem; color: #94a3b8;">(${porcentajeCompletado}%)</small></h2>
+                    </div>
+                    <div style="flex: 1; min-width: 140px; background: #0f172a; border: 1px solid #ef4444; padding: 15px; border-radius: 12px; text-align: center;">
+                        <span style="color: #f87171; font-size: 0.75rem; text-transform: uppercase; font-weight: bold;">En Riesgo</span>
+                        <h2 style="color: #f87171; margin: 5px 0 0 0; font-size: 1.8rem;">${alertasDesercion}</h2>
+                    </div>
+                </div>
+                <table style="width:100%; border-collapse: collapse; font-size: 0.85rem; text-align: left;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid #334155; color: #38bdf8;">
+                            <th style="padding: 10px;">Código</th>
+                            <th style="padding: 10px; text-align: center;">Foto</th>
+                            <th style="padding: 10px;">Nombre / Estado</th>
+                            <th style="padding: 10px; text-align: center;">Asistencias</th>
+                            <th style="padding: 10px;">Contraseña</th>
+                            <th style="padding: 10px; text-align: center;">Perfil</th>
+                            <th style="padding: 10px;">Datos Guardados</th>
+                            <th style="padding: 10px; text-align: center;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-alumnos-body">${filasTablaHtml}</tbody>
+                </table>`;
             });
-
-            if (bannerActivos) {
-                if (conectadosCount > 0) {
-                    bannerActivos.innerHTML = htmlAlumnosActivos;
-                } else {
-                    bannerActivos.innerHTML = `<div style="color: #94a3b8; font-size: 0.85rem; font-style: italic;">⚪ No hay estudiantes dentro del portal en este instante.</div>`;
-                }
-            }
-
-            const porcentajeCompletado = totalAlumnos > 0 ? Math.round((perfilesCreados / totalAlumnos) * 100) : 0;
-
-            contenedor.innerHTML = `
-            <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
-                <div style="flex: 1; min-width: 140px; background: #0f172a; border: 1px solid #334155; padding: 15px; border-radius: 12px; text-align: center;">
-                    <span style="color: #94a3b8; font-size: 0.75rem; text-transform: uppercase; font-weight: bold;">Total Alumnos</span>
-                    <h2 style="color: #38bdf8; margin: 5px 0 0 0; font-size: 1.8rem;">${totalAlumnos}</h2>
-                </div>
-                <div style="flex: 1; min-width: 140px; background: #0f172a; border: 1px solid #22c55e; padding: 15px; border-radius: 12px; text-align: center;">
-                    <span style="color: #4ade80; font-size: 0.75rem; text-transform: uppercase; font-weight: bold;">🟢 En Portal Ahora</span>
-                    <h2 style="color: #4ade80; margin: 5px 0 0 0; font-size: 1.8rem;">${conectadosCount}</h2>
-                </div>
-                <div style="flex: 1; min-width: 140px; background: #0f172a; border: 1px solid #10b981; padding: 15px; border-radius: 12px; text-align: center;">
-                    <span style="color: #34d399; font-size: 0.75rem; text-transform: uppercase; font-weight: bold;">Perfiles Creados</span>
-                    <h2 style="color: #34d399; margin: 5px 0 0 0; font-size: 1.8rem;">${perfilesCreados} <small style="font-size: 0.8rem; color: #94a3b8;">(${porcentajeCompletado}%)</small></h2>
-                </div>
-                <div style="flex: 1; min-width: 140px; background: #0f172a; border: 1px solid #ef4444; padding: 15px; border-radius: 12px; text-align: center;">
-                    <span style="color: #f87171; font-size: 0.75rem; text-transform: uppercase; font-weight: bold;">En Riesgo</span>
-                    <h2 style="color: #f87171; margin: 5px 0 0 0; font-size: 1.8rem;">${alertasDesercion}</h2>
-                </div>
-            </div>
-            <table style="width:100%; border-collapse: collapse; font-size: 0.85rem; text-align: left;">
-                <thead>
-                    <tr style="border-bottom: 2px solid #334155; color: #38bdf8;">
-                        <th style="padding: 10px;">Código</th>
-                        <th style="padding: 10px; text-align: center;">Foto</th>
-                        <th style="padding: 10px;">Nombre / Estado</th>
-                        <th style="padding: 10px; text-align: center;">Asistencias</th>
-                        <th style="padding: 10px;">Contraseña</th>
-                        <th style="padding: 10px; text-align: center;">Perfil</th>
-                        <th style="padding: 10px;">Datos Guardados</th>
-                        <th style="padding: 10px; text-align: center;">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="tabla-alumnos-body">${filasTablaHtml}</tbody>
-            </table>`;
         }, error => {
             console.error("Error al cargar alumnos:", error);
             if (contenedor) {
@@ -816,12 +840,105 @@ let antenaPermisosActiva = false;
                 <div style="background: #450a0a; border: 1px solid #ef4444; padding: 15px; border-radius: 12px; color: #fca5a5; margin: 10px 0;">
                     ❌ <strong>ERROR DE CONEXIÓN A FIREBASE:</strong> ${error.message}<br><br>
                     <small style="color: #f87171;">
-                    • Si estás abriendo la página desde el escritorio (file:///C:/Users/...), los navegadores bloquean Firebase.<br>
-                    • Para probarlo localmente sin errores, usa VS Code Live Server o sube el archivo a Vercel.<br>
                     • Revisa en Firebase Console que las Reglas de Realtime Database permitan lectura (".read": true).
                     </small>
                 </div>`;
             }
+        });
+    }
+
+    function adminGenerarFichaImprimible(codigo) {
+        db.ref(`clase/${codigo}`).once('value').then(snap => {
+            if (!snap.exists()) return alert("El estudiante no existe.");
+            const d = snap.val();
+            const p = d.perfil || {};
+            const vent = window.open('', '_blank');
+            vent.document.write(`
+                <html>
+                <head><title>Ficha Oficial - ${codigo}</title>
+                <style>
+                    body { font-family: Arial, sans-serif; padding: 30px; color: #000; background: #fff; }
+                    .card { border: 2px solid #000; border-radius: 12px; padding: 20px; max-width: 500px; margin: auto; }
+                    h2 { text-align: center; color: #8b00ff; margin-bottom: 5px; }
+                    p { font-size: 14px; line-height: 1.6; }
+                    .foto { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; display: block; margin: 10px auto; border: 2px solid #000; }
+                </style>
+                </head>
+                <body>
+                    <div class="card">
+                        <h2>ELEGIDOS ACADEMY</h2>
+                        <h4 style="text-align:center;">Ficha Oficial de Estudiante</h4>
+                        ${p.foto ? `<img src="${p.foto}" class="foto">` : ''}
+                        <p><strong>Código:</strong> ${codigo}</p>
+                        <p><strong>Nombre:</strong> ${d.nombre || 'N/A'}</p>
+                        <p><strong>Correo:</strong> ${d.correo || 'N/A'}</p>
+                        <p><strong>Edad:</strong> ${p.edad || 'N/A'}</p>
+                        <p><strong>Celular:</strong> ${p.celular || 'N/A'}</p>
+                        <p><strong>Comunidad:</strong> ${p.comunidad || 'N/A'}</p>
+                        <p><strong>Nivel:</strong> ${p.nivel || 'N/A'}</p>
+                        <p><strong>Sobre él/ella:</strong> ${p.desc || 'N/A'}</p>
+                    </div>
+                </body>
+                </html>
+            `);
+            vent.document.close();
+        });
+    }
+
+    function adminCargarProyectosFinales() {
+        const contenedor = document.getElementById("contenedor-proyectos-finales");
+        if (!contenedor) return;
+        contenedor.innerHTML = "<p style='color: #38bdf8;'>Cargando entregas de proyectos...</p>";
+
+        db.ref('clase').on('value', snap => {
+            if (!snap.exists()) {
+                contenedor.innerHTML = "<p style='color: #94a3b8;'>No hay proyectos entregados.</p>";
+                return;
+            }
+
+            let html = `
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left;">
+                <thead>
+                    <tr style="border-bottom: 2px solid #0284c7; color: #38bdf8;">
+                        <th style="padding: 10px;">Código</th>
+                        <th style="padding: 10px;">Alumno</th>
+                        <th style="padding: 10px;">Enlace Proyecto</th>
+                        <th style="padding: 10px; text-align: center;">Estado</th>
+                        <th style="padding: 10px; text-align: center;">Acción</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+            let count = 0;
+            snap.forEach(child => {
+                const data = child.val();
+                if (data.proyecto_final) {
+                    count++;
+                    const pf = data.proyecto_final;
+                    const estado = pf.estado || "Entregado";
+                    html += `
+                        <tr style="border-bottom: 1px solid #334155;">
+                            <td style="padding: 10px; font-family: monospace; color: #fbbf24;">${child.key}</td>
+                            <td style="padding: 10px; font-weight: bold;">${data.nombre || child.key}</td>
+                            <td style="padding: 10px;"><a href="${pf.link || '#'}" target="_blank" style="color: #38bdf8; text-decoration: underline;">🔗 Ver Proyecto</a></td>
+                            <td style="padding: 10px; text-align: center;"><span style="background: ${estado === 'Aprobado' ? '#16a34a' : '#ea580c'}; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;">${estado}</span></td>
+                            <td style="padding: 10px; text-align: center;">
+                                <button class="btn-action" style="padding: 4px 8px; font-size: 0.75rem; background: #16a34a;" onclick="adminAprobarProyecto('${child.key}')">Aprobar</button>
+                            </td>
+                        </tr>`;
+                }
+            });
+
+            html += `</tbody></table>`;
+            contenedor.innerHTML = count === 0 ? "<p style='color: #94a3b8;'>No hay proyectos entregados aún.</p>" : html;
+        }, err => {
+            if (contenedor) contenedor.innerHTML = `<p style='color: #f87171;'>Error: ${err.message}</p>`;
+        });
+    }
+
+    function adminAprobarProyecto(codigo) {
+        db.ref(`clase/${codigo}/proyecto_final`).update({ estado: 'Aprobado' }).then(() => {
+            alert(`✅ Proyecto de ${codigo} aprobado.`);
         });
     }
 
@@ -1018,7 +1135,6 @@ let antenaPermisosActiva = false;
         }
     }
 
-    // ASISTENCIA Y PASES DE LISTA
     function adminCargarPaseMasivo() {
         const fecha = document.getElementById("masivo-fecha").value;
         const contenedor = document.getElementById("masivo-lista-container");
@@ -1032,20 +1148,20 @@ let antenaPermisosActiva = false;
             snap.forEach(child => {
                 const data = child.val(), codigo = child.key, nombre = data.nombre || "Sin nombre";
                 let tieneBoleto = false;
-if (data.accesos_especiales) {
-    if (fecha === "2026-10-04" && (data.accesos_especiales["elegidos"] || data.accesos_especiales["mahu"])) tieneBoleto = true;
-    if ((fecha === "2026-10-25" || fecha === "2026-10-27") && (data.accesos_especiales["masterclass"] || data.accesos_especiales["dreamez"])) tieneBoleto = true;
-    if (fecha === "2026-11-08" && data.accesos_especiales["festival"]) tieneBoleto = true;
-}
+                if (data.accesos_especiales) {
+                    if (fecha === "2026-10-04" && (data.accesos_especiales["elegidos"] || data.accesos_especiales["mahu"])) tieneBoleto = true;
+                    if ((fecha === "2026-10-25" || fecha === "2026-10-27") && (data.accesos_especiales["masterclass"] || data.accesos_especiales["dreamez"])) tieneBoleto = true;
+                    if (fecha === "2026-11-08" && data.accesos_especiales["festival"]) tieneBoleto = true;
+                }
 
-const checked = (data.asistencias && data.asistencias[fecha]) || tieneBoleto ? "checked" : "";
-const disabled = tieneBoleto ? "disabled title='Asistencia cubierta por ticket'" : "";
-const badgeTicket = tieneBoleto ? `<span style="background:#ea580c; color:white; font-size:0.6rem; padding:2px 4px; border-radius:4px; margin-left:5px;">🎟️ Ticket Oficial</span>` : "";
+                const checked = (data.asistencias && data.asistencias[fecha]) || tieneBoleto ? "checked" : "";
+                const disabled = tieneBoleto ? "disabled title='Asistencia cubierta por ticket'" : "";
+                const badgeTicket = tieneBoleto ? `<span style="background:#ea580c; color:white; font-size:0.6rem; padding:2px 4px; border-radius:4px; margin-left:5px;">🎟️ Ticket Oficial</span>` : "";
 
-html += `<div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #451a03;">
-    <span style="font-size: 0.85rem;">${nombre} <span style="font-family:monospace; color:#cbd5e1; font-size:0.75rem;">(${codigo})</span> ${badgeTicket}</span>
-    <input type="checkbox" class="check-asistencia-masiva" data-codigo="${codigo}" ${checked} ${disabled} style="width: 18px; height: 18px; cursor: pointer;">
-</div>`;
+                html += `<div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #451a03;">
+                    <span style="font-size: 0.85rem;">${nombre} <span style="font-family:monospace; color:#cbd5e1; font-size:0.75rem;">(${codigo})</span> ${badgeTicket}</span>
+                    <input type="checkbox" class="check-asistencia-masiva" data-codigo="${codigo}" ${checked} ${disabled} style="width: 18px; height: 18px; cursor: pointer;">
+                </div>`;
             });
             html += `</div><button class="btn-action" style="background: #16a34a; width: 100%;" onclick="adminGuardarPaseMasivo('${fecha}')">💾 Guardar Asistencia Masiva</button>`;
             contenedor.innerHTML = html;
@@ -1053,16 +1169,15 @@ html += `<div style="display: flex; justify-content: space-between; align-items:
     }
 
     function adminGuardarPaseMasivo(fecha) {
-    const updates = {};
-    document.querySelectorAll(".check-asistencia-masiva").forEach(chk => {
-        // Solo guarda los que NO tienen el checkbox bloqueado por el ticket
-        if (!chk.disabled) {
-            const codigo = chk.getAttribute("data-codigo");
-            updates[`clase/${codigo}/asistencias/${fecha}`] = chk.checked ? "Admin: Pase Masivo" : null;
-        }
-    });
-    db.ref().update(updates).then(() => alert(`✅ Pase masivo guardado.`));
-}
+        const updates = {};
+        document.querySelectorAll(".check-asistencia-masiva").forEach(chk => {
+            if (!chk.disabled) {
+                const codigo = chk.getAttribute("data-codigo");
+                updates[`clase/${codigo}/asistencias/${fecha}`] = chk.checked ? "Admin: Pase Masivo" : null;
+            }
+        });
+        db.ref().update(updates).then(() => alert(`✅ Pase masivo guardado.`));
+    }
 
     function adminModificarAsistencia(accion) {
         const codigo = document.getElementById("asist-codigo").value.trim().toUpperCase();
@@ -1124,10 +1239,6 @@ html += `<div style="display: flex; justify-content: space-between; align-items:
         }
     }
 
-    // =========================================================================
-    // 1. LÓGICA DE RETO SOCIAL Y LEADERBOARD (PUNTOS SOCIALES)
-    // =========================================================================
-
     function adminCargarLeaderboard() {
         const contenedor = document.getElementById("contenedor-leaderboard-social");
         if (!contenedor) return;
@@ -1150,7 +1261,6 @@ html += `<div style="display: flex; justify-content: space-between; align-items:
                 });
             });
 
-            // Ordenar de mayor a menor puntaje
             alumnos.sort((a, b) => b.puntos - a.puntos);
 
             let html = `
@@ -1196,11 +1306,6 @@ html += `<div style="display: flex; justify-content: space-between; align-items:
             }).then(() => adminCargarLeaderboard());
         });
     }
-
-
-    // =========================================================================
-    // 2. CALENDARIO DINÁMICO ACADÉMICO
-    // =========================================================================
 
     let claseOriginalEstado = null;
     let arregloClasesGlobal = [];
@@ -1364,11 +1469,6 @@ html += `<div style="display: flex; justify-content: space-between; align-items:
         }
     }
 
-
-    // =========================================================================
-    // 3. EVALUACIÓN Y ELEGIBLES A DIPLOMA Y GRADUACIÓN
-    // =========================================================================
-
     function adminCargarElegiblesGraduacion() {
         const contenedor = document.getElementById("contenedor-elegibles-graduacion");
         if (!contenedor) return;
@@ -1400,11 +1500,11 @@ html += `<div style="display: flex; justify-content: space-between; align-items:
                 const st = child.val();
                 const totalClases = 10;
                 let asis = st.asistencias ? Object.keys(st.asistencias).filter(k => !String(st.asistencias[k]).toLowerCase().includes("permiso")).length : 0;
-if (st.accesos_especiales) {
-    if ((st.accesos_especiales["elegidos"] || st.accesos_especiales["mahu"]) && (!st.asistencias || (!st.asistencias["04_1500"] && !st.asistencias["2026-10-04"]))) asis++;
-    if ((st.accesos_especiales["masterclass"] || st.accesos_especiales["dreamez"]) && (!st.asistencias || (!st.asistencias["25_1500"] && !st.asistencias["2026-10-25"] && !st.asistencias["2026-10-27"]))) asis++;
-    if (st.accesos_especiales["festival"] && (!st.asistencias || (!st.asistencias["08_1300"] && !st.asistencias["2026-11-08"]))) asis++;
-}
+                if (st.accesos_especiales) {
+                    if ((st.accesos_especiales["elegidos"] || st.accesos_especiales["mahu"]) && (!st.asistencias || (!st.asistencias["04_1500"] && !st.asistencias["2026-10-04"]))) asis++;
+                    if ((st.accesos_especiales["masterclass"] || st.accesos_especiales["dreamez"]) && (!st.asistencias || (!st.asistencias["25_1500"] && !st.asistencias["2026-10-25"] && !st.asistencias["2026-10-27"]))) asis++;
+                    if (st.accesos_especiales["festival"] && (!st.asistencias || (!st.asistencias["08_1300"] && !st.asistencias["2026-11-08"]))) asis++;
+                }
                 const pct = Math.round((asis / totalClases) * 100);
                 const pfEstado = (st.proyecto_final && st.proyecto_final.estado) ? st.proyecto_final.estado : "Sin Entregar";
                 const esElegible = pct >= 70 && pfEstado === "Aprobado";
@@ -1425,11 +1525,6 @@ if (st.accesos_especiales) {
             contenedor.innerHTML = `<div style="background: #065f46; color: #a7f3d0; padding: 10px; border-radius: 8px; font-weight: bold; margin-bottom: 10px;">Total de Candidatos Aptos: ${countElegibles}</div>` + html;
         });
     }
-
-
-    // =========================================================================
-    // 4. CENTRAL DE NOTIFICACIONES Y AVISOS GLOBAL
-    // =========================================================================
 
     function adminEnviarNotificacion() {
         const titulo = document.getElementById("noti-titulo").value.trim();
@@ -1453,7 +1548,6 @@ if (st.accesos_especiales) {
 
         const updates = {};
 
-        // 1. Guardar en Historial Global
         updates[`sistema/notificaciones_globales/${notiId}`] = {
             id: notiId,
             titulo: titulo,
@@ -1464,7 +1558,6 @@ if (st.accesos_especiales) {
             timestamp: firebase.database.ServerValue.TIMESTAMP
         };
 
-        // 2. Si Pop-up está activo
         if (isPopup) {
             updates[`configuracion/anuncioGlobal`] = {
                 titulo: titulo,
@@ -1475,7 +1568,6 @@ if (st.accesos_especiales) {
             };
         }
 
-        // 3. Inyectar en cada estudiante
         db.ref('clase').once('value').then(snap => {
             if (snap.exists()) {
                 snap.forEach(child => {
@@ -1549,11 +1641,6 @@ if (st.accesos_especiales) {
         }
     }
 
-
-    // =========================================================================
-    // 5. HERRAMIENTAS LIVE (PIN, RULETA Y MODO PRUEBAS)
-    // =========================================================================
-
     function adminGenerarPINAsistencia() {
         const ahora = new Date(new Date().toLocaleString("en-US", { timeZone: "America/El_Salvador" }));
         const hoy = ahora.getFullYear() + '-' + String(ahora.getMonth() + 1).padStart(2, '0') + '-' + String(ahora.getDate()).padStart(2, '0');
@@ -1568,7 +1655,6 @@ if (st.accesos_especiales) {
         });
     }
 
-    // 2. MOTOR DIRECTO DE RULETA (Selecciona solo entre conectados en tiempo real)
     function adminEjecutarRuletaEnVivo() {
         if (!navigator.onLine) return alert("📡 Sin conexión a internet.");
         
@@ -1601,10 +1687,8 @@ if (st.accesos_especiales) {
                 return;
             }
 
-            // Elección del ganador al azar entre los conectados
             const ganador = conectados[Math.floor(Math.random() * conectados.length)];
 
-            // Paso A: Emitir señal de giro ("girando")
             db.ref('sistema/ruleta').set({ 
                 estado: 'girando', 
                 participantes: conectados,
@@ -1612,7 +1696,6 @@ if (st.accesos_especiales) {
             });
             statusDiv.innerText = "Transmitiendo ruleta a " + conectados.length + " alumnos...";
 
-            // Paso B: Tras 5 segundos de animación en los portales, mostrar el ganador
             setTimeout(() => {
                 db.ref('sistema/ruleta').update({ 
                     estado: 'resultado',
@@ -1627,7 +1710,6 @@ if (st.accesos_especiales) {
         });
     }
 
-    // Apaga la ruleta y restaura la pantalla del portal
     function adminOcultarRuleta() {
         db.ref('sistema/ruleta').set({ estado: 'inactiva' }).then(() => {
             const statusDiv = document.getElementById("admin-ruleta-status");
@@ -1638,7 +1720,6 @@ if (st.accesos_especiales) {
         });
     }
 
-    // 1. REGISTRAR UN NUEVO ADMINISTRADOR EN FIREBASE
     function adminCrearNuevoAdmin() {
         let usuario = document.getElementById("nuevo-admin-usuario").value.trim().toUpperCase();
         const nombre = document.getElementById("nuevo-admin-nombre").value.trim();
@@ -1664,7 +1745,6 @@ if (st.accesos_especiales) {
         }).catch(err => alert("Error al registrar administrador: " + err));
     }
 
-    // 2. MODO DE PRUEBAS DEL PORTAL (Simula al Alumno en Nueva Pestaña)
     function adminAbrirModoPrueba() {
         const codigo = document.getElementById("test-codigo").value.trim().toUpperCase();
         if (!codigo.startsWith("CLASE-2026-")) {
@@ -1672,14 +1752,8 @@ if (st.accesos_especiales) {
             return;
         }
 
-        // Abre el portal de estudiantes en una nueva pestaña con todas las funciones listas para probar
         window.open(`index.html?testMode=${codigo}`, '_blank');
     }
-
-
-    // =========================================================================
-    // 6. CONTROL DE EVENTOS Y BOLETOS (FUNCIÓN FINALIZADA)
-    // =========================================================================
 
     let antenaEventoActual = null;
     let modoSoloVinculados = false;
@@ -1695,13 +1769,11 @@ if (st.accesos_especiales) {
         modoSoloVinculados = soloVinculados;
         contenedor.innerHTML = "<p style='color: #a5b4fc;'>📡 Activando antena en tiempo real para boletos...</p>";
 
-        // Apagar la antena anterior si cambias de evento para no saturar Firebase
         if (antenaEventoActual && antenaEventoActual !== evento) {
             db.ref(antenaEventoActual).off('value');
         }
         antenaEventoActual = evento;
 
-        // Encender la antena (escucha constante)
         db.ref(evento).on('value', snap => {
             if (!snap.exists()) {
                 contenedor.innerHTML = "<p style='color: #f87171;'>No hay boletos registrados para este evento.</p>";
@@ -1731,17 +1803,16 @@ if (st.accesos_especiales) {
                 let colorFondo = "#334155";
                 let animacion = "none";
                 
-                // Lógica de detección de estado
                 if (data.usado) {
                     estadoBadge = 'Escaneado ✅';
-                    colorFondo = '#059669'; // Verde
+                    colorFondo = '#059669';
                     animacion = 'pulseGlow 2s infinite';
                 } else if (data.vinculado_a) {
                     estadoBadge = 'Asignado 🎟️';
-                    colorFondo = '#0284c7'; // Azul
+                    colorFondo = '#0284c7';
                 } else {
                     estadoBadge = 'Disponible';
-                    colorFondo = '#334155'; // Gris
+                    colorFondo = '#334155';
                 }
 
                 html += `
@@ -1797,213 +1868,200 @@ if (st.accesos_especiales) {
         }
     }
 
-// =======================================================
-// CONTROL DE TICKETS Y BOLETOS (INDIVIDUAL Y MASIVO)
-// =======================================================
+    function adminAsignarTicketIndividual() {
+        const eventoSelect = document.getElementById("select-evento-masivo");
+        const eventoIdRaw = eventoSelect.value;
+        let codigoEstudiante = document.getElementById("ticket-codigo-individual").value.trim().toUpperCase();
+        let codigoBoleto = document.getElementById("ticket-codigo-boleto").value.trim().toUpperCase();
+        const resDiv = document.getElementById("resultado-tickets-masivos");
 
-// 1. ASIGNAR BOLETO INDIVIDUAL
-function adminAsignarTicketIndividual() {
-    const eventoSelect = document.getElementById("select-evento-masivo");
-    const eventoIdRaw = eventoSelect.value;
-    let codigoEstudiante = document.getElementById("ticket-codigo-individual").value.trim().toUpperCase();
-    let codigoBoleto = document.getElementById("ticket-codigo-boleto").value.trim().toUpperCase();
-    const resDiv = document.getElementById("resultado-tickets-masivos");
+        if (!eventoIdRaw) return alert("Por favor, selecciona un evento primero.");
+        if (!codigoEstudiante.startsWith("CLASE-2026-")) return alert("Ingresa un código de estudiante válido (Ej: CLASE-2026-001).");
+        if (!codigoBoleto) return alert("Ingresa el código oficial del boleto físico a vincular.");
 
-    if (!eventoIdRaw) return alert("Por favor, selecciona un evento primero.");
-    if (!codigoEstudiante.startsWith("CLASE-2026-")) return alert("Ingresa un código de estudiante válido (Ej: CLASE-2026-001).");
-    if (!codigoBoleto) return alert("Ingresa el código oficial del boleto físico a vincular.");
+        resDiv.style.display = "block";
+        resDiv.innerText = "⏳ Buscando estudiante y asignando ticket oficial...";
 
-    resDiv.style.display = "block";
-    resDiv.innerText = "⏳ Buscando estudiante y asignando ticket oficial...";
+        db.ref('clase/' + codigoEstudiante).once('value').then(snap => {
+            if (!snap.exists()) {
+                resDiv.innerHTML = `❌ El estudiante ${codigoEstudiante} no existe. Verifica el código.`;
+                return;
+            }
 
-    db.ref('clase/' + codigoEstudiante).once('value').then(snap => {
-        if (!snap.exists()) {
-            resDiv.innerHTML = `❌ El estudiante ${codigoEstudiante} no existe. Verifica el código.`;
-            return;
-        }
+            let eventoId = eventoIdRaw;
+            if (eventoId === "mahu") eventoId = "elegidos";
+
+            const updates = {};
+            updates[`${eventoId}/${codigoBoleto}`] = {
+                vinculado_a: codigoEstudiante,
+                tipo: "fisico",
+                estado: "activo",
+                usado: false,
+                fechaGeneracion: new Date().toISOString()
+            };
+            
+            updates[`clase/${codigoEstudiante}/boletos/${codigoBoleto}`] = eventoId;
+            updates[`clase/${codigoEstudiante}/accesos_especiales/${eventoId}`] = true;
+            if (eventoIdRaw === "mahu") updates[`clase/${codigoEstudiante}/accesos_especiales/mahu`] = true;
+            if (eventoIdRaw === "masterclass") updates[`clase/${codigoEstudiante}/accesos_especiales/dreamez`] = true;
+
+            db.ref().update(updates).then(() => {
+                resDiv.innerHTML = `✅ <strong>¡Ticket Asignado!</strong><br>Se asignó el ticket <strong>${codigoBoleto}</strong> a <strong>${snap.val().nombre}</strong> para ${eventoId.toUpperCase()}.`;
+                document.getElementById("ticket-codigo-individual").value = "";
+                document.getElementById("ticket-codigo-boleto").value = "";
+            }).catch(err => { resDiv.innerHTML = "❌ Error en Firebase: " + err.message; });
+        }).catch(err => { resDiv.innerHTML = "❌ Error de conexión: " + err.message; });
+    }
+
+    function adminDesvincularTicketIndividual() {
+        const eventoSelect = document.getElementById("select-evento-masivo");
+        const eventoIdRaw = eventoSelect.value;
+        let codigoEstudiante = document.getElementById("ticket-codigo-individual").value.trim().toUpperCase();
+        let codigoBoleto = document.getElementById("ticket-codigo-boleto").value.trim().toUpperCase();
+        const resDiv = document.getElementById("resultado-tickets-masivos");
+
+        if (!eventoIdRaw) return alert("Por favor, selecciona un evento primero.");
+        if (!codigoEstudiante) return alert("Ingresa el código del Alumno para quitarle su boleto de este evento.");
+
+        resDiv.style.display = "block";
+        resDiv.innerText = "⏳ Removiendo acceso al estudiante...";
+
+        let eventoId = eventoIdRaw;
+        if (eventoId === "mahu") eventoId = "elegidos";
+
+        db.ref(`clase/${codigoEstudiante}/boletos`).once('value').then(snap => {
+            const updates = {};
+            let boletoEncontrado = codigoBoleto || null;
+
+            if (snap.exists()) {
+                snap.forEach(child => {
+                    if (child.val() === eventoId) boletoEncontrado = child.key;
+                });
+            }
+
+            updates[`clase/${codigoEstudiante}/accesos_especiales/${eventoId}`] = null;
+            if (eventoIdRaw === "mahu") updates[`clase/${codigoEstudiante}/accesos_especiales/mahu`] = null;
+            if (eventoIdRaw === "masterclass") updates[`clase/${codigoEstudiante}/accesos_especiales/dreamez`] = null;
+
+            if (boletoEncontrado) {
+                updates[`clase/${codigoEstudiante}/boletos/${boletoEncontrado}`] = null;
+                updates[`${eventoId}/${boletoEncontrado}`] = null;
+            }
+
+            db.ref().update(updates).then(() => {
+                resDiv.innerHTML = `✅ <strong>¡Ticket Removido!</strong><br>Se quitó el acceso de ${codigoEstudiante} al evento ${eventoId.toUpperCase()}.`;
+                document.getElementById("ticket-codigo-individual").value = "";
+                document.getElementById("ticket-codigo-boleto").value = "";
+            }).catch(err => { resDiv.innerHTML = "❌ Error en Firebase: " + err.message; });
+        });
+    }
+
+    function adminAsignarTicketsMasivos() {
+        const eventoSelect = document.getElementById("select-evento-masivo");
+        const eventoIdRaw = eventoSelect.value;
+        const resDiv = document.getElementById("resultado-tickets-masivos");
+
+        if (!eventoIdRaw) return alert("Por favor, selecciona un evento primero.");
+        if (!confirm(`⚠️ ESTÁS A PUNTO DE ASIGNAR TICKETS A TODOS LOS ALUMNOS.\n\n¿Seguro que deseas continuar?`)) return;
+
+        resDiv.style.display = "block";
+        resDiv.innerText = "⏳ Extrayendo lista de alumnos y asignando...";
+
+        let eventoId = eventoIdRaw;
+        if (eventoId === "mahu") eventoId = "elegidos";
+
+        db.ref('clase').once('value').then(snap => {
+            if (!snap.exists()) return resDiv.innerHTML = "❌ No hay alumnos registrados.";
+
+            const updates = {};
+            let count = 0;
+
+            snap.forEach(child => {
+                const codigoEstudiante = child.key;
+                if (codigoEstudiante.startsWith("CLASE-")) {
+                    const numEstudiante = codigoEstudiante.split('-').pop();
+                    
+                    let prefijo = "";
+                    if (eventoId === "elegidos") prefijo = "ELEGIDOS";
+                    else if (eventoId === "masterclass") prefijo = "DREAMEZ";
+                    else if (eventoId === "festival") prefijo = "FESTIVAL";
+                    else prefijo = eventoId.toUpperCase();
+
+                    const codigoBoleto = `${prefijo}-2026-${numEstudiante}`;
+                    
+                    updates[`${eventoId}/${codigoBoleto}`] = {
+                        vinculado_a: codigoEstudiante,
+                        tipo: "fisico",
+                        estado: "activo",
+                        usado: false,
+                        fechaGeneracion: new Date().toISOString()
+                    };
+                    
+                    updates[`clase/${codigoEstudiante}/boletos/${codigoBoleto}`] = eventoId;
+                    updates[`clase/${codigoEstudiante}/accesos_especiales/${eventoId}`] = true;
+                    if (eventoIdRaw === "mahu") updates[`clase/${codigoEstudiante}/accesos_especiales/mahu`] = true;
+                    if (eventoIdRaw === "masterclass") updates[`clase/${codigoEstudiante}/accesos_especiales/dreamez`] = true;
+
+                    count++;
+                }
+            });
+
+            db.ref().update(updates).then(() => {
+                resDiv.innerHTML = `✅ <strong>¡Asignación Masiva Exitosa!</strong><br>Se habilitó el ticket a <strong>${count} alumnos</strong> para el evento ${eventoId.toUpperCase()}.`;
+            }).catch(err => { resDiv.innerHTML = "❌ Error: " + err.message; });
+        });
+    }
+
+    function adminDesvincularTicketsMasivos() {
+        const eventoSelect = document.getElementById("select-evento-masivo");
+        const eventoIdRaw = eventoSelect.value;
+        const resDiv = document.getElementById("resultado-tickets-masivos");
+
+        if (!eventoIdRaw) return alert("Por favor, selecciona un evento primero.");
+        if (!confirm(`🚨 PELIGRO: ESTÁS A PUNTO DE BORRAR LOS ACCESOS Y TICKETS DE TODOS LOS ALUMNOS PARA ESTE EVENTO.\n\n¿Deseas continuar?`)) return;
+
+        resDiv.style.display = "block";
+        resDiv.innerText = "⏳ Eliminando tickets y denegando accesos a toda la base de datos...";
 
         let eventoId = eventoIdRaw;
         if (eventoId === "mahu") eventoId = "elegidos";
 
         const updates = {};
-        updates[`${eventoId}/${codigoBoleto}`] = {
-    vinculado_a: codigoEstudiante,
-    tipo: "fisico", // <------ CAMBIA ESTO
-    estado: "activo",
-// ...
-            usado: false,
-            fechaGeneracion: new Date().toISOString()
-        };
         
-        updates[`clase/${codigoEstudiante}/boletos/${codigoBoleto}`] = eventoId;
-        updates[`clase/${codigoEstudiante}/accesos_especiales/${eventoId}`] = true;
-        if (eventoIdRaw === "mahu") updates[`clase/${codigoEstudiante}/accesos_especiales/mahu`] = true;
-        if (eventoIdRaw === "masterclass") updates[`clase/${codigoEstudiante}/accesos_especiales/dreamez`] = true;
-
-        db.ref().update(updates).then(() => {
-            resDiv.innerHTML = `✅ <strong>¡Ticket Asignado!</strong><br>Se asignó el ticket <strong>${codigoBoleto}</strong> a <strong>${snap.val().nombre}</strong> para ${eventoId.toUpperCase()}.`;
-            document.getElementById("ticket-codigo-individual").value = "";
-            document.getElementById("ticket-codigo-boleto").value = "";
-        }).catch(err => { resDiv.innerHTML = "❌ Error en Firebase: " + err.message; });
-    }).catch(err => { resDiv.innerHTML = "❌ Error de conexión: " + err.message; });
-}
-
-// 2. QUITAR BOLETO INDIVIDUAL
-function adminDesvincularTicketIndividual() {
-    const eventoSelect = document.getElementById("select-evento-masivo");
-    const eventoIdRaw = eventoSelect.value;
-    let codigoEstudiante = document.getElementById("ticket-codigo-individual").value.trim().toUpperCase();
-    let codigoBoleto = document.getElementById("ticket-codigo-boleto").value.trim().toUpperCase();
-    const resDiv = document.getElementById("resultado-tickets-masivos");
-
-    if (!eventoIdRaw) return alert("Por favor, selecciona un evento primero.");
-    if (!codigoEstudiante) return alert("Ingresa el código del Alumno para quitarle su boleto de este evento.");
-
-    resDiv.style.display = "block";
-    resDiv.innerText = "⏳ Removiendo acceso al estudiante...";
-
-    let eventoId = eventoIdRaw;
-    if (eventoId === "mahu") eventoId = "elegidos";
-
-    // Buscamos qué boleto tiene asignado el alumno en ese evento
-    db.ref(`clase/${codigoEstudiante}/boletos`).once('value').then(snap => {
-        const updates = {};
-        let boletoEncontrado = codigoBoleto || null; // Si escribió el código de boleto lo toma, si no lo busca
-
-        if (snap.exists()) {
-            snap.forEach(child => {
-                if (child.val() === eventoId) boletoEncontrado = child.key;
-            });
-        }
-
-        // Le quitamos el acceso del perfil del alumno
-        updates[`clase/${codigoEstudiante}/accesos_especiales/${eventoId}`] = null;
-        if (eventoIdRaw === "mahu") updates[`clase/${codigoEstudiante}/accesos_especiales/mahu`] = null;
-        if (eventoIdRaw === "masterclass") updates[`clase/${codigoEstudiante}/accesos_especiales/dreamez`] = null;
-
-        if (boletoEncontrado) {
-            updates[`clase/${codigoEstudiante}/boletos/${boletoEncontrado}`] = null;
-            updates[`${eventoId}/${boletoEncontrado}`] = null; // Borramos el boleto de la DB del evento
-        }
-
-        db.ref().update(updates).then(() => {
-            resDiv.innerHTML = `✅ <strong>¡Ticket Removido!</strong><br>Se quitó el acceso de ${codigoEstudiante} al evento ${eventoId.toUpperCase()}.`;
-            document.getElementById("ticket-codigo-individual").value = "";
-            document.getElementById("ticket-codigo-boleto").value = "";
-        }).catch(err => { resDiv.innerHTML = "❌ Error en Firebase: " + err.message; });
-    });
-}
-
-// 3. ASIGNAR BOLETOS A TODOS (MASIVO)
-function adminAsignarTicketsMasivos() {
-    const eventoSelect = document.getElementById("select-evento-masivo");
-    const eventoIdRaw = eventoSelect.value;
-    const resDiv = document.getElementById("resultado-tickets-masivos");
-
-    if (!eventoIdRaw) return alert("Por favor, selecciona un evento primero.");
-    if (!confirm(`⚠️ ESTÁS A PUNTO DE ASIGNAR TICKETS A TODOS LOS ALUMNOS.\n\n¿Seguro que deseas continuar?`)) return;
-
-    resDiv.style.display = "block";
-    resDiv.innerText = "⏳ Extrayendo lista de alumnos y asignando...";
-
-    let eventoId = eventoIdRaw;
-    if (eventoId === "mahu") eventoId = "elegidos";
-
-    db.ref('clase').once('value').then(snap => {
-        if (!snap.exists()) return resDiv.innerHTML = "❌ No hay alumnos registrados.";
-
-        const updates = {};
-        let count = 0;
-
-        snap.forEach(child => {
-            const codigoEstudiante = child.key;
-            if (codigoEstudiante.startsWith("CLASE-")) {
-                const numEstudiante = codigoEstudiante.split('-').pop();
-                
-                let prefijo = "";
-                if (eventoId === "elegidos") prefijo = "ELEGIDOS";
-                else if (eventoId === "masterclass") prefijo = "DREAMEZ";
-                else if (eventoId === "festival") prefijo = "FESTIVAL";
-                else prefijo = eventoId.toUpperCase();
-
-                const codigoBoleto = `${prefijo}-2026-${numEstudiante}`;
-                
-                updates[`${eventoId}/${codigoBoleto}`] = {
-                    vinculado_a: codigoEstudiante,
-                    tipo: "fisico",
-                    estado: "activo",
-                    usado: false,
-                    fechaGeneracion: new Date().toISOString()
-                };
-                
-                updates[`clase/${codigoEstudiante}/boletos/${codigoBoleto}`] = eventoId;
-                updates[`clase/${codigoEstudiante}/accesos_especiales/${eventoId}`] = true;
-                if (eventoIdRaw === "mahu") updates[`clase/${codigoEstudiante}/accesos_especiales/mahu`] = true;
-                if (eventoIdRaw === "masterclass") updates[`clase/${codigoEstudiante}/accesos_especiales/dreamez`] = true;
-
-                count++;
+        db.ref(eventoId).once('value').then(snap => {
+            if (snap.exists()) {
+                snap.forEach(boleto => { updates[`${eventoId}/${boleto.key}`] = null; });
             }
-        });
-
-        db.ref().update(updates).then(() => {
-            resDiv.innerHTML = `✅ <strong>¡Asignación Masiva Exitosa!</strong><br>Se habilitó el ticket a <strong>${count} alumnos</strong> para el evento ${eventoId.toUpperCase()}.`;
-        }).catch(err => { resDiv.innerHTML = "❌ Error: " + err.message; });
-    });
-}
-
-// 4. QUITAR BOLETOS A TODOS (MASIVO)
-function adminDesvincularTicketsMasivos() {
-    const eventoSelect = document.getElementById("select-evento-masivo");
-    const eventoIdRaw = eventoSelect.value;
-    const resDiv = document.getElementById("resultado-tickets-masivos");
-
-    if (!eventoIdRaw) return alert("Por favor, selecciona un evento primero.");
-    if (!confirm(`🚨 PELIGRO: ESTÁS A PUNTO DE BORRAR LOS ACCESOS Y TICKETS DE TODOS LOS ALUMNOS PARA ESTE EVENTO.\n\n¿Deseas continuar?`)) return;
-
-    resDiv.style.display = "block";
-    resDiv.innerText = "⏳ Eliminando tickets y denegando accesos a toda la base de datos...";
-
-    let eventoId = eventoIdRaw;
-    if (eventoId === "mahu") eventoId = "elegidos";
-
-    const updates = {};
-    
-    // Paso 1: Borrar todos los boletos de la sección del evento
-    db.ref(eventoId).once('value').then(snap => {
-        if (snap.exists()) {
-            snap.forEach(boleto => { updates[`${eventoId}/${boleto.key}`] = null; });
-        }
-        
-        // Paso 2: Entrar a cada alumno y quitarle la vinculación
-        db.ref('clase').once('value').then(snapAlumnos => {
-            if (snapAlumnos.exists()) {
-                let count = 0;
-                snapAlumnos.forEach(alumno => {
-                    const codigoEstudiante = alumno.key;
-                    if (codigoEstudiante.startsWith("CLASE-")) {
-                        count++;
-                        
-                        updates[`clase/${codigoEstudiante}/accesos_especiales/${eventoId}`] = null;
-                        if (eventoIdRaw === "mahu") updates[`clase/${codigoEstudiante}/accesos_especiales/mahu`] = null;
-                        if (eventoIdRaw === "masterclass") updates[`clase/${codigoEstudiante}/accesos_especiales/dreamez`] = null;
-                        
-                        if (alumno.val().boletos) {
-                            Object.keys(alumno.val().boletos).forEach(boletoKey => {
-                                if (alumno.val().boletos[boletoKey] === eventoId) {
-                                    updates[`clase/${codigoEstudiante}/boletos/${boletoKey}`] = null;
-                                }
-                            });
+            
+            db.ref('clase').once('value').then(snapAlumnos => {
+                if (snapAlumnos.exists()) {
+                    let count = 0;
+                    snapAlumnos.forEach(alumno => {
+                        const codigoEstudiante = alumno.key;
+                        if (codigoEstudiante.startsWith("CLASE-")) {
+                            count++;
+                            
+                            updates[`clase/${codigoEstudiante}/accesos_especiales/${eventoId}`] = null;
+                            if (eventoIdRaw === "mahu") updates[`clase/${codigoEstudiante}/accesos_especiales/mahu`] = null;
+                            if (eventoIdRaw === "masterclass") updates[`clase/${codigoEstudiante}/accesos_especiales/dreamez`] = null;
+                            
+                            if (alumno.val().boletos) {
+                                Object.keys(alumno.val().boletos).forEach(boletoKey => {
+                                    if (alumno.val().boletos[boletoKey] === eventoId) {
+                                        updates[`clase/${codigoEstudiante}/boletos/${boletoKey}`] = null;
+                                    }
+                                });
+                            }
                         }
-                    }
-                });
-                
-                db.ref().update(updates).then(() => {
-                    resDiv.innerHTML = `✅ <strong>¡Borrado Masivo Exitoso!</strong><br>Se eliminaron los accesos al evento ${eventoId.toUpperCase()} a los ${count} estudiantes registrados.`;
-                }).catch(err => { resDiv.innerHTML = "❌ Error: " + err.message; });
-            }
+                    });
+                    
+                    db.ref().update(updates).then(() => {
+                        resDiv.innerHTML = `✅ <strong>¡Borrado Masivo Exitoso!</strong><br>Se eliminaron los accesos al evento ${eventoId.toUpperCase()} a los ${count} estudiantes registrados.`;
+                    }).catch(err => { resDiv.innerHTML = "❌ Error: " + err.message; });
+                }
+            });
         });
-    });
-}
+    }
 </script>
 </body>
 </html>
