@@ -564,20 +564,21 @@
         }
     }
 
-    let antenaPermisosActiva = false;
+   let antenaPermisosActiva = false;
+    let ultimosPermisosHTML = "";
 
     function adminCargarPermisos() {
         const contenedor = document.getElementById("bandeja-permisos-container");
         if (!contenedor) return;
 
-        contenedor.innerHTML = "<p style='color: #fdba74;'>📡 Conectando con Firebase y escuchando permisos...</p>";
-
         if (!antenaPermisosActiva) {
             antenaPermisosActiva = true;
+            contenedor.innerHTML = "<p style='color: #fdba74;'>📡 Conectando con Firebase y escuchando permisos...</p>";
 
             db.ref('clase').on('value', snap => {
                 if (!snap.exists()) {
-                    contenedor.innerHTML = "<p style='color: #ffedd5;'>No hay alumnos registrados en la base de datos.</p>";
+                    ultimosPermisosHTML = "<p style='color: #ffedd5;'>No hay alumnos registrados en la base de datos.</p>";
+                    contenedor.innerHTML = ultimosPermisosHTML;
                     return;
                 }
 
@@ -616,18 +617,19 @@
                 });
 
                 if (countPermisos === 0) {
-                    contenedor.innerHTML = "<p style='color: #ffedd5;'>✅ Bandeja vacía. No hay permisos pendientes por revisar.</p>";
+                    ultimosPermisosHTML = "<p style='color: #ffedd5;'>✅ Bandeja vacía. No hay permisos pendientes por revisar.</p>";
                 } else {
-                    contenedor.innerHTML = `<div style="color: #4ade80; font-size: 0.85rem; font-weight: bold; margin-bottom: 12px;">🔴 Solicitudes Entrantes (${countPermisos}):</div>` + html;
+                    ultimosPermisosHTML = `<div style="color: #4ade80; font-size: 0.85rem; font-weight: bold; margin-bottom: 12px;">🔴 Solicitudes Entrantes (${countPermisos}):</div>` + html;
                 }
+                contenedor.innerHTML = ultimosPermisosHTML;
             }, error => {
                 console.error("Error en Firebase:", error);
-                contenedor.innerHTML = `
-                    <div style="background: #450a0a; border: 1px solid #fca5a5; color: #fca5a5; padding: 12px; border-radius: 8px;">
-                        ❌ <strong>Fallo al conectar con la base de datos:</strong> ${error.message}
-                    </div>`;
+                ultimosPermisosHTML = `<div style="background: #450a0a; border: 1px solid #fca5a5; color: #fca5a5; padding: 12px; border-radius: 8px;">❌ Fallo al conectar con la base de datos: ${error.message}</div>`;
+                contenedor.innerHTML = ultimosPermisosHTML;
                 antenaPermisosActiva = false;
             });
+        } else if (ultimosPermisosHTML) {
+            contenedor.innerHTML = ultimosPermisosHTML;
         }
     }
 
