@@ -76,13 +76,32 @@
 
         <!-- SECCIÓN 1: GESTIÓN DE ALUMNOS -->
         <div id="sec-alumnos" class="admin-section active">
+            <!-- TARJETA: GENERADOR DE PIN Y POP-UP FORZADO -->
             <div class="card" style="border-color: #22c55e; background: #052e16;">
-                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #14532d; padding-bottom: 10px; margin-bottom: 15px;">
-                    <h3 style="color: #4ade80; margin: 0; border: none; padding: 0;">📡 Detector en Tiempo Real de Portal Activo</h3>
-                    <span id="active-status-ping" style="font-size: 0.75rem; color: #86efac; background: #14532d; padding: 4px 10px; border-radius: 12px; font-weight: bold;">● Monitor Live Activo</span>
+                <h3 style="color: #4ade80; border-color: #14532d; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.5rem;">⏱️</span> Asistencia Virtual (Pop-up de PIN)
+                </h3>
+                <p style="font-size: 0.85rem; color: #86efac; margin-bottom: 15px;">
+                    Genera un PIN y lánzalo como un Pop-up en la pantalla de los estudiantes. Ellos deberán escribir este código exacto para marcar su asistencia.
+                </p>
+                
+                <div class="form-group" style="margin-bottom: 15px; background: #14532d; padding: 15px; border-radius: 8px;">
+                    <label style="color: #bbf7d0; font-weight: bold; font-size: 0.85rem; width: 100%;">¿A quién forzar con el Pop-up de asistencia?</label>
+                    <select id="pin-target" style="border-color: #22c55e; width: 100%; background: #064e3b; color: #fff;">
+                        <option value="online">Solo a los estudiantes CONECTADOS en el portal AHORA</option>
+                        <option value="todos">A TODOS los estudiantes inscritos</option>
+                    </select>
                 </div>
-                <div id="active-students-banner" style="display: flex; gap: 10px; flex-wrap: wrap;">
-                    <p style="color: #86efac; font-size: 0.85rem; margin: 0;">Escaneando actividad de estudiantes en el portal...</p>
+                
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn-action" style="background: #16a34a; flex: 1; font-size: 1rem; padding: 12px; font-weight: bold;" id="btn-generar-pin-admin" onclick="adminGenerarPINAsistencia()">🔑 GENERAR Y LANZAR PIN</button>
+                    <button class="btn-danger" style="background: #dc2626; flex: 1; font-size: 1rem; padding: 12px; font-weight: bold;" onclick="adminApagarPIN()">🛑 APAGAR POP-UP</button>
+                </div>
+                
+                <div id="admin-pin-display-container" style="display: none; margin-top: 20px; text-align: center; background: #14532d; padding: 20px; border-radius: 12px; border: 1px dashed #22c55e;">
+                    <p style="color: #4ade80; font-size: 0.85rem; font-weight: bold; margin-bottom: 10px;">PIN ACTIVO EN PANTALLAS (HOY):</p>
+                    <h1 id="admin-pin-number" style="font-size: 4rem; letter-spacing: 15px; margin: 0; color: #ffffff; text-shadow: 0 5px 15px rgba(0,0,0,0.5);">0000</h1>
+                    <p id="admin-pin-target-status" style="color: #bbf7d0; font-size: 0.8rem; margin-top: 10px;"></p>
                 </div>
             </div>
 
@@ -92,14 +111,18 @@
                     <button class="btn-action" style="background: #0284c7; padding: 6px 14px; font-size: 0.8rem;" onclick="adminCargarListadoGeneral()">🔄 Actualizar Listado</button>
                 </div>
 
-                <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+               <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
                     <input type="text" id="buscar-alumno" placeholder="🔍 Buscar por Nombre o Código..." onkeyup="adminFiltrarAlumnos()" style="flex: 2; min-width: 240px; padding: 10px; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: #fff;">
-                    <select id="filtro-estado-alumno" onchange="adminFiltrarAlumnos()" style="flex: 1; min-width: 200px; padding: 10px; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: #fff;">
+                    <select id="filtro-estado-alumno" onchange="adminFiltrarAlumnos()" style="flex: 1; min-width: 150px; padding: 10px; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: #fff;">
                         <option value="todos">Todos los Alumnos</option>
-                        <option value="online">🟢 Solo Conectados (En línea)</option>
-                        <option value="alerta">⚠️ En Riesgo de Deserción</option>
+                        <option value="online">🟢 Solo Conectados</option>
+                        <option value="alerta">⚠️ En Riesgo (Faltas)</option>
                         <option value="pendiente">❌ Perfiles Pendientes</option>
                         <option value="completado">✅ Perfiles Completados</option>
+                    </select>
+                    <select id="filtro-seccion-alumno" onchange="adminFiltrarAlumnos()" style="flex: 1; min-width: 150px; padding: 10px; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: #fff;">
+                        <option value="todas">Todas las Secciones</option>
+                        <!-- Se llenará automáticamente por JS -->
                     </select>
                 </div>
 
@@ -162,8 +185,301 @@
                         <input type="text" id="ficha-edad" placeholder="Edad (Ej: 22)">
                         <input type="text" id="ficha-celular" placeholder="Celular (Ej: 7777-7777)">
                     </div>
-                    <input type="text" id="ficha-comunidad" placeholder="Comunidad / Zona de residencia">
-                    <select id="ficha-nivel">
+                    // LISTADO GENERAL Y CONTROL DE ALUMNOS CONECTADOS EN TIEMPO REAL (INCLUYE NOTAS, FALTAS, SECCIONES Y PERMISOS)
+    function adminCargarListadoGeneral() {
+        const contenedor = document.getElementById("tabla-alumnos-container");
+        const bannerActivos = document.getElementById("active-students-banner");
+        const filtroSeccion = document.getElementById("filtro-seccion-alumno");
+
+        if (contenedor) contenedor.innerHTML = "<p style='color: #38bdf8;'>📡 Calculando promedios y conectando a la base de datos...</p>";
+        if (bannerActivos) bannerActivos.innerHTML = "<p style='color: #86efac;'>Escaneando actividad de estudiantes en el portal...</p>";
+        
+        // Primero consultamos el historial de exámenes para calcular promedios
+        db.ref('sistema/historial_examenes').once('value').then(examSnap => {
+            const historialExamenes = examSnap.exists() ? examSnap.val() : {};
+
+            db.ref('clase').off('value'); 
+            db.ref('clase').on('value', snap => { 
+                if(!contenedor) return;
+                if(!snap.exists()) {
+                    contenedor.innerHTML = "<p style='color: #fbbf24;'>⚠️ No hay alumnos registrados.</p>";
+                    if (bannerActivos) bannerActivos.innerHTML = "<p style='color: #94a3b8;'>⚪ No hay alumnos en la base de datos.</p>";
+                    return;
+                }
+
+                db.ref('estudiantes_online').once('value').then(onlineSnap => {
+                    const nodosOnline = onlineSnap.exists() ? onlineSnap.val() : {};
+
+                    let totalAlumnos = 0, perfilesCreados = 0, alertasDesercion = 0, conectadosCount = 0, filasTablaHtml = "";
+                    let htmlAlumnosActivos = "";
+                    let seccionesSet = new Set(); // Para llenar el filtro dinámico
+
+                    snap.forEach(child => {
+                        totalAlumnos++;
+                        const data = child.val();
+                        const codigo = child.key;
+                        const nombre = data.nombre || "Sin nombre";
+                        const pass = data.password || "ELEGIDOS26";
+                        
+                       // Cálculo de Asistencias, Faltas y Permisos (Preciso y seguro)
+                        let totalAsist = 0;
+                        let totalPermisosAprobados = 0;
+                        let ausenciasConsecutivas = 0;
+                        
+                        if (data.asistencias) {
+                            Object.keys(data.asistencias).forEach(k => {
+                                const valStr = String(data.asistencias[k]).toLowerCase().trim();
+                                if (valStr.startsWith("permiso") || valStr.includes("justificado")) {
+                                    totalPermisosAprobados++;
+                                } else {
+                                    totalAsist++;
+                                }
+                            });
+                        }
+                        
+                        // Si no tiene asistencias ni permisos, asumimos que no ha venido a nada (faltas iniciales).
+                        if (totalAsist === 0 && totalPermisosAprobados === 0) {
+                            ausenciasConsecutivas = 3; 
+                        }
+                        
+                        // Permisos pendientes en la bandeja (no aprobados aún)
+                        let permisosPendientes = data.permisos_solicitados ? Object.keys(data.permisos_solicitados).length : 0;
+                        let permisosDisplay = permisosPendientes > 0 ? `${totalPermisosAprobados} (Pend: ${permisosPendientes})` : `${totalPermisosAprobados}`;
+
+                        // Cálculo de Nota Promedio
+                        let sumaNotas = 0, cantExamenes = 0;
+                        Object.keys(historialExamenes).forEach(exId => {
+                            if(historialExamenes[exId].resultados && historialExamenes[exId].resultados[codigo]) {
+                                sumaNotas += historialExamenes[exId].resultados[codigo].nota;
+                                cantExamenes++;
+                            }
+                        });
+                        let notaPromedio = cantExamenes > 0 ? (sumaNotas / cantExamenes).toFixed(1) : "-";
+                        
+                        let estaOnline = false;
+                        let horaUltimaConexionStr = "Sin datos";
+                        
+                        if (data.ultima_conexion) {
+                            horaUltimaConexionStr = new Date(data.ultima_conexion).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                            const tiempoPasado = Date.now() - data.ultima_conexion;
+                            if (tiempoPasado <= 1800000) {
+                                estaOnline = (data.online === true || (nodosOnline[codigo] && Object.keys(nodosOnline[codigo]).length > 0));
+                            }
+                        }
+
+                        if (estaOnline) {
+                            conectadosCount++;
+                            htmlAlumnosActivos += `
+                            <div style="background: #166534; border: 1px solid #22c55e; border-radius: 10px; padding: 8px 14px; display: flex; align-items: center; gap: 10px; animation: pulseGlow 2s infinite;">
+                                <span style="font-size: 1.2rem;">🟢</span>
+                                <div>
+                                    <strong style="color: #f0fdf4; font-size: 0.85rem; display: block;">${nombre}</strong>
+                                    <span style="color: #bbf7d0; font-size: 0.75rem; font-family: monospace;">${codigo} | ${horaUltimaConexionStr}</span>
+                                </div>
+                            </div>`;
+                        }
+
+                        const badgeConexion = estaOnline 
+                            ? `<span class="badge-live-online">🟢 Portal Activo (${horaUltimaConexionStr})</span>`
+                            : `<span style="background: #334155; color: #94a3b8; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem;">⚪ Desconectado</span>`;
+
+                        let alertaBadge = "";
+                        if (ausenciasConsecutivas >= 2) {
+                            alertasDesercion++;
+                            const msgWhatsApp = encodeURIComponent(`Hola ${nombre}, te saludamos de ELEGIDOS. Hemos notado tus inasistencias a las últimas clases...`);
+                            alertaBadge = `<div style="margin-top:4px;"><span style="background: #ef4444; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: bold;">⚠️ RIESGO DESERCIÓN</span>
+                            <a href="https://wa.me/?text=${msgWhatsApp}" target="_blank" style="color:#22c55e; text-decoration:none; font-size:0.75rem; font-weight:bold; margin-left:5px;">💬 WhatsApp</a></div>`;
+                        }
+
+                        let seccionAlumno = "Sin Asignar";
+                        let estadoPerfilStr = "pendiente";
+                        let estadoPerfilHtml = "<span style='color: #f87171;'>Pendiente ❌</span>";
+                        let datosPerfilHtml = "<span style='color: #64748b;'>Sin datos</span>";
+                        let fotoHtml = `<div style="width: 40px; height: 40px; border-radius: 8px; background: #334155; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; color: #94a3b8;">N/A</div>`;
+                        
+                        if (data.perfil) {
+                            seccionAlumno = data.perfil.seccion || "Sin Asignar";
+                            if (!seccionesSet.has(seccionAlumno) && seccionAlumno !== "Sin Asignar") seccionesSet.add(seccionAlumno);
+                        }
+
+                        if (data.perfil && data.perfil.edad) {
+                            perfilesCreados++;
+                            estadoPerfilStr = "completado";
+                            estadoPerfilHtml = "<span style='color: #4ade80;'>Completado ✅</span>";
+                            datosPerfilHtml = `<div style="font-size: 0.75rem; color: #cbd5e1; line-height: 1.4;">
+                                <strong>Edad:</strong> ${data.perfil.edad} <br>
+                                <strong>Zona:</strong> ${data.perfil.comunidad}<br>
+                                <strong>Nivel:</strong> ${data.perfil.nivel}
+                            </div>`;
+                            if (data.perfil.foto) fotoHtml = `<img src="${data.perfil.foto}" style="width: 40px; height: 40px; border-radius: 8px; object-fit: cover; border: 1px solid #4ade80;">`;
+                        }
+
+                        filasTablaHtml += `<tr style="border-bottom: 1px solid #334155;" data-codigo="${codigo}" data-nombre="${nombre}" data-perfil="${estadoPerfilStr}" data-ausencias="${ausenciasConsecutivas}" data-online="${estaOnline}" data-seccion="${seccionAlumno}">
+                            <td style="padding: 10px; font-family: monospace; color: #fbbf24; font-weight: bold;">${codigo}</td>
+                            <td style="padding: 10px; text-align: center;">${fotoHtml}</td>
+                            <td style="padding: 10px; text-transform: capitalize;">
+                                <strong>${nombre}</strong> <br><span style="font-size:0.75rem; color:#a78bfa; font-weight: bold;">Sec: ${seccionAlumno}</span><br>${badgeConexion} ${alertaBadge}
+                            </td>
+                            <td style="padding: 10px; text-align: left; font-size: 0.8rem;">
+                                <span style="color: #4ade80;">✅ Asist: <b>${totalAsist}</b></span><br>
+                                <span style="color: #f87171;">❌ Faltas: <b>${ausenciasConsecutivas}</b></span><br>
+                                <span style="color: #fbbf24;">📝 Permisos: <b>${permisosDisplay}</b></span>
+                            </td>
+                            <td style="padding: 10px; text-align: center; color: #60a5fa; font-weight: bold; font-size: 1.2rem;">${notaPromedio}</td>
+                            <td style="padding: 10px; text-align: center;">${estadoPerfilHtml}</td>
+                            <td style="padding: 10px; text-align: center; display: flex; gap: 4px; justify-content: center; flex-wrap: wrap;">
+                                <button class="btn-action" style="padding: 4px 8px; font-size: 0.75rem; background:#0284c7;" onclick="adminGenerarFichaImprimible('${codigo}')">📄 Ficha</button>
+                                <button class="btn-action" style="padding: 4px 8px; font-size: 0.75rem;" onclick="rellenarEditar('${codigo}')">Clave</button>
+                                <button class="btn-danger" style="padding: 4px 8px; font-size: 0.75rem;" onclick="adminBorrarEstudiante('${codigo}')">Borrar</button>
+                            </td>
+                        </tr>`;
+                    });
+
+                    // Llenar dinámicamente el selector de secciones
+                    if (filtroSeccion) {
+                        let secHtml = `<option value="todas">Todas las Secciones</option><option value="Sin Asignar">Sin Asignar</option>`;
+                        seccionesSet.forEach(sec => { secHtml += `<option value="${sec}">Sección: ${sec}</option>`; });
+                        const valorPrevio = filtroSeccion.value; // Conservar selección al recargar
+                        filtroSeccion.innerHTML = secHtml;
+                        if(Array.from(filtroSeccion.options).some(o => o.value === valorPrevio)) filtroSeccion.value = valorPrevio;
+                    }
+
+                    if (bannerActivos) {
+                        if (conectadosCount > 0) {
+                            bannerActivos.innerHTML = htmlAlumnosActivos;
+                        } else {
+                            bannerActivos.innerHTML = `<div style="color: #94a3b8; font-size: 0.85rem; font-style: italic;">⚪ No hay estudiantes dentro del portal en este instante.</div>`;
+                        }
+                    }
+
+                    const porcentajeCompletado = totalAlumnos > 0 ? Math.round((perfilesCreados / totalAlumnos) * 100) : 0;
+
+                    contenedor.innerHTML = `
+                    <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 140px; background: #0f172a; border: 1px solid #334155; padding: 15px; border-radius: 12px; text-align: center;">
+                            <span style="color: #94a3b8; font-size: 0.75rem; text-transform: uppercase; font-weight: bold;">Total Alumnos</span>
+                            <h2 style="color: #38bdf8; margin: 5px 0 0 0; font-size: 1.8rem;">${totalAlumnos}</h2>
+                        </div>
+                        <div style="flex: 1; min-width: 140px; background: #0f172a; border: 1px solid #22c55e; padding: 15px; border-radius: 12px; text-align: center;">
+                            <span style="color: #4ade80; font-size: 0.75rem; text-transform: uppercase; font-weight: bold;">🟢 En Portal Ahora</span>
+                            <h2 style="color: #4ade80; margin: 5px 0 0 0; font-size: 1.8rem;">${conectadosCount}</h2>
+                        </div>
+                        <div style="flex: 1; min-width: 140px; background: #0f172a; border: 1px solid #10b981; padding: 15px; border-radius: 12px; text-align: center;">
+                            <span style="color: #34d399; font-size: 0.75rem; text-transform: uppercase; font-weight: bold;">Perfiles Creados</span>
+                            <h2 style="color: #34d399; margin: 5px 0 0 0; font-size: 1.8rem;">${perfilesCreados} <small style="font-size: 0.8rem; color: #94a3b8;">(${porcentajeCompletado}%)</small></h2>
+                        </div>
+                    </div>
+                    <table style="width:100%; border-collapse: collapse; font-size: 0.85rem; text-align: left;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid #334155; color: #38bdf8;">
+                                <th style="padding: 10px;">Código</th>
+                                <th style="padding: 10px; text-align: center;">Foto</th>
+                                <th style="padding: 10px;">Nombre & Sección</th>
+                                <th style="padding: 10px;">Asistencia/Riesgo</th>
+                                <th style="padding: 10px; text-align: center;">Nota Prom.</th>
+                                <th style="padding: 10px; text-align: center;">Perfil</th>
+                                <th style="padding: 10px; text-align: center;">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-alumnos-body">${filasTablaHtml}</tbody>
+                    </table>`;
+                });
+            }, error => {
+                console.error("Error al cargar alumnos:", error);
+                if (contenedor) {
+                    contenedor.innerHTML = `<div style="background: #450a0a; border: 1px solid #ef4444; padding: 15px; border-radius: 12px; color: #fca5a5; margin: 10px 0;">❌ <strong>ERROR:</strong> ${error.message}</div>`;
+                }
+            });
+        });
+    }
+
+    function adminFiltrarAlumnos() {
+        const textoBusqueda = document.getElementById("buscar-alumno").value.toLowerCase().trim();
+        const filtroEstado = document.getElementById("filtro-estado-alumno").value;
+        const filtroSeccion = document.getElementById("filtro-seccion-alumno").value;
+        
+        document.querySelectorAll("#tabla-alumnos-body tr").forEach(fila => {
+            const codigo = fila.getAttribute("data-codigo") || "";
+            const nombre = fila.getAttribute("data-nombre") || "";
+            const estadoPerfil = fila.getAttribute("data-perfil") || "";
+            const esOnline = fila.getAttribute("data-online") === "true";
+            const ausenciasConsecutivas = parseInt(fila.getAttribute("data-ausencias") || "0", 10);
+            const seccion = fila.getAttribute("data-seccion") || "";
+
+            const coincideBusqueda = codigo.toLowerCase().includes(textoBusqueda) || nombre.toLowerCase().includes(textoBusqueda);
+            
+            let coincideEstado = true;
+            if (filtroEstado === "online") coincideEstado = esOnline;
+            if (filtroEstado === "alerta") coincideEstado = ausenciasConsecutivas >= 2;
+            if (filtroEstado === "pendiente") coincideEstado = estadoPerfil === "pendiente";
+            if (filtroEstado === "completado") coincideEstado = estadoPerfil === "completado";
+
+            let coincideSeccion = (filtroSeccion === "todas" || seccion === filtroSeccion);
+
+            fila.style.display = (coincideBusqueda && coincideEstado && coincideSeccion) ? "" : "none";
+        });
+    }
+
+    // Funciones complementarias sin alterar el funcionamiento original
+    function adminCargarFichaManual() {
+        const codigo = document.getElementById("ficha-codigo").value.trim().toUpperCase();
+        if(!codigo.startsWith("CLASE-2026-")) return alert("Ingresa un código válido.");
+        db.ref(`clase/${codigo}`).once('value').then(snap => {
+            if(snap.exists()) {
+                fichaManualCodigoActual = codigo;
+                const p = snap.val().perfil || {};
+                document.getElementById("ficha-edad").value = p.edad || "";
+                document.getElementById("ficha-celular").value = p.celular || "";
+                document.getElementById("ficha-comunidad").value = p.comunidad || "";
+                document.getElementById("ficha-seccion").value = p.seccion || ""; // NUEVO CAMPO CARGADO
+                document.getElementById("ficha-nivel").value = p.nivel || "";
+                document.getElementById("ficha-foto-file").value = ""; 
+                document.getElementById("ficha-formulario").style.display = "flex";
+                alert(`✅ Ficha cargada.`);
+            } else {
+                alert("❌ El código no existe.");
+                document.getElementById("ficha-formulario").style.display = "none";
+            }
+        });
+    }
+
+    function adminGuardarFichaManual() {
+        if(!fichaManualCodigoActual) return;
+        const fileInput = document.getElementById("ficha-foto-file");
+        const nuevosDatos = {
+            edad: document.getElementById("ficha-edad").value.trim(),
+            celular: document.getElementById("ficha-celular").value.trim(),
+            comunidad: document.getElementById("ficha-comunidad").value.trim(),
+            seccion: document.getElementById("ficha-seccion").value.trim(), // GUARDAR NUEVO CAMPO
+            nivel: document.getElementById("ficha-nivel").value,
+        };
+
+        const guardarPerfilBD = (fotoUrl) => {
+            db.ref(`clase/${fichaManualCodigoActual}/perfil`).once('value').then(snap => {
+                let perfilActual = snap.exists() ? snap.val() : {};
+                perfilActual.edad = nuevosDatos.edad;
+                perfilActual.celular = nuevosDatos.celular;
+                perfilActual.comunidad = nuevosDatos.comunidad;
+                perfilActual.seccion = nuevosDatos.seccion;
+                perfilActual.nivel = nuevosDatos.nivel;
+                if (fotoUrl) perfilActual.foto = fotoUrl;
+
+                db.ref(`clase/${fichaManualCodigoActual}/perfil`).set(perfilActual).then(() => {
+                    alert(`✅ Ficha guardada correctamente.`);
+                    document.getElementById("ficha-formulario").style.display = "none";
+                    document.getElementById("ficha-codigo").value = "";
+                });
+            });
+        };
+
+        if (fileInput.files && fileInput.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) { guardarPerfilBD(e.target.result); };
+            reader.readAsDataURL(fileInput.files[0]);
+        } else {
+            guardarPerfilBD(null);
+        }
+    }
                         <option value="">Nivel de Conocimiento...</option>
                         <option value="Cero">Cero</option>
                         <option value="Básico">Básico</option>
@@ -195,6 +511,7 @@
                 <div class="form-group">
                     <input type="date" id="masivo-fecha" title="Selecciona fecha de la sesión">
                     <button class="btn-action" style="background: #d97706;" onclick="adminCargarPaseMasivo()">📂 Cargar Lista</button>
+                    <button class="btn-danger" style="background: #dc2626;" onclick="adminBorrarPaseMasivo()">🗑️ Borrar Lista</button>
                 </div>
                 <div id="masivo-lista-container" style="margin-top: 15px;"></div>
             </div>
@@ -265,6 +582,55 @@
 
         <!-- SECCIÓN 3: PERMISOS -->
         <div id="sec-permisos" class="admin-section">
+            <div class="card" style="border-color: #ea580c; background: #431407;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #78350f; padding-bottom: 10px;">
+                    <h3 style="color: #fdba74; margin: 0; border: none; padding: 0;">📥 Bandeja de Permisos y Justificantes</h3>
+                    <button class="btn-action" style="background: #ea580c; padding: 6px 14px; font-size: 0.8rem;" onclick="adminCargarPermisos()">🔄 Actualizar Bandeja</button>
+                </div>
+                <p style="font-size: 0.85rem; color: #ffedd5;">Solicitudes enviadas por los alumnos desde su portal.</p>
+                <div id="bandeja-permisos-container" style="margin-top: 15px;">
+                    <p style="color: #fdba74; font-style: italic;">Haz clic en "Actualizar Bandeja" para ver las solicitudes entrantes.</p>
+                </div>
+            </div>
+
+            <!-- TARJETA: BORRAR PERMISOS INDIVIDUALES -->
+            <div class="card" style="border-color: #f59e0b; background: #451a03; margin-bottom: 20px;">
+                <h3 style="color: #fbbf24; border-color: #78350f;">🧹 Limpieza de Permisos por Alumno (Bugeados)</h3>
+                <p style="font-size: 0.85rem; color: #fde68a; margin-bottom: 15px;">Borra de raíz los permisos antiguos trabados en el historial de un alumno específico para que su contador regrese a 0 al 100%.</p>
+                
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <input type="text" id="input-limpiar-permiso-codigo" placeholder="Código (Ej: CLASE-2026-001)" style="border-color: #f59e0b; background: #291504; color: #fff;">
+                    <button class="btn-action" style="background: #d97706;" onclick="adminLimpiarPermisoIndividual()">🧹 Limpiar Todo a este Alumno</button>
+                </div>
+            </div>
+
+            <!-- ZONA DE PELIGRO PERMISOS -->
+            <div class="card" style="border-color: #dc2626; background: #450a0a;">
+                <h3 style="color: #f87171; border-color: #7f1d1d;">Peligro: Reiniciar Permisos a 0</h3>
+                <p style="font-size: 0.85rem; color: #fca5a5; margin-bottom: 15px;">Reinicia por completo y marca a 0 los permisos de todos los estudiantes, borrando todas las solicitudes enviadas en la base de datos.</p>
+                <button class="btn-danger" style="background: #b91c1c; width: 100%; font-size: 1rem; padding: 12px;" onclick="adminReiniciarTodosPermisosAZero()">🔄 REINICIAR TODOS LOS PERMISOS A 0</button>
+            </div>
+        </div>
+
+<!-- TARJETA: BORRAR PERMISOS INDIVIDUALES -->
+            <div class="card" style="border-color: #f59e0b; background: #451a03; margin-bottom: 20px;">
+                <h3 style="color: #fbbf24; border-color: #78350f;">🧹 Limpieza de Permisos por Alumno (Bugeados)</h3>
+                <p style="font-size: 0.85rem; color: #fde68a; margin-bottom: 15px;">Borra de raíz los permisos antiguos trabados en el historial de un alumno específico para que su contador regrese a 0 al 100%.</p>
+                
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <input type="text" id="input-limpiar-permiso-codigo" placeholder="Código (Ej: CLASE-2026-001)" style="border-color: #f59e0b; background: #291504; color: #fff;">
+                    <button class="btn-action" style="background: #d97706;" onclick="adminLimpiarPermisoIndividual()">🧹 Limpiar Todo a este Alumno</button>
+                </div>
+            </div>
+
+            <!-- ZONA DE PELIGRO PERMISOS -->
+            <div class="card" style="border-color: #dc2626; background: #450a0a;">
+                <h3 style="color: #f87171; border-color: #7f1d1d;">Peligro: Reiniciar Permisos a 0</h3>
+                <p style="font-size: 0.85rem; color: #fca5a5; margin-bottom: 15px;">Reinicia por completo y marca a 0 los permisos de todos los estudiantes, borrando todas las solicitudes enviadas en la base de datos.</p>
+                <button class="btn-danger" style="background: #b91c1c; width: 100%; font-size: 1rem; padding: 12px;" onclick="adminReiniciarTodosPermisosAZero()">🔄 REINICIAR TODOS LOS PERMISOS A 0</button>
+            </div>
+        </div>
+
             <div class="card" style="border-color: #ea580c; background: #431407;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #78350f; padding-bottom: 10px;">
                     <h3 style="color: #fdba74; margin: 0; border: none; padding: 0;">📥 Bandeja de Permisos y Justificantes</h3>
@@ -425,21 +791,172 @@
             </div>
         </div>
 
-        <!-- NUEVA SECCIÓN 10: CONTROLES EN VIVO (PIN, RULETA, MODO PRUEBA) -->
+        <!-- NUEVA SECCIÓN 10: CONTROLES EN VIVO -->
         <div id="sec-live" class="admin-section">
+            
+            <!-- TARJETA: CONTROL MANUAL DEL BOTÓN MEET / ZOOM -->
+            <div class="card" style="border-color: #3b82f6; background: #1e3a8a;">
+                <h3 style="color: #60a5fa; border-color: #1e40af; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.5rem;">🎥</span> Control del Botón Meet / Zoom
+                </h3>
+                <p style="font-size: 0.85rem; color: #bfdbfe; margin-bottom: 20px;">
+                    Activa manualmente el botón de la clase en vivo. Al encenderlo, el botón de ingreso aparecerá de inmediato en la pantalla de los alumnos seleccionados.
+                </p>
+                
+                <div class="form-group" style="margin-bottom: 15px; background: #172554; padding: 15px; border-radius: 8px;">
+                    <label style="color: #93c5fd; font-weight: bold; font-size: 0.85rem; width: 100%;">1. Enlace de la Clase</label>
+                    <input type="text" id="admin-url-meet" value="https://meet.google.com/yzu-agci-fbe" placeholder="Enlace de Google Meet..." style="border-color: #3b82f6; width: 100%; background: #1e3a8a; color: #60a5fa; font-weight: bold; margin-bottom: 15px;">
+
+                    <label style="color: #93c5fd; font-weight: bold; font-size: 0.85rem; width: 100%;">2. ¿A quién mostrar el botón de Meet?</label>
+                    <select id="meet-target" style="border-color: #3b82f6; width: 100%; background: #1e3a8a; color: #fff; margin-bottom: 10px;" onchange="document.getElementById('meet-target-codigo').style.display = this.value === 'especifico' ? 'block' : 'none'">
+                        <option value="todos">A TODOS los estudiantes inscritos</option>
+                        <option value="online">Solo a los ACTIVOS en el portal AHORA</option>
+                        <option value="especifico">A un código Específico (Individual)...</option>
+                    </select>
+                    <input type="text" id="meet-target-codigo" placeholder="Ej: CLASE-2026-001" style="display: none; border-color: #3b82f6; width: 100%; background: #1e3a8a; color: #fff;">
+                </div>
+
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn-action" style="flex: 1; background: #2563eb; font-size: 1rem; padding: 12px; font-weight: bold;" onclick="adminActivarMeet()">🟢 ACTIVAR BOTÓN AHORA</button>
+                    <button class="btn-action" style="flex: 1; background: #1e40af; font-size: 1rem; padding: 12px; font-weight: bold;" onclick="adminDesactivarMeet()">🔴 OCULTAR BOTÓN</button>
+                </div>
+
+                <div id="admin-meet-status" style="margin-top: 15px; text-align: center; color: #93c5fd; font-size: 0.9rem; font-weight: bold;">
+                    Estado: Consultando...
+                </div>
+            </div>
+
+            <!-- TARJETA: CREADOR DE EXAMEN EN VIVO DIRECTO -->
+            <div class="card" style="border-color: #ef4444; background: #450a0a;">
+                <h3 style="color: #f87171; border-color: #7f1d1d; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.5rem;">📝</span> Lanzar Examen en Vivo (Nativo)
+                </h3>
+                <p style="font-size: 0.85rem; color: #fca5a5; margin-bottom: 20px;">
+                    Crea preguntas y lánzalas. Un Pop-up invadirá el portal de los alumnos y responderán sin salir del sitio.
+                </p>
+
+                <div class="form-group" style="margin-bottom: 15px; background: #7f1d1d; padding: 15px; border-radius: 8px;">
+                    <label style="color: #fecaca; font-weight: bold; font-size: 0.85rem; width: 100%;">1. Título del Examen (Ej: Evaluación Clase 5)</label>
+                    <input type="text" id="examen-titulo" placeholder="Nombre para el historial..." style="border-color: #ef4444; width: 100%; background: #2c0606; margin-bottom: 10px;">
+
+                    <label style="color: #fecaca; font-weight: bold; font-size: 0.85rem; width: 100%;">2. ¿A quién enviar el examen?</label>
+                    <select id="examen-target" style="border-color: #ef4444; width: 100%; background: #2c0606; margin-bottom: 10px;" onchange="document.getElementById('examen-target-codigo').style.display = this.value === 'especifico' ? 'block' : 'none'">
+                        <option value="todos">A TODOS los estudiantes inscritos</option>
+                        <option value="online">Solo a los ACTIVOS en el portal AHORA</option>
+                        <option value="meet">Solo a los que entraron al botón MEET/ZOOM</option>
+                        <option value="especifico">A un código Específico...</option>
+                    </select>
+                    <input type="text" id="examen-target-codigo" placeholder="Ej: CLASE-2026-001" style="display: none; border-color: #ef4444; width: 100%; margin-bottom: 10px; background: #2c0606;">
+                    
+                    <label style="color: #fecaca; font-weight: bold; font-size: 0.85rem; width: 100%;">3. Duración del Examen</label>
+                    <select id="examen-duracion" style="border-color: #ef4444; width: 100%; background: #2c0606;">
+                        <option value="5">5 Minutos</option>
+                        <option value="10">10 Minutos</option>
+                        <option value="15" selected>15 Minutos</option>
+                        <option value="20">20 Minutos</option>
+                        <option value="30">30 Minutos</option>
+                    </select>
+                </div>
+
+                <div id="contenedor-preguntas" style="display: flex; flex-direction: column; gap: 15px; margin-bottom: 15px;">
+                    <!-- Preguntas inyectadas por JS -->
+                </div>
+                
+                <button class="btn-action" style="background: #b91c1c; width: 100%; margin-bottom: 20px; border: 1px dashed #fca5a5;" onclick="adminAgregarPregunta()">➕ Agregar Pregunta al Examen</button>
+
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn-action" style="flex: 1; background: #ef4444; font-size: 1rem; padding: 12px;" onclick="adminLanzarExamen()">🚀 DISPARAR EXAMEN AHORA</button>
+                    <button class="btn-action" style="flex: 1; background: #7f1d1d; font-size: 1rem; padding: 12px;" onclick="adminApagarExamen()">🛑 APAGAR EXAMEN</button>
+                </div>
+
+                <div id="admin-examen-status" style="margin-top: 15px; text-align: center; color: #fca5a5; font-size: 0.9rem; font-weight: bold;">
+                    Estado: Esperando para iniciar...
+                </div>
+
+                <div style="margin-top: 25px; border-top: 1px solid #7f1d1d; padding-top: 15px;">
+                    <h4 style="color: #fecaca; margin-bottom: 10px; display: flex; justify-content: space-between;">
+                        📊 Resultados en Tiempo Real 
+                        <div>
+                            <button class="btn-action" style="background: #ef4444; padding: 2px 8px; font-size: 0.7rem;" onclick="adminVerHistorialExamenes()">Ver Historial</button>
+                            <button class="btn-action" style="background: #b91c1c; padding: 2px 8px; font-size: 0.7rem;" onclick="adminEscucharResultadosExamen()">Recargar</button>
+                        </div>
+                    </h4>
+                    <div id="examen-resultados-live" style="max-height: 250px; overflow-y: auto; background: #2c0606; padding: 10px; border-radius: 8px; border: 1px dashed #ef4444;">
+                        <p style="color: #fca5a5; font-size: 0.85rem; text-align: center; margin: 0;">Esperando entregas...</p>
+                    </div>
+                </div>
+            </div>
+
+                <div id="contenedor-preguntas" style="display: flex; flex-direction: column; gap: 15px; margin-bottom: 15px;">
+                    <!-- Preguntas inyectadas por JS -->
+                </div>
+                
+                <button class="btn-action" style="background: #b91c1c; width: 100%; margin-bottom: 20px; border: 1px dashed #fca5a5;" onclick="adminAgregarPregunta()">➕ Agregar Pregunta al Examen</button>
+
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn-action" style="flex: 1; background: #ef4444; font-size: 1rem; padding: 12px;" onclick="adminLanzarExamen()">🚀 DISPARAR EXAMEN AHORA</button>
+                    <button class="btn-action" style="flex: 1; background: #7f1d1d; font-size: 1rem; padding: 12px;" onclick="adminApagarExamen()">🛑 APAGAR EXAMEN</button>
+                </div>
+
+                <div id="admin-examen-status" style="margin-top: 15px; text-align: center; color: #fca5a5; font-size: 0.9rem; font-weight: bold;">
+                    Estado: Esperando para iniciar...
+                </div>
+
+                <div style="margin-top: 25px; border-top: 1px solid #7f1d1d; padding-top: 15px;">
+                    <h4 style="color: #fecaca; margin-bottom: 10px; display: flex; justify-content: space-between;">📊 Resultados en Tiempo Real <button class="btn-action" style="background: #b91c1c; padding: 2px 8px; font-size: 0.7rem;" onclick="adminEscucharResultadosExamen()">Recargar</button></h4>
+                    <div id="examen-resultados-live" style="max-height: 250px; overflow-y: auto; background: #2c0606; padding: 10px; border-radius: 8px; border: 1px dashed #ef4444;">
+                        <p style="color: #fca5a5; font-size: 0.85rem; text-align: center; margin: 0;">Esperando entregas...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="border-color: #22c55e; background: #052e16;">
+                <h3 style="color: #4ade80; border-color: #14532d; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.5rem;">📝</span> Lanzar Examen en Vivo (Pop-up Global)
+                </h3>
+                <p style="font-size: 0.85rem; color: #fca5a5; margin-bottom: 20px;">
+                    Al activar esta opción, un Pop-up gigante invadirá la pantalla de todos los estudiantes conectados, forzándolos a realizar el examen o dinámica.
+                </p>
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <input type="text" id="admin-url-examen" placeholder="Pega aquí el enlace (Google Forms, Typeform, etc.)" style="border-color: #ef4444; width: 100%;">
+                </div>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn-action" style="flex: 1; background: #ef4444; font-size: 1rem; padding: 12px;" onclick="adminLanzarExamen()">🚀 Disparar Examen a Todos</button>
+                    <button class="btn-action" style="flex: 1; background: #7f1d1d; font-size: 1rem; padding: 12px;" onclick="adminApagarExamen()">🛑 Apagar Examen</button>
+                </div>
+                <div id="admin-examen-status" style="margin-top: 15px; text-align: center; color: #fca5a5; font-size: 0.9rem; font-style: italic;">
+                    Estado: Inactivo.
+                </div>
+            </div>
+
             <div class="card" style="border-color: #22c55e; background: #052e16;">
                 <h3 style="color: #4ade80; border-color: #14532d; display: flex; align-items: center; gap: 10px;">
                     <span style="font-size: 1.5rem;">⏱️</span> Asistencia Virtual y Generador de PIN
                 </h3>
                 <p style="font-size: 0.85rem; color: #86efac; margin-bottom: 20px;">
-                    Genera el PIN diario a las 00:00 para la clase online. Solo los estudiantes que entren al enlace de Google Meet podrán validar este PIN.
+                    Genera el PIN y lanza un Pop-up en la pantalla de los estudiantes para que registren su asistencia en vivo.
                 </p>
                 
-                <button class="btn-action" style="background: #16a34a; width: 100%; font-size: 1.1rem; padding: 15px;" id="btn-generar-pin-admin" onclick="adminGenerarPINAsistencia()">🔑 Generar PIN para la clase de HOY</button>
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="color: #86efac; font-weight: bold; font-size: 0.85rem; width: 100%;">¿A quién enviar el Pop-up de Asistencia?</label>
+                   <select id="asistencia-target" style="border-color: #22c55e; width: 100%; background: #064e3b; color: #fff; padding: 10px; border-radius: 8px;" onchange="document.getElementById('asistencia-target-codigo').style.display = this.value === 'especifico' ? 'block' : 'none'">
+                        <option value="todos">A TODOS los estudiantes inscritos</option>
+                        <option value="online">Solo a los ACTIVOS en el portal AHORA</option>
+                        <option value="meet">Solo a los que entraron al botón MEET/ZOOM</option>
+                        <option value="especifico">A un código Específico (Individual)...</option>
+                    </select>
+                    <input type="text" id="asistencia-target-codigo" placeholder="Ej: CLASE-2026-001" style="display: none; border-color: #22c55e; width: 100%; margin-top: 10px; background: #064e3b; color: #fff; padding: 10px; border-radius: 8px;">
+                </div>
+
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn-action" style="background: #16a34a; flex: 1; font-size: 1rem; padding: 12px;" id="btn-generar-pin-admin" onclick="adminGenerarPINAsistencia()">🚀 Generar PIN y Lanzar Pop-up</button>
+                    <button class="btn-action" style="background: #064e3b; flex: 1; font-size: 1rem; padding: 12px;" onclick="adminApagarPINAsistencia()">🛑 Apagar Pop-up</button>
+                </div>
                 
                 <div id="admin-pin-display-container" style="display: none; margin-top: 20px; text-align: center; background: #14532d; padding: 20px; border-radius: 12px; border: 1px dashed #22c55e;">
                     <p style="color: #4ade80; font-size: 0.85rem; font-weight: bold; margin-bottom: 10px;">PIN ACTIVO EN FIREBASE (HOY):</p>
                     <h1 id="admin-pin-number" style="font-size: 4rem; letter-spacing: 15px; margin: 0; color: #ffffff; text-shadow: 0 5px 15px rgba(0,0,0,0.5);">0000</h1>
+                    <p id="admin-pin-status" style="color: #86efac; font-size: 0.8rem; margin-top: 10px;">Estado: Pop-up activo en pantallas.</p>
                 </div>
             </div>
 
@@ -533,6 +1050,7 @@
         adminCargarCalendarioParaMotor();
         adminCargarPermisos();
         iniciarMotorAdministrador();
+        iniciarListenerMeetAdmin();
     }
 
     function adminReiniciarAsistenciaPorFecha() {
@@ -564,79 +1082,116 @@
         }
     }
 
-   let antenaPermisosActiva = false;
-    let ultimosPermisosHTML = "";
+   // =========================================================
+    // LÓGICA DE BANDEJA DE PERMISOS (TIEMPO REAL)
+    // =========================================================
+    let antenaPermisosActiva = false; // Solo declaramos la variable una vez
 
     function adminCargarPermisos() {
         const contenedor = document.getElementById("bandeja-permisos-container");
         if (!contenedor) return;
 
-        if (!antenaPermisosActiva) {
-            antenaPermisosActiva = true;
-            contenedor.innerHTML = "<p style='color: #fdba74;'>📡 Conectando con Firebase y escuchando permisos...</p>";
+        // Si la antena ya está activa, no volvemos a suscribirnos, 
+        // pero sí actualizamos el mensaje de carga visualmente si el usuario hace clic.
+        if (antenaPermisosActiva) {
+            // Ya está conectada, no hacemos nada más.
+            return;
+        }
 
-            db.ref('clase').on('value', snap => {
-                if (!snap.exists()) {
-                    ultimosPermisosHTML = "<p style='color: #ffedd5;'>No hay alumnos registrados en la base de datos.</p>";
-                    contenedor.innerHTML = ultimosPermisosHTML;
-                    return;
+        antenaPermisosActiva = true;
+        contenedor.innerHTML = "<p style='color: #fdba74;'>📡 Conectando con Firebase y escuchando permisos en tiempo real...</p>";
+
+        // Usamos .on() en lugar de .once() para escuchar cambios en tiempo real PARA SIEMPRE
+        db.ref('clase').on('value', snap => {
+            if (!snap.exists()) {
+                contenedor.innerHTML = "<p style='color: #ffedd5;'>No hay alumnos registrados en la base de datos.</p>";
+                return;
+            }
+
+            let html = "";
+            let countPermisos = 0;
+
+            snap.forEach(child => {
+                const data = child.val();
+                const alumnoCodigo = child.key;
+
+                // 1. Buscar en la bandeja oficial de permisos_solicitados
+                if (data.permisos_solicitados) {
+                    Object.keys(data.permisos_solicitados).forEach(claseId => {
+                        countPermisos++;
+                        const p = data.permisos_solicitados[claseId];
+
+                        const fotoHtml = p.foto 
+                            ? `<button class="btn-action" style="background:#ea580c; padding:4px 8px; font-size:0.75rem; margin-top:8px;" onclick="document.getElementById('img-modal-permiso').src='${p.foto}'; document.getElementById('modal-foto-permiso').style.display='flex';">📸 Ver Justificante</button>` 
+                            : `<span style="color:#78350f; font-size:0.75rem; display:block; margin-top:8px;">Sin justificante adjunto</span>`;
+
+                        html += `
+                        <div style="background: #291504; border: 1px solid #78350f; border-radius: 12px; padding: 14px; margin-bottom: 12px; position: relative;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 6px; flex-wrap: wrap; gap: 5px;">
+                                <strong style="color: #fdba74; font-size: 0.95rem;">${data.nombre || alumnoCodigo} <span style="font-family: monospace; color: #f59e0b; font-size: 0.8rem;">(${alumnoCodigo})</span></strong>
+                                <span style="font-size: 0.75rem; color: #ffedd5; background: #78350f; padding: 2px 8px; border-radius: 6px; font-weight: bold;">Clase: ${p.fecha_clase || claseId}</span>
+                            </div>
+                            <p style="color: #fbbf24; font-size: 0.85rem; margin: 0 0 5px 0;"><strong>Motivo:</strong> ${p.razon || 'Sin motivo especificado'}</p>
+                            <p style="color: #d97706; font-size: 0.75rem; margin: 0;">Enviado: ${p.timestamp ? new Date(p.timestamp).toLocaleString() : 'Reciente'}</p>
+                            
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                                ${fotoHtml}
+                                <button class="btn-danger" style="padding: 4px 10px; font-size: 0.75rem; background: #dc2626;" onclick="adminBorrarSolicitudPermiso('${alumnoCodigo}', '${claseId}')">🗑️ Eliminar Solicitud</button>
+                            </div>
+                        </div>`;
+                    });
                 }
-
-                let html = "";
-                let countPermisos = 0;
-
-                snap.forEach(child => {
-                    const data = child.val();
-                    const alumnoCodigo = child.key;
-
-                    if (data && data.permisos_solicitados) {
-                        Object.keys(data.permisos_solicitados).forEach(claseId => {
+                
+                // 2. Buscar permisos antiguos guardados solo como string en 'asistencias'
+                if (data.asistencias) {
+                    Object.keys(data.asistencias).forEach(claseId => {
+                        const valStr = String(data.asistencias[claseId]).trim();
+                        // Si dice permiso y NO está ya en permisos_solicitados
+                        if (valStr.toLowerCase().startsWith("permiso") && (!data.permisos_solicitados || !data.permisos_solicitados[claseId])) {
                             countPermisos++;
-                            const p = data.permisos_solicitados[claseId];
-
-                            const fotoHtml = p.foto 
-                                ? `<button class="btn-action" style="background:#ea580c; padding:4px 8px; font-size:0.75rem; margin-top:8px;" onclick="document.getElementById('img-modal-permiso').src='${p.foto}'; document.getElementById('modal-foto-permiso').style.display='flex';">📸 Ver Justificante</button>` 
-                                : `<span style="color:#78350f; font-size:0.75rem; display:block; margin-top:8px;">Sin justificante adjunto</span>`;
-
                             html += `
                             <div style="background: #291504; border: 1px solid #78350f; border-radius: 12px; padding: 14px; margin-bottom: 12px; position: relative;">
                                 <div style="display: flex; justify-content: space-between; margin-bottom: 6px; flex-wrap: wrap; gap: 5px;">
                                     <strong style="color: #fdba74; font-size: 0.95rem;">${data.nombre || alumnoCodigo} <span style="font-family: monospace; color: #f59e0b; font-size: 0.8rem;">(${alumnoCodigo})</span></strong>
-                                    <span style="font-size: 0.75rem; color: #ffedd5; background: #78350f; padding: 2px 8px; border-radius: 6px; font-weight: bold;">Clase: ${p.fecha_clase || claseId}</span>
+                                    <span style="font-size: 0.75rem; color: #ffedd5; background: #78350f; padding: 2px 8px; border-radius: 6px; font-weight: bold;">Clase: ${claseId}</span>
                                 </div>
-                                <p style="color: #fbbf24; font-size: 0.85rem; margin: 0 0 5px 0;"><strong>Motivo:</strong> ${p.razon || 'Sin motivo especificado'}</p>
-                                <p style="color: #d97706; font-size: 0.75rem; margin: 0;">Enviado: ${p.timestamp ? new Date(p.timestamp).toLocaleString() : 'Reciente'}</p>
+                                <p style="color: #fbbf24; font-size: 0.85rem; margin: 0 0 5px 0;"><strong>Motivo:</strong> ${valStr}</p>
+                                <p style="color: #d97706; font-size: 0.75rem; margin: 0;">Enviado: Formato antiguo (Directo a historial)</p>
                                 
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
-                                    ${fotoHtml}
-                                    <button class="btn-danger" style="padding: 4px 10px; font-size: 0.75rem; background: #dc2626;" onclick="adminBorrarSolicitudPermiso('${alumnoCodigo}', '${claseId}')">🗑️ Eliminar Solicitud</button>
+                                    <span style="color:#78350f; font-size:0.75rem; display:block;">Sin justificante adjunto</span>
+                                    <button class="btn-danger" style="padding: 4px 10px; font-size: 0.75rem; background: #dc2626;" onclick="adminBorrarSolicitudPermiso('${alumnoCodigo}', '${claseId}')">🗑️ Eliminar Permiso</button>
                                 </div>
                             </div>`;
-                        });
-                    }
-                });
-
-                if (countPermisos === 0) {
-                    ultimosPermisosHTML = "<p style='color: #ffedd5;'>✅ Bandeja vacía. No hay permisos pendientes por revisar.</p>";
-                } else {
-                    ultimosPermisosHTML = `<div style="color: #4ade80; font-size: 0.85rem; font-weight: bold; margin-bottom: 12px;">🔴 Solicitudes Entrantes (${countPermisos}):</div>` + html;
+                        }
+                    });
                 }
-                contenedor.innerHTML = ultimosPermisosHTML;
-            }, error => {
-                console.error("Error en Firebase:", error);
-                ultimosPermisosHTML = `<div style="background: #450a0a; border: 1px solid #fca5a5; color: #fca5a5; padding: 12px; border-radius: 8px;">❌ Fallo al conectar con la base de datos: ${error.message}</div>`;
-                contenedor.innerHTML = ultimosPermisosHTML;
-                antenaPermisosActiva = false;
             });
-        } else if (ultimosPermisosHTML) {
-            contenedor.innerHTML = ultimosPermisosHTML;
-        }
+
+            if (countPermisos === 0) {
+                contenedor.innerHTML = "<p style='color: #4ade80; font-weight: bold;'>✅ Bandeja vacía. No hay permisos pendientes por revisar.</p>";
+            } else {
+                contenedor.innerHTML = `<div style="color: #4ade80; font-size: 0.85rem; font-weight: bold; margin-bottom: 12px;">🔴 Solicitudes Entrantes (${countPermisos}):</div>` + html;
+            }
+        }, error => {
+            console.error("Error en Firebase:", error);
+            contenedor.innerHTML = `<div style="background: #450a0a; border: 1px solid #fca5a5; color: #fca5a5; padding: 12px; border-radius: 8px;">❌ Fallo al conectar con la base de datos: ${error.message}</div>`;
+            antenaPermisosActiva = false; // Permitir reintento si falla
+        });
     }
 
     function adminBorrarSolicitudPermiso(alumnoCodigo, claseId) {
-        if (confirm(`¿Deseas eliminar la solicitud de permiso de ${alumnoCodigo}?`)) {
-            db.ref(`clase/${alumnoCodigo}/permisos_solicitados/${claseId}`).remove().then(() => {
-                alert("🗑️ Solicitud borrada.");
+        if (confirm(`⚠️ ¿Deseas eliminar la solicitud de permiso de ${alumnoCodigo}?\n\nAl confirmar, también se desvinculará este permiso de su historial de asistencia para que pueda registrarse normalmente.`)) {
+            const updates = {};
+            // Borra la solicitud visual de la bandeja
+            updates[`clase/${alumnoCodigo}/permisos_solicitados/${claseId}`] = null;
+            // Desvincula el permiso de su porcentaje/historial de asistencias reales
+            updates[`clase/${alumnoCodigo}/asistencias/${claseId}`] = null;
+
+            db.ref().update(updates).then(() => {
+                alert("🗑 Solicitud y permiso en historial borrados exitosamente.");
+            }).catch(err => {
+                alert("Error al borrar permiso: " + err);
             });
         }
     }
@@ -651,25 +1206,8 @@
     }
 
     function iniciarMotorAdministrador() {
-        setInterval(() => {
-            const ahora = new Date(new Date().toLocaleString("en-US", {timeZone: "America/El_Salvador"}));
-            
-            if (ahora.getHours() === 0 && ahora.getMinutes() === 0) {
-                const hoy = ahora.getFullYear() + '-' + String(ahora.getMonth() + 1).padStart(2, '0') + '-' + String(ahora.getDate()).padStart(2, '0');
-                
-                const hayClaseOnlineHoy = FECHAS_CURSO_ADMIN.some(c => c.fecha === hoy && c.modalidad === 'Online');
-                
-                if (hayClaseOnlineHoy) {
-                    db.ref('sistema/asistencia_virtual/' + hoy).once('value').then(snap => {
-                        if (!snap.exists()) {
-                            const pinGenerado = Math.floor(1000 + Math.random() * 9000).toString();
-                            db.ref('sistema/asistencia_virtual/' + hoy).set(pinGenerado);
-                            console.log("PIN Automático Generado para HOY: " + pinGenerado);
-                        }
-                    });
-                }
-            }
-        }, 60000);
+        // El PIN automático de medianoche fue eliminado para que el pop-up de asistencia
+        // en el portal de alumnos SOLO se active cuando el Admin presione el botón "Generar PIN".
     }
 
     function cambiarSeccionAdmin(idSeccion, boton) {
@@ -715,18 +1253,22 @@
                     const codigo = child.key;
                     const nombre = data.nombre || "Sin nombre";
                     const pass = data.password || "ELEGIDOS26";
+                    // Solo cuenta las asistencias reales registradas, NO suma los tickets especiales
                     let totalAsist = data.asistencias ? Object.keys(data.asistencias).filter(k => !String(data.asistencias[k]).toLowerCase().includes("permiso")).length : 0;
-
-                    if (data.accesos_especiales) {
-                        if ((data.accesos_especiales["elegidos"] || data.accesos_especiales["mahu"]) && (!data.asistencias || (!data.asistencias["04_1500"] && !data.asistencias["2026-10-04"]))) totalAsist++;
-                        if ((data.accesos_especiales["masterclass"] || data.accesos_especiales["dreamez"]) && (!data.asistencias || (!data.asistencias["25_1500"] && !data.asistencias["2026-10-25"] && !data.asistencias["2026-10-27"]))) totalAsist++;
-                        if (data.accesos_especiales["festival"] && (!data.asistencias || (!data.asistencias["08_1300"] && !data.asistencias["2026-11-08"]))) totalAsist++;
-                    }
                     
-                    const estaOnline = data.online === true || (nodosOnline[codigo] && Object.keys(nodosOnline[codigo]).length > 0);
+                    let estaOnline = false;
                     let horaUltimaConexionStr = "Sin datos";
+                    
                     if (data.ultima_conexion) {
                         horaUltimaConexionStr = new Date(data.ultima_conexion).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        
+                        // Validar con tiempo universal UTC para que no afecten zonas horarias (30 mins = 1800000 ms)
+                        const tiempoPasado = Date.now() - data.ultima_conexion;
+                        
+                        if (tiempoPasado <= 1800000) {
+                            // Solo si pasaron menos de 30 minutos y Firebase lo marca activo
+                            estaOnline = (data.online === true || (nodosOnline[codigo] && Object.keys(nodosOnline[codigo]).length > 0));
+                        }
                     }
 
                     if (estaOnline) {
@@ -944,26 +1486,45 @@
         });
     }
 
-    function adminFiltrarAlumnos() {
+   function adminFiltrarAlumnos() {
         const textoBusqueda = document.getElementById("buscar-alumno").value.toLowerCase().trim();
         const filtroEstado = document.getElementById("filtro-estado-alumno").value;
+        const filtroSeccion = document.getElementById("filtro-seccion-alumno") ? document.getElementById("filtro-seccion-alumno").value : "todas";
         
         document.querySelectorAll("#tabla-alumnos-body tr").forEach(fila => {
-            const codigo = fila.getAttribute("data-codigo") || "";
-            const nombre = fila.getAttribute("data-nombre") || "";
+            // Verificamos si la fila es válida (tiene un código de estudiante)
+            const codigo = fila.getAttribute("data-codigo");
+            if (!codigo) return;
+            
+            const nombre = (fila.getAttribute("data-nombre") || "").toLowerCase();
             const estadoPerfil = fila.getAttribute("data-perfil") || "";
             const esOnline = fila.getAttribute("data-online") === "true";
-            const ausenciasConsecutivas = parseInt(fila.getAttribute("data-ausencias") || "0", 10);
+            
+            // La falta se guarda en Firebase como un entero, leemos del HTML de forma segura
+            const ausenciasAttr = fila.getAttribute("data-ausencias");
+            const ausenciasConsecutivas = ausenciasAttr ? parseInt(ausenciasAttr, 10) : 0;
+            const seccion = fila.getAttribute("data-seccion") || "";
 
-            const coincideBusqueda = codigo.toLowerCase().includes(textoBusqueda) || nombre.toLowerCase().includes(textoBusqueda);
+            const coincideBusqueda = codigo.toLowerCase().includes(textoBusqueda) || nombre.includes(textoBusqueda);
             
             let coincideEstado = true;
             if (filtroEstado === "online") coincideEstado = esOnline;
-            if (filtroEstado === "alerta") coincideEstado = ausenciasConsecutivas >= 2;
-            if (filtroEstado === "pendiente") coincideEstado = estadoPerfil === "pendiente";
-            if (filtroEstado === "completado") coincideEstado = estadoPerfil === "completado";
+            // Evaluamos riesgo real de deserción (2 faltas o más)
+            else if (filtroEstado === "alerta") coincideEstado = ausenciasConsecutivas >= 2;
+            else if (filtroEstado === "pendiente") coincideEstado = estadoPerfil === "pendiente";
+            else if (filtroEstado === "completado") coincideEstado = estadoPerfil === "completado";
 
-            fila.style.display = (coincideBusqueda && coincideEstado) ? "" : "none";
+            let coincideSeccion = true;
+            if (filtroSeccion && filtroSeccion !== "todas") {
+                coincideSeccion = (seccion === filtroSeccion);
+            }
+
+            // Aplicamos los filtros
+            if (coincideBusqueda && coincideEstado && coincideSeccion) {
+                fila.style.display = "";
+            } else {
+                fila.style.display = "none";
+            }
         });
     }
 
@@ -1156,18 +1717,38 @@
                     if (fecha === "2026-11-08" && data.accesos_especiales["festival"]) tieneBoleto = true;
                 }
 
-                const checked = (data.asistencias && data.asistencias[fecha]) || tieneBoleto ? "checked" : "";
-                const disabled = tieneBoleto ? "disabled title='Asistencia cubierta por ticket'" : "";
-                const badgeTicket = tieneBoleto ? `<span style="background:#ea580c; color:white; font-size:0.6rem; padding:2px 4px; border-radius:4px; margin-left:5px;">🎟️ Ticket Oficial</span>` : "";
+                // El checkbox SOLO se marca si hay asistencia real. El ticket ya NO da asistencia ni lo bloquea.
+                const checked = (data.asistencias && data.asistencias[fecha]) ? "checked" : "";
+                const badgeTicket = tieneBoleto ? `<span style="background:#ea580c; color:white; font-size:0.6rem; padding:2px 4px; border-radius:4px; margin-left:5px;">🎟️ Tiene Ticket</span>` : "";
 
                 html += `<div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #451a03;">
                     <span style="font-size: 0.85rem;">${nombre} <span style="font-family:monospace; color:#cbd5e1; font-size:0.75rem;">(${codigo})</span> ${badgeTicket}</span>
-                    <input type="checkbox" class="check-asistencia-masiva" data-codigo="${codigo}" ${checked} ${disabled} style="width: 18px; height: 18px; cursor: pointer;">
+                    <input type="checkbox" class="check-asistencia-masiva" data-codigo="${codigo}" ${checked} style="width: 18px; height: 18px; cursor: pointer;">
                 </div>`;
             });
             html += `</div><button class="btn-action" style="background: #16a34a; width: 100%;" onclick="adminGuardarPaseMasivo('${fecha}')">💾 Guardar Asistencia Masiva</button>`;
             contenedor.innerHTML = html;
         });
+    }
+
+    function adminBorrarPaseMasivo() {
+        const fecha = document.getElementById("masivo-fecha").value;
+        if (!fecha) return alert("Selecciona una fecha.");
+        if (confirm(`⚠️ ¿Estás seguro de ELIMINAR TODAS las asistencias de la lista masiva del ${fecha}?`)) {
+            db.ref('clase').once('value').then(snap => {
+                if (!snap.exists()) return;
+                const updates = {};
+                snap.forEach(child => {
+                    if (child.val().asistencias && child.val().asistencias[fecha]) {
+                        updates[`clase/${child.key}/asistencias/${fecha}`] = null;
+                    }
+                });
+                db.ref().update(updates).then(() => {
+                    alert(`✅ Se borraron todas las asistencias masivas de la fecha ${fecha}.`);
+                    adminCargarPaseMasivo(); // Recarga la lista para que veas los checkboxes desmarcados
+                });
+            });
+        }
     }
 
     function adminGuardarPaseMasivo(fecha) {
@@ -1309,12 +1890,8 @@
         });
     }
 
-    let claseOriginalEstado = null;
+   let claseOriginalEstado = null;
     let arregloClasesGlobal = [];
-    const clasesBase = [
-        { id: "27_1300", fecha: "2026-09-27", hora: "13:00", titulo: "Inauguración Curso", tema: "", ponente: "Equipo ELEGIDOS", modalidad: "Presencial" },
-        { id: "30_1500", fecha: "2026-09-30", hora: "15:00", titulo: "Clase 5", tema: "", ponente: "Equipo ELEGIDOS", modalidad: "Online" }
-    ];
 
     function adminCargarCalendarioDinamico() {
         const contenedor = document.getElementById("contenedor-calendario-dinamico");
@@ -1324,13 +1901,12 @@
 
         db.ref('configuracion/calendarioClases').on('value', snap => {
             let mapaClases = new Map();
-            clasesBase.forEach(c => mapaClases.set(c.id, { ...c }));
 
+            // 1. Cargamos solo lo que existe realmente en la base de datos de Firebase
             if (snap.exists()) {
                 const fData = snap.val();
                 for (let key in fData) {
-                    if (mapaClases.has(key)) mapaClases.set(key, { ...mapaClases.get(key), ...fData[key] });
-                    else mapaClases.set(key, { id: key, ...fData[key] });
+                    mapaClases.set(key, { id: key, ...fData[key] });
                 }
             }
 
@@ -1501,12 +2077,8 @@
             snap.forEach(child => {
                 const st = child.val();
                 const totalClases = 10;
+                // Solo cuenta asistencias reales para graduación
                 let asis = st.asistencias ? Object.keys(st.asistencias).filter(k => !String(st.asistencias[k]).toLowerCase().includes("permiso")).length : 0;
-                if (st.accesos_especiales) {
-                    if ((st.accesos_especiales["elegidos"] || st.accesos_especiales["mahu"]) && (!st.asistencias || (!st.asistencias["04_1500"] && !st.asistencias["2026-10-04"]))) asis++;
-                    if ((st.accesos_especiales["masterclass"] || st.accesos_especiales["dreamez"]) && (!st.asistencias || (!st.asistencias["25_1500"] && !st.asistencias["2026-10-25"] && !st.asistencias["2026-10-27"]))) asis++;
-                    if (st.accesos_especiales["festival"] && (!st.asistencias || (!st.asistencias["08_1300"] && !st.asistencias["2026-11-08"]))) asis++;
-                }
                 const pct = Math.round((asis / totalClases) * 100);
                 const pfEstado = (st.proyecto_final && st.proyecto_final.estado) ? st.proyecto_final.estado : "Sin Entregar";
                 const esElegible = pct >= 70 && pfEstado === "Aprobado";
@@ -1643,18 +2215,62 @@
         }
     }
 
-    function adminGenerarPINAsistencia() {
+function adminGenerarPINAsistencia() {
+        if (!navigator.onLine) return alert("📡 Sin conexión a internet.");
+        
+        // Toma el valor del select sin importar en qué pestaña estés
+        let targetElem = document.getElementById("asistencia-target") || document.getElementById("pin-target");
+        const target = targetElem ? targetElem.value : "todos";
+
         const ahora = new Date(new Date().toLocaleString("en-US", { timeZone: "America/El_Salvador" }));
         const hoy = ahora.getFullYear() + '-' + String(ahora.getMonth() + 1).padStart(2, '0') + '-' + String(ahora.getDate()).padStart(2, '0');
         const pinGenerado = Math.floor(1000 + Math.random() * 9000).toString();
 
-        db.ref('sistema/asistencia_virtual/' + hoy).set(pinGenerado).then(() => {
-            const pinElem = document.getElementById("admin-pin-number");
-            const container = document.getElementById("admin-pin-display-container");
-            if (pinElem) pinElem.innerText = pinGenerado;
-            if (container) container.style.display = "block";
-            alert("🔑 PIN para HOY (" + hoy + ") generado: " + pinGenerado);
-        });
+        if (confirm(`⚠️ ¿Estás seguro? Esto lanzará un Pop-up gigante pidiendo el código de asistencia a los estudiantes.`)) {
+            
+            // 1. Guardar el PIN real para que los alumnos puedan validarlo al escribirlo
+            db.ref('sistema/asistencia_virtual/' + hoy).set(pinGenerado).then(() => {
+                
+                // 2. Disparar el Pop-up a las pantallas de los estudiantes
+                return db.ref('sistema/asistencia_live').set({
+                    activo: true,
+                    pin: pinGenerado,
+                    fecha: hoy,
+                    target: target,
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                });
+                
+            }).then(() => {
+                // 3. Mostrar el PIN al Administrador forzando la búsqueda de elementos repetidos
+                document.querySelectorAll('[id="admin-pin-number"]').forEach(el => el.innerText = pinGenerado);
+                document.querySelectorAll('[id="admin-pin-display-container"]').forEach(el => el.style.display = "block");
+                
+                const statusElements = document.querySelectorAll('[id^="admin-pin-"]');
+                statusElements.forEach(el => {
+                    if(el.id.includes("status")) el.innerText = "Estado: Pop-up activo en las pantallas (" + (target === 'online' ? "Solo Conectados" : "Todos") + ").";
+                });
+                
+                alert("🔑 ¡LISTO! Tu PIN es " + pinGenerado + ". Díctalo en la videollamada para que los alumnos lo ingresen.");
+            }).catch(err => alert("Error al conectar con la base de datos: " + err));
+        }
+    }    function adminApagarPIN() {
+        if (confirm("🛑 ¿Seguro que deseas APAGAR el Pop-up de asistencia? Las pantallas de los estudiantes volverán a la normalidad.")) {
+            db.ref('sistema/asistencia_live').update({ activo: false }).then(() => {
+                const statusElem = document.getElementById("admin-pin-target-status");
+                if (statusElem) statusElem.innerText = "Estado: Pop-up inactivo (apagado).";
+                alert("🛑 Pop-up de asistencia ocultado.");
+            });
+        }
+    }
+
+    function adminApagarPINAsistencia() {
+        if (confirm("🛑 ¿Seguro que deseas apagar el Pop-up de asistencia? Las pantallas volverán a la normalidad.")) {
+            db.ref('sistema/asistencia_live').update({ activo: false }).then(() => {
+                const statusElem = document.getElementById("admin-pin-status");
+                if (statusElem) statusElem.innerText = "Estado: Pop-up inactivo.";
+                alert("Pop-up de asistencia apagado.");
+            });
+        }
     }
 
     function adminEjecutarRuletaEnVivo() {
@@ -1664,61 +2280,69 @@
         statusDiv.innerText = "Escaneando alumnos en línea...";
         statusDiv.style.color = "#4ade80";
 
-        db.ref('clase').once('value').then(snap => {
-            if (!snap.exists()) {
-                statusDiv.innerText = "No hay datos de alumnos.";
-                return;
-            }
+        // 1. Obtenemos el nodo de conexiones en tiempo real primero
+        db.ref('estudiantes_online').once('value').then(onlineSnap => {
+            const nodosOnline = onlineSnap.exists() ? onlineSnap.val() : {};
 
-            const conectados = [];
-            snap.forEach(child => {
-                const data = child.val();
-                if (data.online === true && data.nombre) {
-                    conectados.push(data.nombre);
+            // 2. Luego consultamos la lista de alumnos
+            db.ref('clase').once('value').then(snap => {
+                if (!snap.exists()) {
+                    statusDiv.innerText = "No hay datos de alumnos.";
+                    return;
                 }
-            });
 
-            if (conectados.length === 0) {
-                alert("❌ No hay ningún estudiante activo en el portal en este momento.");
-                statusDiv.innerText = "Sorteo cancelado: Nadie conectado.";
-                return;
-            }
+                const conectados = [];
+                snap.forEach(child => {
+                    const data = child.val();
+                    const codigo = child.key;
+                    
+                    let estaOnline = false;
+                    
+                    // 3. Aplicamos la misma lógica robusta del listado de alumnos
+                    if (data.ultima_conexion) {
+                        const tiempoPasado = Date.now() - data.ultima_conexion;
+                        if (tiempoPasado <= 1800000) { // Menos de 30 minutos
+                            estaOnline = (data.online === true || (nodosOnline[codigo] && Object.keys(nodosOnline[codigo]).length > 0));
+                        }
+                    }
 
-            if (!confirm(`Se detectaron ${conectados.length} alumnos conectados en tiempo real.\n\n¿Iniciar la ruleta en las pantallas de los estudiantes en línea?`)) {
-                statusDiv.innerText = "Operación cancelada por el administrador.";
-                return;
-            }
-
-            const ganador = conectados[Math.floor(Math.random() * conectados.length)];
-
-            db.ref('sistema/ruleta').set({ 
-                estado: 'girando', 
-                participantes: conectados,
-                timestamp: firebase.database.ServerValue.TIMESTAMP
-            });
-            statusDiv.innerText = "Transmitiendo ruleta a " + conectados.length + " alumnos...";
-
-            setTimeout(() => {
-                db.ref('sistema/ruleta').update({ 
-                    estado: 'resultado',
-                    ganador: ganador
+                    if (estaOnline && data.nombre) {
+                        conectados.push(data.nombre);
+                    }
                 });
-                statusDiv.innerText = `🎉 ¡Ganador seleccionado: ${ganador}!`;
-            }, 5000);
 
-        }).catch(err => {
-            alert("Error consultando la base de datos: " + err);
-            statusDiv.innerText = "Error de red.";
-        });
-    }
+                if (conectados.length === 0) {
+                    alert("❌ No hay ningún estudiante activo en el portal en este momento.");
+                    statusDiv.innerText = "Sorteo cancelado: Nadie conectado.";
+                    return;
+                }
 
-    function adminOcultarRuleta() {
-        db.ref('sistema/ruleta').set({ estado: 'inactiva' }).then(() => {
-            const statusDiv = document.getElementById("admin-ruleta-status");
-            if (statusDiv) {
-                statusDiv.innerText = "Ruleta inactiva.";
-                statusDiv.style.color = "#f9a8d4";
-            }
+                if (!confirm(`Se detectaron ${conectados.length} alumnos conectados en tiempo real.\n\n¿Iniciar la ruleta en las pantallas de los estudiantes en línea?`)) {
+                    statusDiv.innerText = "Operación cancelada por el administrador.";
+                    return;
+                }
+
+                const ganador = conectados[Math.floor(Math.random() * conectados.length)];
+
+                db.ref('sistema/ruleta').set({ 
+                    estado: 'girando', 
+                    participantes: conectados,
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                });
+                statusDiv.innerText = "Transmitiendo ruleta a " + conectados.length + " alumnos...";
+
+                setTimeout(() => {
+                    db.ref('sistema/ruleta').update({ 
+                        estado: 'resultado',
+                        ganador: ganador
+                    });
+                    statusDiv.innerText = `🎉 ¡Ganador seleccionado: ${ganador}!`;
+                }, 5000);
+
+            }).catch(err => {
+                alert("Error consultando la base de datos: " + err);
+                statusDiv.innerText = "Error de red.";
+            });
         });
     }
 
@@ -2064,6 +2688,459 @@
             });
         });
     }
+function adminLanzarExamen() {
+        if (!navigator.onLine) return alert("📡 Sin conexión a internet.");
+        const urlExamen = document.getElementById("admin-url-examen").value.trim();
+        
+        if (!urlExamen) {
+            return alert("❌ Debes pegar un enlace (URL) para el examen antes de lanzarlo.");
+        }
+
+        if (confirm("⚠️ ¿Estás seguro? Esto lanzará un Pop-up gigante en la pantalla de todos los estudiantes bloqueando su portal hasta que entren al examen.")) {
+            db.ref('sistema/examen_live').set({
+                activo: true,
+                url: urlExamen,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            }).then(() => {
+                document.getElementById("admin-examen-status").innerText = "¡EXAMEN DISPARADO Y ACTIVO EN PANTALLAS!";
+                document.getElementById("admin-examen-status").style.color = "#4ade80";
+                document.getElementById("admin-url-examen").value = "";
+            }).catch(err => alert("Error: " + err));
+        }
+    }
+
+    function adminApagarExamen() {
+        if (confirm("🛑 ¿Seguro que deseas apagar el examen? Las pantallas de los alumnos volverán a la normalidad.")) {
+            db.ref('sistema/examen_live').set({ activo: false }).then(() => {
+                document.getElementById("admin-examen-status").innerText = "Estado: Inactivo.";
+                document.getElementById("admin-examen-status").style.color = "#fca5a5";
+            });
+        }
+    }
+// =========================================================
+    // LÓGICA DEL CREADOR DE EXÁMENES (ADMIN)
+    // =========================================================
+    let contadorPreguntas = 0;
+    let fechaExamenActualId = "";
+
+    function adminAgregarPregunta() {
+        contadorPreguntas++;
+        const pId = contadorPreguntas;
+        const html = `
+            <div id="pregunta-box-${pId}" style="background: #2c0606; padding: 15px; border-radius: 8px; border: 1px solid #7f1d1d;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <strong style="color: #fca5a5;">Pregunta ${pId}</strong>
+                    <button class="btn-danger" style="padding: 2px 8px; font-size: 0.7rem; background: #7f1d1d;" onclick="document.getElementById('pregunta-box-${pId}').remove()">X</button>
+                </div>
+                <input type="text" class="ex-pregunta-txt" placeholder="Escribe la pregunta aquí..." style="width: 100%; margin-bottom: 10px; border-color: #ef4444; background: #450a0a; color: #fff;">
+                
+                <p style="font-size: 0.75rem; color: #fecaca; margin-bottom: 5px;">Selecciona el círculo de la respuesta correcta:</p>
+                <div style="display: flex; gap: 5px; margin-bottom: 5px;">
+                    <input type="radio" name="correcta-${pId}" value="0" checked style="width: 20px; accent-color: #4ade80;">
+                    <input type="text" class="ex-opcion-txt" placeholder="Opción A (Literal 1)" style="width: 100%; background: #450a0a; border-color: #ef4444; color: #fff;">
+                </div>
+                <div style="display: flex; gap: 5px; margin-bottom: 5px;">
+                    <input type="radio" name="correcta-${pId}" value="1" style="width: 20px; accent-color: #4ade80;">
+                    <input type="text" class="ex-opcion-txt" placeholder="Opción B (Literal 2)" style="width: 100%; background: #450a0a; border-color: #ef4444; color: #fff;">
+                </div>
+                <div style="display: flex; gap: 5px; margin-bottom: 5px;">
+                    <input type="radio" name="correcta-${pId}" value="2" style="width: 20px; accent-color: #4ade80;">
+                    <input type="text" class="ex-opcion-txt" placeholder="Opción C (Literal 3)" style="width: 100%; background: #450a0a; border-color: #ef4444; color: #fff;">
+                </div>
+            </div>`;
+        document.getElementById("contenedor-preguntas").insertAdjacentHTML('beforeend', html);
+    }
+
+    function adminLanzarExamen() {
+        if (!navigator.onLine) return alert("📡 Sin conexión a internet.");
+        
+        const titulo = document.getElementById("examen-titulo").value.trim();
+        const target = document.getElementById("examen-target").value;
+        const targetCodigo = document.getElementById("examen-target-codigo").value.trim().toUpperCase();
+        const duracion = parseInt(document.getElementById("examen-duracion").value);
+
+        if (!titulo) return alert("❌ Debes colocarle un título al examen para guardarlo en el historial.");
+
+        if (target === 'especifico' && !targetCodigo.startsWith("CLASE-")) {
+            return alert("❌ Ingresa un código válido para el alumno específico.");
+        }
+
+        const cajas = document.querySelectorAll("[id^='pregunta-box-']");
+        if (cajas.length === 0) return alert("❌ Debes agregar al menos una pregunta al examen.");
+
+        let preguntasData = [];
+        let esValido = true;
+
+        cajas.forEach((caja, index) => {
+            const texto = caja.querySelector(".ex-pregunta-txt").value.trim();
+            const opcionesNodes = caja.querySelectorAll(".ex-opcion-txt");
+            const correctaNode = caja.querySelector(`input[type="radio"]:checked`);
+
+            if (!texto) esValido = false;
+            let opciones = [];
+            opcionesNodes.forEach(op => {
+                if(!op.value.trim()) esValido = false;
+                opciones.push(op.value.trim());
+            });
+
+            if(esValido) {
+                preguntasData.push({
+                    id: index,
+                    pregunta: texto,
+                    opciones: opciones,
+                    correcta: parseInt(correctaNode.value)
+                });
+            }
+        });
+
+        if (!esValido) return alert("❌ Revisa el examen: Faltan preguntas u opciones por llenar.");
+
+        if (confirm("⚠️ ALERTA ROJA: Esto bloqueará el portal de los estudiantes indicados y los forzará a responder el examen. ¿Deseas lanzarlo ahora?")) {
+            
+            // Creamos un ID único para la fecha (para el historial)
+            fechaExamenActualId = Date.now().toString();
+
+            // Se limpian los resultados "en vivo" anteriores y se lanza el nuevo
+            db.ref('sistema/examen_resultados_live').remove().then(() => {
+                db.ref('sistema/examen_live').set({
+                    activo: true,
+                    titulo: titulo,
+                    id_historial: fechaExamenActualId,
+                    target: target,
+                    targetCodigo: target === 'especifico' ? targetCodigo : null,
+                    duracion: duracion,
+                    preguntas: preguntasData,
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                }).then(() => {
+                    document.getElementById("admin-examen-status").innerText = "🔥 EXAMEN DISPARADO A LAS PANTALLAS 🔥";
+                    document.getElementById("admin-examen-status").style.color = "#4ade80";
+                    adminEscucharResultadosExamen();
+                }).catch(err => alert("Error: " + err));
+            });
+        }
+    }
+
+    function adminApagarExamen() {
+        if (confirm("🛑 ¿Seguro que deseas apagar el examen? Los alumnos recuperarán el control de su portal.")) {
+            db.ref('sistema/examen_live').update({ activo: false }).then(() => {
+                document.getElementById("admin-examen-status").innerText = "Estado: Examen Finalizado.";
+                document.getElementById("admin-examen-status").style.color = "#fca5a5";
+            });
+        }
+    }
+
+    let antenaResultadosActiva = false;
+    function adminEscucharResultadosExamen() {
+        if(antenaResultadosActiva) return;
+        antenaResultadosActiva = true;
+        
+        db.ref('sistema/examen_resultados_live').on('value', snap => {
+            const cont = document.getElementById("examen-resultados-live");
+            if (!snap.exists()) {
+                cont.innerHTML = "<p style='color: #fca5a5; font-size: 0.85rem; text-align: center; margin: 0;'>Esperando que los alumnos envíen sus respuestas...</p>";
+                return;
+            }
+            let html = "";
+            snap.forEach(child => {
+                const data = child.val();
+                let colorNota = data.nota >= 7.0 ? "#4ade80" : "#f87171";
+                html += `
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #7f1d1d; padding: 8px 0;">
+                    <div style="display: flex; flex-direction: column;">
+                        <span style="color: #f8fafc; font-size: 0.9rem; font-weight: bold;">${data.nombre}</span>
+                        <span style="color: #fca5a5; font-size: 0.7rem; font-family: monospace;">${child.key}</span>
+                    </div>
+                    <strong style="color: ${colorNota}; font-size: 1.3rem; background: #450a0a; padding: 4px 10px; border-radius: 8px; border: 1px solid ${colorNota};">${data.nota.toFixed(1)}</strong>
+                </div>`;
+            });
+            cont.innerHTML = html;
+        });
+    }
+
+    function adminVerHistorialExamenes() {
+        db.ref('sistema/historial_examenes').once('value').then(snap => {
+            if (!snap.exists()) {
+                return alert("No hay exámenes registrados en el historial aún.");
+            }
+            
+            const historial = snap.val();
+            let html = `<h3 style="color: #f87171; border-bottom: 1px solid #ef4444; padding-bottom: 10px;">📋 Historial de Exámenes</h3>`;
+            
+            Object.keys(historial).forEach(idExamen => {
+                const examenData = historial[idExamen];
+                html += `<div style="background: #450a0a; padding: 10px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #7f1d1d;">
+                    <h4 style="color: #fca5a5; margin: 0 0 5px 0;">${examenData.titulo || 'Examen ' + idExamen}</h4>`;
+                
+                if (examenData.resultados) {
+                    html += `<table style="width: 100%; border-collapse: collapse; font-size: 0.8rem; text-align: left; color: #fff;">
+                        <tr style="border-bottom: 1px solid #7f1d1d;"><th style="padding: 4px;">Alumno</th><th style="padding: 4px;">Código</th><th style="padding: 4px; text-align: right;">Nota</th></tr>`;
+                    
+                    Object.keys(examenData.resultados).forEach(cod => {
+                        const res = examenData.resultados[cod];
+                        let colorNota = res.nota >= 7.0 ? "#4ade80" : "#f87171";
+                        html += `<tr style="border-bottom: 1px solid #7f1d1d;">
+                            <td style="padding: 4px;">${res.nombre}</td>
+                            <td style="padding: 4px; font-family: monospace; color: #fca5a5;">${cod}</td>
+                            <td style="padding: 4px; text-align: right; color: ${colorNota}; font-weight: bold;">${res.nota.toFixed(1)}</td>
+                        </tr>`;
+                    });
+                    html += `</table>`;
+                } else {
+                    html += `<p style="font-size: 0.8rem; color: #fca5a5; margin: 0;">No hubo entregas en este examen.</p>`;
+                }
+                html += `</div>`;
+            });
+            
+            document.getElementById("examen-resultados-live").innerHTML = html;
+        });
+    }
+
+    // Inicializamos con 1 pregunta en blanco por defecto
+    setTimeout(adminAgregarPregunta, 1500);
+
+// =========================================================
+    // LÓGICA DE BORRADO DE PERMISOS (MASIVO)
+    // =========================================================
+    function adminBorrarTodosPermisos() {
+        if (prompt("⚠️ Esta acción ELIMINARÁ TODAS las solicitudes de permiso de la base de datos para TODOS los alumnos.\n\nEscribe 'BORRAR PERMISOS' para confirmar:") === "BORRAR PERMISOS") {
+            db.ref('clase').once('value').then(snap => {
+                if (!snap.exists()) return;
+                const updates = {};
+                snap.forEach(child => {
+                    if (child.val().permisos_solicitados) {
+                        updates[`clase/${child.key}/permisos_solicitados`] = null;
+                    }
+                });
+                db.ref().update(updates).then(() => {
+                    alert("✅ Todos los permisos han sido eliminados de la base de datos.");
+                    adminCargarPermisos();
+                }).catch(err => alert("Error al borrar permisos: " + err.message));
+            });
+        }
+    }
+
+// =========================================================
+    // LÓGICA DE LIMPIEZA INDIVIDUAL DE PERMISOS (NUEVO)
+    // =========================================================
+    function adminLimpiarPermisoIndividual() {
+        const codigo = document.getElementById("input-limpiar-permiso-codigo").value.trim().toUpperCase();
+        if(!codigo.startsWith("CLASE-2026-")) return alert("Ingresa un código válido (Ej: CLASE-2026-001)");
+        
+        if (confirm(`¿Seguro que quieres borrar de raíz TODOS los permisos de ${codigo} para que su contador baje a 0?`)) {
+            db.ref(`clase/${codigo}`).once('value').then(snap => {
+                if (!snap.exists()) return alert("El alumno no existe.");
+                
+                const data = snap.val();
+                const updates = {};
+                let borrados = 0;
+                
+                // 1. Borrar de la bandeja de solicitudes
+                if (data.permisos_solicitados) {
+                    updates[`clase/${codigo}/permisos_solicitados`] = null;
+                    borrados++;
+                }
+                
+                // 2. Borrar del historial de asistencias (las asistencias fantasma)
+                if (data.asistencias) {
+                    Object.keys(data.asistencias).forEach(fecha => {
+                        const valStr = String(data.asistencias[fecha]).toLowerCase().trim();
+                        if (valStr.startsWith("permiso") || valStr.includes("justificado")) {
+                            updates[`clase/${codigo}/asistencias/${fecha}`] = null;
+                            borrados++;
+                        }
+                    });
+                }
+                
+                if (borrados === 0) return alert("Este alumno ya tiene los permisos en 0, no hay nada oculto.");
+                
+                db.ref().update(updates).then(() => {
+                    alert(`✅ ¡Listo! Se borraron todos los rastros de permisos de ${codigo}. Su contador quedará en 0 al 100%.`);
+                    document.getElementById("input-limpiar-permiso-codigo").value = "";
+                    if(typeof adminCargarListadoGeneral === 'function') adminCargarListadoGeneral();
+                }).catch(err => alert("Error al limpiar: " + err.message));
+            });
+        }
+    }
+
+    // =========================================================
+    // LÓGICA DE REINICIO MASIVO DE PERMISOS A 0 (MEJORADA)
+    // =========================================================
+    function adminReiniciarTodosPermisosAZero() {
+        if (prompt("⚠️ ADVERTENCIA EXTREMA: Esta acción pondrá los permisos de TODOS los alumnos a 0, arrancando desde la raíz cualquier registro viejo.\n\nEscribe 'REINICIAR PERMISOS' para confirmar:") === "REINICIAR PERMISOS") {
+            db.ref('clase').once('value').then(snap => {
+                if (!snap.exists()) return alert("No hay alumnos registrados.");
+                
+                const updates = {};
+
+                snap.forEach(child => {
+                    const alumnoCodigo = child.key;
+                    const data = child.val();
+                    
+                    // 1. Borrar todas las solicitudes visuales de la bandeja
+                    if (data.permisos_solicitados) {
+                        updates[`clase/${alumnoCodigo}/permisos_solicitados`] = null;
+                    }
+                    
+                    // 2. Escanear el historial de cada alumno y arrancar los permisos bugeados
+                    if (data.asistencias) {
+                        Object.keys(data.asistencias).forEach(fecha => {
+                            const valStr = String(data.asistencias[fecha]).toLowerCase().trim();
+                            if (valStr.startsWith("permiso") || valStr.includes("justificado")) {
+                                updates[`clase/${alumnoCodigo}/asistencias/${fecha}`] = null;
+                            }
+                        });
+                    }
+                });
+
+                db.ref().update(updates).then(() => {
+                    alert(`✅ ¡Listo! Se ha hecho una limpieza profunda. Los permisos de TODOS están en 0 al 100%.`);
+                    adminCargarPermisos(); 
+                    if(typeof adminCargarListadoGeneral === 'function') adminCargarListadoGeneral(); 
+                }).catch(err => alert("Error al reiniciar permisos: " + err.message));
+            });
+        }
+    }
+    // =========================================================
+    // LÓGICA DE BORRADO DE EXÁMENES (INDIVIDUAL Y MASIVO)
+    // =========================================================
+    function adminVerHistorialExamenes() {
+        db.ref('sistema/historial_examenes').once('value').then(snap => {
+            if (!snap.exists()) {
+                return alert("No hay exámenes registrados en el historial aún.");
+            }
+            
+            const historial = snap.val();
+            let html = `
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ef4444; padding-bottom: 10px; margin-bottom: 10px;">
+                <h3 style="color: #f87171; margin: 0;">📋 Historial de Exámenes</h3>
+                <button class="btn-danger" style="padding: 4px 10px; font-size: 0.75rem;" onclick="adminBorrarTodoHistorialExamenes()">🗑️ Borrar Todo</button>
+            </div>`;
+            
+            Object.keys(historial).forEach(idExamen => {
+                const examenData = historial[idExamen];
+                html += `<div style="background: #450a0a; padding: 10px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #7f1d1d;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                        <h4 style="color: #fca5a5; margin: 0;">${examenData.titulo || 'Examen ' + idExamen}</h4>
+                        <button class="btn-danger" style="padding: 2px 8px; font-size: 0.7rem;" onclick="adminBorrarExamenHistorial('${idExamen}')">🗑️ Borrar Examen</button>
+                    </div>`;
+                
+                if (examenData.resultados) {
+                    html += `<table style="width: 100%; border-collapse: collapse; font-size: 0.8rem; text-align: left; color: #fff;">
+                        <tr style="border-bottom: 1px solid #7f1d1d;">
+                            <th style="padding: 4px;">Alumno</th>
+                            <th style="padding: 4px;">Código</th>
+                            <th style="padding: 4px; text-align: center;">Acción</th>
+                            <th style="padding: 4px; text-align: right;">Nota</th>
+                        </tr>`;
+                    
+                    Object.keys(examenData.resultados).forEach(cod => {
+                        const res = examenData.resultados[cod];
+                        let colorNota = res.nota >= 7.0 ? "#4ade80" : "#f87171";
+                        html += `<tr style="border-bottom: 1px solid #7f1d1d;">
+                            <td style="padding: 4px;">${res.nombre}</td>
+                            <td style="padding: 4px; font-family: monospace; color: #fca5a5;">${cod}</td>
+                            <td style="padding: 4px; text-align: center;">
+                                <button class="btn-danger" style="padding: 2px 6px; font-size: 0.6rem; background: #991b1b;" title="Borrar nota de este alumno" onclick="adminBorrarNotaIndividual('${idExamen}', '${cod}')">X</button>
+                            </td>
+                            <td style="padding: 4px; text-align: right; color: ${colorNota}; font-weight: bold;">${res.nota.toFixed(1)}</td>
+                        </tr>`;
+                    });
+                    html += `</table>`;
+                } else {
+                    html += `<p style="font-size: 0.8rem; color: #fca5a5; margin: 0;">No hubo entregas en este examen.</p>`;
+                }
+                html += `</div>`;
+            });
+            
+            document.getElementById("examen-resultados-live").innerHTML = html;
+        });
+    }
+
+    function adminBorrarExamenHistorial(idExamen) {
+        if (confirm("⚠️ ¿Estás seguro de eliminar este examen completo y todas sus notas del historial?")) {
+            db.ref(`sistema/historial_examenes/${idExamen}`).remove().then(() => {
+                adminVerHistorialExamenes(); // Recargar la lista
+            });
+        }
+    }
+
+    function adminBorrarNotaIndividual(idExamen, alumnoCodigo) {
+        if (confirm(`⚠️ ¿Deseas borrar la nota de ${alumnoCodigo} en este examen?`)) {
+            db.ref(`sistema/historial_examenes/${idExamen}/resultados/${alumnoCodigo}`).remove().then(() => {
+                adminVerHistorialExamenes(); // Recargar la lista
+            });
+        }
+    }
+
+    function adminBorrarTodoHistorialExamenes() {
+        if (prompt("⚠️ Esto ELIMINARÁ el historial de TODOS los exámenes realizados por ELEGIDOS.\n\nEscribe 'BORRAR EXAMENES' para confirmar:") === "BORRAR EXAMENES") {
+            db.ref('sistema/historial_examenes').remove().then(() => {
+                alert("✅ Historial de exámenes borrado completamente.");
+                document.getElementById("examen-resultados-live").innerHTML = "<p style='color: #fca5a5; font-size: 0.85rem; text-align: center; margin: 0;'>Historial vacío.</p>";
+            });
+        }
+    }
+
+    // =========================================================
+    // LÓGICA DE CONTROL MANUAL DE MEET / ZOOM
+    // =========================================================
+    function adminActivarMeet() {
+        let urlMeet = document.getElementById("admin-url-meet").value.trim();
+        
+        // Seguro: Si por error la casilla está vacía, forzamos el enlace fijo
+        if (!urlMeet) {
+            urlMeet = "https://meet.google.com/yzu-agci-fbe";
+            document.getElementById("admin-url-meet").value = urlMeet;
+        }
+
+        const target = document.getElementById("meet-target").value;
+        const targetCodigo = document.getElementById("meet-target-codigo").value.trim().toUpperCase();
+
+        if (target === 'especifico' && !targetCodigo.startsWith("CLASE-")) {
+            return alert("❌ Ingresa un código válido para el alumno específico (Ej: CLASE-2026-001).");
+        }
+
+        if (confirm("⚠️ ¿Estás seguro de MOSTRAR el botón de clase en vivo a los alumnos seleccionados ahora?")) {
+            db.ref('sistema/meet_live').set({
+                activo: true,
+                url: urlMeet,
+                target: target,
+                targetCodigo: target === 'especifico' ? targetCodigo : null,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            }).then(() => {
+                alert("✅ Botón Meet activado con éxito. Ya es visible en el portal de estudiantes.");
+            }).catch(err => alert("Error: " + err.message));
+        }
+    }
+
+    function adminDesactivarMeet() {
+        if (confirm("🛑 ¿Seguro que deseas OCULTAR el botón de la clase en vivo?")) {
+            db.ref('sistema/meet_live').update({ activo: false }).then(() => {
+                alert("🚫 Botón Meet ocultado del portal.");
+            }).catch(err => alert("Error: " + err.message));
+        }
+    }
+
+    function iniciarListenerMeetAdmin() {
+        db.ref('sistema/meet_live').on('value', snap => {
+            const statusDiv = document.getElementById("admin-meet-status");
+            const inputUrl = document.getElementById("admin-url-meet");
+            
+            if (snap.exists() && snap.val().activo) {
+                if(statusDiv) {
+                    statusDiv.innerText = "Estado: 🟢 ACTIVO EN EL PORTAL DE ALUMNOS";
+                    statusDiv.style.color = "#4ade80";
+                }
+                if(inputUrl && snap.val().url && !inputUrl.value) inputUrl.value = snap.val().url;
+            } else {
+                if(statusDiv) {
+                    statusDiv.innerText = "Estado: 🔴 OCULTO / INACTIVO";
+                    statusDiv.style.color = "#fca5a5";
+                }
+            }
+        });
+    }
+
 </script>
 </body>
 </html>
