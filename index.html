@@ -302,7 +302,7 @@
                             if (!seccionesSet.has(seccionAlumno) && seccionAlumno !== "Sin Asignar") seccionesSet.add(seccionAlumno);
                         }
 
-                        if (data.perfil && data.perfil.edad) {
+                       if (data.perfil && data.perfil.edad) {
                             perfilesCreados++;
                             estadoPerfilStr = "completado";
                             estadoPerfilHtml = "<span style='color: #4ade80;'>Completado ✅</span>";
@@ -314,16 +314,32 @@
                             if (data.perfil.foto) fotoHtml = `<img src="${data.perfil.foto}" style="width: 40px; height: 40px; border-radius: 8px; object-fit: cover; border: 1px solid #4ade80;">`;
                         }
 
+                        // --- EXTRACCIÓN DE NUEVOS DATOS (Puntos, Código Secreto, Canjes) ---
+                        let puntosSociales = data.puntos_sociales || 0;
+                        let codigoSecreto = data.password || "ELEGIDOS26"; // ELEGIDOS26 es la contraseña por defecto
+                        let historialCanjes = "Ninguno";
+                        
+                        // Busca en el nodo de Firebase si el estudiante ha canjeado recompensas
+                        if (data.canjes) {
+                            historialCanjes = Object.keys(data.canjes).join(', ');
+                        } else if (data.recompensas) {
+                            historialCanjes = Object.keys(data.recompensas).join(', ');
+                        }
+
                         filasTablaHtml += `<tr style="border-bottom: 1px solid #334155;" data-codigo="${codigo}" data-nombre="${nombre}" data-perfil="${estadoPerfilStr}" data-ausencias="${ausenciasConsecutivas}" data-online="${estaOnline}" data-seccion="${seccionAlumno}">
                             <td style="padding: 10px; font-family: monospace; color: #fbbf24; font-weight: bold;">${codigo}</td>
                             <td style="padding: 10px; text-align: center;">${fotoHtml}</td>
                             <td style="padding: 10px; text-transform: capitalize;">
-                                <strong>${nombre}</strong> <br><span style="font-size:0.75rem; color:#a78bfa; font-weight: bold;">Sec: ${seccionAlumno}</span><br>${badgeConexion} ${alertaBadge}
+                                <strong>${nombre}</strong> <br><span style="font-size:0.75rem; color:#a78bfa; font-weight: bold;">Sec: ${seccionAlumno}</span><br>${badgeConexion}${alertaBadge}
                             </td>
                             <td style="padding: 10px; text-align: left; font-size: 0.8rem;">
                                 <span style="color: #4ade80;">✅ Asist: <b>${totalAsist}</b></span><br>
                                 <span style="color: #f87171;">❌ Faltas: <b>${ausenciasConsecutivas}</b></span><br>
-                                <span style="color: #fbbf24;">📝 Permisos: <b>${permisosDisplay}</b></span>
+                                <span style="color: #fbbf24;">📝 Permisos: <b>${permisosDisplay}</b></span><br>
+                                <hr style="border: 0; border-top: 1px dashed #475569; margin: 6px 0;">
+                                <span style="color: #c084fc;">🔥 Puntos: <b>${puntosSociales} pts</b></span><br>
+                                <span style="color: #38bdf8;">🔑 Clave: <b>${codigoSecreto}</b></span><br>
+                                <span style="color: #f472b6;">🎁 Canjes: <b>${historialCanjes}</b></span>
                             </td>
                             <td style="padding: 10px; text-align: center; color: #60a5fa; font-weight: bold; font-size: 1.2rem;">${notaPromedio}</td>
                             <td style="padding: 10px; text-align: center;">${estadoPerfilHtml}</td>
@@ -1253,6 +1269,7 @@
                     const codigo = child.key;
                     const nombre = data.nombre || "Sin nombre";
                     const pass = data.password || "ELEGIDOS26";
+                    const puntosSociales = data.puntos_sociales || 0; // NUEVA LÍNEA: Extraer puntos
                     // Solo cuenta las asistencias reales registradas, NO suma los tickets especiales
                     let totalAsist = data.asistencias ? Object.keys(data.asistencias).filter(k => !String(data.asistencias[k]).toLowerCase().includes("permiso")).length : 0;
                     
@@ -1321,6 +1338,7 @@
                             <strong>${nombre}</strong> <br>${badgeConexion} ${alertaBadge}
                         </td>
                         <td style="padding: 10px; text-align: center; font-weight: bold; color: #4ade80;">${totalAsist}</td>
+                        <td style="padding: 10px; text-align: center; font-weight: bold; color: #f59e0b; font-size: 1.1rem;">🔥 ${puntosSociales}</td>
                         <td style="padding: 10px; font-family: monospace; color: #cbd5e1;">${pass}</td>
                         <td style="padding: 10px; text-align: center;">${estadoPerfilHtml}</td>
                         <td style="padding: 10px;">${datosPerfilHtml}</td>
@@ -1368,6 +1386,7 @@
                             <th style="padding: 10px; text-align: center;">Foto</th>
                             <th style="padding: 10px;">Nombre / Estado</th>
                             <th style="padding: 10px; text-align: center;">Asistencias</th>
+                            <th style="padding: 10px; text-align: center;">Puntos</th>
                             <th style="padding: 10px;">Contraseña</th>
                             <th style="padding: 10px; text-align: center;">Perfil</th>
                             <th style="padding: 10px;">Datos Guardados</th>
